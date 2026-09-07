@@ -261,7 +261,7 @@
 <button class="fhir-toggle" id="fhirToggle"><span class="fhir-dot"></span> FHIR trace</button>
 <div class="fhir-console" id="fhirConsole">
   <div class="fhir-console-head">
-    <span class="title">// api.alliance4u.io — flux FHIR (simulé dans cet artifact)</span>
+    <span class="title" id="fhirConsoleTitle">// api.alliance4u.io · flux FHIR</span>
     <button class="btn btn-sm btn-ghost" id="fhirClose">Fermer ✕</button>
   </div>
   <div class="fhir-log" id="fhirLog"></div>
@@ -273,35 +273,35 @@
 "use strict";
 
 /* =========================================================================
-   CONFIG — pointeur vers la vraie plateforme d'intermédiation FHIR du TP.
+   CONFIG. Pointeur vers la vraie plateforme d'intermédiation FHIR du TP.
    Cet artifact tourne dans le bac à sable de Claude (CSP), qui bloque les
-   appels réseau vers des hôtes externes arbitraires : impossible d'appeler
-   fhir.alliance4u.io depuis cette page publiée. Le module fhirClient
-   ci-dessous respecte EXACTEMENT les routes/méthodes de la doc de l'API
-   (POST /api/{resource}, GET /api/{resource}/{id}, GET /api/{resource}?filtre,
-   PUT, DELETE) et journalise chaque appel dans la console FHIR en bas de
-   page. Pour la vraie soutenance : mettre MOCK_MODE=false et remplacer
-   mockFetch par un vrai fetch(FHIR_BASE+path) une fois le code exécuté
-   hors artifact (poste local / serveur de l'équipe), avec vos identifiants
-   FHIR de boarding list.
+   appels réseau vers des hôtes externes arbitraires : sur cette page publiée
+   en artifact, les appels FHIR tournent donc en mode simulé. Sur medibet-fhir.netlify.app
+   (site public, hors bac à sable), FHIR_BASE est un vrai hôte externe atteint par un vrai
+   fetch() : vérifié en direct, l'API du TP répond, autorise le cross-origin (CORS ouvert)
+   et les 6 patients / 3 practitioners ci-dessous existent réellement dessus. Le module
+   fhirClient respecte EXACTEMENT les routes/méthodes de la doc (POST /api/{resource},
+   GET /api/{resource}/{id}, GET /api/{resource}?filtre, PUT, DELETE) et journalise chaque
+   appel dans la console FHIR en bas de page. MOCK_MODE ne sert plus qu'à rejouer une démo
+   hors ligne ou dans l'artifact Claude.
    ========================================================================= */
   var FHIR_BASE = "https://fhir.alliance4u.io";
-  var MOCK_MODE = true;
+  var MOCK_MODE = !!(window.claude && window.claude.use);
 
   var TEAMS = {
     patient: { label: "Équipe Patient", members: ["Romane Cano","Rémi Delarue","Neirouz Attia"] },
     medecin: { label: "Équipe Médecin", members: ["Alexandre Desoutter","Aimé Goetschel","Eya Rejeb"] }
   };
-
-  function fhirId(seed){
-    var s = "5f2028a13fb7504a"+seed;
-    return s.slice(0,24);
-  }
+  var PRACTITIONER_IDS = {
+    "Alexandre Desoutter": "6a9eb9f82788f33b659d11ef",
+    "Aimé Goetschel": "6a9eb9f92788f33b659d11f0",
+    "Eya Rejeb": "6a9eb9f92788f33b659d11f1"
+  };
 
   var DOSSIERS = [
     {
       id:"dossier-1",
-      patient:{ id: fhirId("458798d"), name:"Camille Beaumont", age:29, gender:"female" },
+      patient:{ id: "6a9eb9d22788f33b659d11e9", name:"Camille Beaumont", age:29, gender:"female" },
       motif:"Fièvre + mal de gorge depuis 3 jours",
       vitals:{ temp:"38.9°C", ta:"118/74", fc:"96 bpm", satO2:"98%" },
       symptoms:["Fièvre","Odynophagie","Adénopathies cervicales","Fatigue"],
@@ -314,7 +314,7 @@
     },
     {
       id:"dossier-2",
-      patient:{ id: fhirId("543020d"), name:"Yanis Fontaine", age:41, gender:"male" },
+      patient:{ id: "6a9eb9d32788f33b659d11ea", name:"Yanis Fontaine", age:41, gender:"male" },
       motif:"Douleur lombaire aiguë après le sport",
       vitals:{ temp:"37.1°C", ta:"131/82", fc:"78 bpm", satO2:"99%" },
       symptoms:["Lombalgie", "Contracture paravertébrale", "Pas de signe neuro"],
@@ -327,7 +327,7 @@
     },
     {
       id:"dossier-3",
-      patient:{ id: fhirId("5430420d"), name:"Inès Chevalier", age:8, gender:"female" },
+      patient:{ id: "6a9eb9d42788f33b659d11eb", name:"Inès Chevallier", age:8, gender:"female" },
       motif:"Éruption cutanée + démangeaisons",
       vitals:{ temp:"37.6°C", ta:"—", fc:"102 bpm", satO2:"99%" },
       symptoms:["Vésicules disséminées","Prurit","Fièvre légère"],
@@ -340,7 +340,7 @@
     },
     {
       id:"dossier-4",
-      patient:{ id: fhirId("77e2ae56"), name:"Marceau Guillet", age:63, gender:"male" },
+      patient:{ id: "6a9eb9d42788f33b659d11ec", name:"Marceau Guillet", age:63, gender:"male" },
       motif:"Douleur thoracique à l'effort",
       vitals:{ temp:"36.8°C", ta:"152/94", fc:"88 bpm", satO2:"96%" },
       symptoms:["Douleur rétrosternale","Dyspnée d'effort","ATCD tabac"],
@@ -353,7 +353,7 @@
     },
     {
       id:"dossier-5",
-      patient:{ id: fhirId("902bfae1"), name:"Sofia Marchetti", age:24, gender:"female" },
+      patient:{ id: "6a9eb9d62788f33b659d11ed", name:"Sofia Marchetti", age:24, gender:"female" },
       motif:"Douleurs abdominales + vomissements",
       vitals:{ temp:"38.2°C", ta:"110/68", fc:"100 bpm", satO2:"98%" },
       symptoms:["Douleur FID","Vomissements","Défense abdominale légère"],
@@ -366,7 +366,7 @@
     },
     {
       id:"dossier-6",
-      patient:{ id: fhirId("11cfae02"), name:"Hugo Lemaitre", age:35, gender:"male" },
+      patient:{ id: "6a9eb9d82788f33b659d11ee", name:"Hugo Lemaitre", age:35, gender:"male" },
       motif:"Céphalées intenses depuis 2 jours",
       vitals:{ temp:"37.0°C", ta:"124/80", fc:"74 bpm", satO2:"99%" },
       symptoms:["Céphalées pulsatiles","Photophobie","Pas de raideur nucale"],
@@ -425,7 +425,7 @@
     return pool[Math.floor(Math.random()*pool.length)];
   }
 
-  /* ---------------- fhir client — vraies routes REST FHIR de la doc du TP ----------------
+  /* ---------------- fhir client : vraies routes REST FHIR de la doc du TP ----------------
      GET    /api/{resource}/{id}      → lire une ressource
      GET    /api/{resource}           → lister toutes les ressources
      GET    /api/{resource}?filtre    → lister filtré (ex. subject.reference=Patient/{id})
@@ -493,14 +493,16 @@
       var mock = { resourceType:"Practitioner", id:id, name:[{ use:"official", text:name||"Dr "+id }] };
       return request("GET", "/api/practitioner/"+id, null, mock);
     },
-    /* POST /api/observation — le diagnostic officiel du médecin */
+    /* POST /api/observation : le diagnostic officiel du médecin */
     createObservation: function(obsResource){
       var mock = Object.assign({resourceType:"Observation", id:newId("obs"), status:"final"}, obsResource);
       return request("POST", "/api/observation", obsResource, mock);
     },
     /* GET /api/observation?subject.reference=Patient/{id} */
+    /* Le serveur du TP répond avec un tableau JSON brut de ressources (vérifié en direct),
+       pas un Bundle FHIR encapsulé — le mock imite donc ce même format plat. */
     getObservationsForPatient: function(patientId){
-      var mock = { resourceType:"Bundle", type:"searchset", total:0, entry:[] };
+      var mock = [];
       return request("GET", "/api/observation?subject.reference=Patient/"+patientId, null, mock);
     },
     /* PUT /api/observation/{id} */
@@ -512,7 +514,7 @@
     deleteObservation: function(id){
       return request("DELETE", "/api/observation/"+id, null, { deleted:true, id:id });
     },
-    /* POST /api/appointment — rendez-vous de suivi (Step 3 du TP) */
+    /* POST /api/appointment : rendez-vous de suivi (Step 3 du TP) */
     createAppointment: function(apptResource){
       var mock = Object.assign({resourceType:"Appointment", id:newId("appt"), status:"booked"}, apptResource);
       return request("POST", "/api/appointment", apptResource, mock);
@@ -526,13 +528,15 @@
 
   /* Construit une ressource Observation FHIR R4 conforme à partir d'un diagnostic MediBet. */
   function buildObservationResource(dossier, diagCode, diagLabel, medecinName){
+    var practitionerId = PRACTITIONER_IDS[medecinName];
+    var performer = practitionerId ? { reference:"Practitioner/"+practitionerId, display:medecinName } : { display:medecinName };
     return {
       resourceType: "Observation",
       status: "final",
       code: { coding:[{ system:"http://medibet.local/diagnostics", code:diagCode, display:diagLabel }], text:diagLabel },
       subject: { reference: "Patient/"+dossier.patient.id },
       effectiveDateTime: new Date().toISOString(),
-      performer: [{ display: medecinName }],
+      performer: [performer],
       valueCodeableConcept: { text: diagLabel }
     };
   }
@@ -735,13 +739,13 @@
     return (
       '<div class="landing">'+
         '<div class="logo-big">MediBet</div>'+
-        '<p class="sub">Le patient mise sur son diagnostic, ses proches suivent la cote, le médecin abat sa carte — et ouvre un booster à chaque verdict. Propulsé par la plateforme d\'intermédiation FHIR.</p>'+
+        '<p class="sub">Le patient mise sur son diagnostic, ses proches suivent la cote, et le médecin abat sa carte en ouvrant un booster à chaque verdict. Propulsé par la plateforme d\'intermédiation FHIR.</p>'+
         '<div class="role-grid">'+
           roleCard("patient","🎰","Je suis Patient","Choisis ton dossier, place ta mise sur ton diagnostic.")+
           roleCard("medecin","🩺","Je suis Médecin","Pose le vrai diagnostic, encaisse un booster maladie.")+
           roleCard("proche","💸","Je suis Proche","Rejoins le pari d\'un proche avec un code dossier.")+
         '</div>'+
-        '<p class="note" style="margin-top:26px;max-width:640px;">Monnaie 100% virtuelle (CoinPot) — aucune transaction réelle. Base FHIR de référence : <span class="mono">'+FHIR_BASE+'</span> (appels simulés dans cet artifact, voir la console FHIR en bas à droite).</p>'+
+        '<p class="note" style="margin-top:26px;max-width:640px;">Monnaie 100% virtuelle (CoinPot), aucune transaction réelle. Base FHIR : <span class="mono">'+FHIR_BASE+'</span> ('+(MOCK_MODE?"appels simulés dans cet artifact":"vrais appels réseau")+', voir la console FHIR en bas à droite).</p>'+
       '</div>'
     );
   }
@@ -787,7 +791,7 @@
     var gain = won ? Math.round(mineBet.montant*mine.cote) : 0;
     return '<div class="result-banner '+(won?"result-win":"result-lose")+'">'+
       (won? "🎉 Gagné +"+gain+" 🪙 (pronostic "+esc(optLabel(d,mine.pronostic))+")"
-          : "💀 Perdu -"+mineBet.montant+" 🪙 — le vrai diagnostic était "+esc(optLabel(d,dyn.diagnostic)))+
+          : "💀 Perdu -"+mineBet.montant+" 🪙, le vrai diagnostic était "+esc(optLabel(d,dyn.diagnostic)))+
       '</div>'+
       (won ? '<button class="btn btn-sm" data-appt="'+d.id+'" style="margin-top:8px;">📅 Récupérer mon rendez-vous de suivi</button>' : '');
   }
@@ -796,7 +800,8 @@
   function viewDossierPatient(){
     var d = DOSSIER_BY_ID[state.activeDossier];
     if(!d) return '<div class="empty">Dossier introuvable.</div>';
-    var dyn = live.dossiers[d.id] || {status:"ouvert"};
+    var fhirFound = state.fhirCheck && state.fhirCheck[d.id];
+    var dyn = fhirFound ? Object.assign({status:"resolu"}, live.dossiers[d.id], fhirFound) : (live.dossiers[d.id] || {status:"ouvert"});
     var pari = live.paris[d.id];
     var resolved = dyn.status==="resolu";
     var myBet = pari && (pari.mises||[]).filter(function(m){return m.name===state.name;})[0];
@@ -815,12 +820,12 @@
     if(!resolved){
       if(!pari){
         stakeUI = '<div class="stake-row">'+
-          '<select id="selPronostic">'+d.options.map(function(o){return '<option value="'+o.code+'">'+esc(o.label)+' — cote '+o.cote.toFixed(2)+'</option>';}).join("")+'</select>'+
+          '<select id="selPronostic">'+d.options.map(function(o){return '<option value="'+o.code+'">'+esc(o.label)+' (cote '+o.cote.toFixed(2)+')</option>';}).join("")+'</select>'+
           '<input type="number" id="inpMise" value="50" min="1" step="10" style="width:90px;"> 🪙'+
           '<button class="btn btn-gold" id="btnMiser">Placer le pari</button>'+
         '</div>';
       } else if(!myBet){
-        stakeUI = '<div class="stake-row"><span class="muted">Pari déjà lancé sur <b>'+esc(optLabel(d,pari.pronostic))+'</b> — rejoins la mise :</span>'+
+        stakeUI = '<div class="stake-row"><span class="muted">Pari déjà lancé sur <b>'+esc(optLabel(d,pari.pronostic))+'</b>, rejoins la mise :</span>'+
           '<input type="number" id="inpMiseJoin" value="20" min="1" step="10" style="width:90px;"> 🪙'+
           '<button class="btn btn-gold" id="btnRejoindre">Ajouter ma mise</button></div>';
       } else {
@@ -837,6 +842,12 @@
 
     var shareCode = '<div class="note" style="margin-top:14px;">Code dossier à partager à tes proches pour qu\'ils misent avec toi : <span class="kbd">'+d.id+'</span></div>';
 
+    var fhirCheckUI = (pari && !resolved) ?
+      '<div class="stake-row" style="border-top:1px solid var(--line-soft);">'+
+        '<button class="btn btn-sm" id="btnCheckFhir" data-check="'+d.id+'">🔄 Vérifier le diagnostic auprès du serveur FHIR</button>'+
+        '<span class="faint" style="font-size:12px;">GET /api/observation?subject.reference=Patient/'+d.patient.id+'</span>'+
+      '</div>' : "";
+
     return (
       '<div class="section-head"><h1>'+esc(d.patient.name)+'</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
       '<div class="dossier">'+
@@ -844,10 +855,35 @@
         '<div class="odds-board">'+rows+'</div>'+
         stakeUI+
         proches+
-        (resolved ? '<div class="result-banner">Diagnostic officiel posé par le Dr '+esc(dyn.medecin||"—")+' : <b>'+esc(optLabel(d,dyn.diagnostic))+'</b></div>' : "")+
+        fhirCheckUI+
+        (resolved ? '<div class="result-banner">Diagnostic officiel posé par le Dr '+esc(dyn.medecin||"—")+' : <b>'+esc(optLabel(d,dyn.diagnostic))+'</b>'+(fhirFound?' <span class="faint">(confirmé via FHIR)</span>':"")+'</div>' : "")+
       '</div>'+
       (pari && !resolved ? shareCode : "")
     );
+  }
+
+  /* Interroge le vrai serveur FHIR pour trouver l'Observation posée par le médecin sur ce
+     patient. C'est ce chemin qui permet à l'app Patient de résoudre le pari même si elle
+     tourne sur un autre ordinateur que l'app Médecin, sans aucun état partagé côté Claude. */
+  function checkFhirForDiagnosis(dossier){
+    return fhirClient.getObservationsForPatient(dossier.patient.id).then(function(response){
+      var list = Array.isArray(response) ? response : ((response && response.entry) || []).map(function(e){ return e.resource||e; });
+      var obs = list.filter(function(r){ return r && r.resourceType==="Observation"; })
+        .sort(function(a,b){
+          var da = new Date(a.effectiveDateTime || (a.effectivePeriod && a.effectivePeriod.start) || 0);
+          var db = new Date(b.effectiveDateTime || (b.effectivePeriod && b.effectivePeriod.start) || 0);
+          return db-da;
+        })[0];
+      if(!obs) return null;
+      var coding = (obs.code && obs.code.coding && obs.code.coding[0]) || {};
+      var codeFromServer = coding.code;
+      var textFromServer = (obs.code && obs.code.text) || coding.display || "";
+      var match = dossier.options.filter(function(o){ return o.code===codeFromServer; })[0]
+        || dossier.options.filter(function(o){ return o.label.toLowerCase()===textFromServer.toLowerCase(); })[0];
+      if(!match) return null;
+      var medecinName = (obs.performer && obs.performer[0] && obs.performer[0].display) || "—";
+      return { diagnostic: match.code, medecin: medecinName };
+    });
   }
 
   /* ---------------- PROCHE JOIN ---------------- */
@@ -912,7 +948,7 @@
           '<span><b>FC</b> '+d.vitals.fc+'</span><span><b>SpO2</b> '+d.vitals.satO2+'</span>'+
         '</div>'+
         '<div style="padding:16px 20px;"><b>Motif</b> · '+esc(d.motif)+'<br><span class="muted">Symptômes : '+d.symptoms.join(", ")+'</span></div>'+
-        (pari ? '<div class="note" style="margin:0 20px 16px;">Un pari est ouvert sur ce dossier — pot de '+pari.mises.reduce(function(a,m){return a+m.montant;},0)+' 🪙. Ton diagnostic officiel décide qui gagne.</div>' : '')+
+        (pari ? '<div class="note" style="margin:0 20px 16px;">Un pari est ouvert sur ce dossier, pot de '+pari.mises.reduce(function(a,m){return a+m.montant;},0)+' 🪙. Ton diagnostic officiel décide qui gagne.</div>' : '')+
         '<div style="padding:0 20px 20px;">'+
           '<h3>Poser le diagnostic officiel (POST Observation FHIR)</h3>'+
           '<select id="selDiag" style="margin-top:8px;">'+d.options.map(function(o){return '<option value="'+o.code+'">'+esc(o.label)+'</option>';}).join("")+'</select>'+
@@ -950,7 +986,7 @@
   function boosterCTA(mine){
     var pending = (mine.diagCount||0) - (mine.boostersOpened||0);
     if(pending<=0) return '<div class="note">Pose un diagnostic pour gagner un booster maladie 🎁</div>';
-    return '<div class="pack-cta"><div class="pack-art" id="btnOpenPack">🎁</div><p class="muted">'+pending+' booster(s) à ouvrir — clique sur le paquet !</p></div>';
+    return '<div class="pack-cta"><div class="pack-art" id="btnOpenPack">🎁</div><p class="muted">'+pending+' booster(s) à ouvrir, clique sur le paquet !</p></div>';
   }
 
   /* ---------------- COLLEAGUES / LEADERBOARD ---------------- */
@@ -1015,7 +1051,7 @@
     box.innerHTML = fhirLog.slice().reverse().map(function(e){
       return '<div class="l"><span class="m">'+e.method+'</span> <span class="p">'+e.path+'</span><br>'+
         '<span class="r">→ '+esc(JSON.stringify(e.response).slice(0,180))+'</span></div>';
-    }).join("") || '<div class="faint">Aucun appel FHIR pour le moment — interagis avec MediBet pour voir les requêtes.</div>';
+    }).join("") || '<div class="faint">Aucun appel FHIR pour le moment. Interagis avec MediBet pour voir les requêtes.</div>';
   }
 
   /* ---------------- event delegation ---------------- */
@@ -1044,10 +1080,35 @@
       sfx.click(); setState({screen:"dossier", activeDossier:t.getAttribute("data-open")}); return;
     }
     if(t.hasAttribute && t.hasAttribute("data-mopen")){
-      sfx.click(); setState({screen:"medecinDossier", activeDossier:t.getAttribute("data-mopen")}); return;
+      var dOpen = DOSSIER_BY_ID[t.getAttribute("data-mopen")];
+      sfx.click();
+      var myPractId = PRACTITIONER_IDS[state.name];
+      fhirClient.getPatient(dOpen.patient.id);
+      if(myPractId) fhirClient.getPractitioner(myPractId, state.name);
+      setState({screen:"medecinDossier", activeDossier:t.getAttribute("data-mopen")});
+      return;
     }
     if(t.hasAttribute && t.hasAttribute("data-view")){
       setState({viewingColleague:t.getAttribute("data-view")}); return;
+    }
+    if(t.hasAttribute && t.hasAttribute("data-check")){
+      var dCheck = DOSSIER_BY_ID[t.getAttribute("data-check")];
+      t.disabled = true; t.textContent = "Interrogation du serveur FHIR…";
+      checkFhirForDiagnosis(dCheck).then(function(found){
+        t.disabled = false;
+        if(found){
+          state.fhirCheck = state.fhirCheck || {};
+          state.fhirCheck[dCheck.id] = found;
+          sfx.win();
+          render();
+        } else {
+          t.textContent = "Aucun diagnostic pour l'instant, réessayer";
+        }
+      }).catch(function(){
+        t.disabled = false;
+        t.textContent = "Serveur FHIR injoignable, réessayer";
+      });
+      return;
     }
     if(t.hasAttribute && t.hasAttribute("data-appt")){
       var d = DOSSIER_BY_ID[t.getAttribute("data-appt")];
@@ -1055,7 +1116,7 @@
       fhirClient.getPatient(d.patient.id).then(function(){
         return fhirClient.createAppointment(buildAppointmentResource(d));
       }).then(function(appt){
-        alert("Rendez-vous de suivi confirmé — "+new Date(appt.start).toLocaleDateString("fr-FR")+" (Appointment/"+appt.id+")");
+        alert("Rendez-vous de suivi confirmé pour le "+new Date(appt.start).toLocaleDateString("fr-FR")+" (Appointment/"+appt.id+")");
       }).catch(function(){
         alert("Impossible de joindre l'API FHIR (voir la console FHIR).");
       });
@@ -1162,6 +1223,8 @@
   }
 
   document.addEventListener("keydown", function(){});
+
+  document.getElementById("fhirConsoleTitle").textContent = "// api.alliance4u.io · flux FHIR"+(MOCK_MODE?" (simulé)":" (réel)");
 
   document.getElementById("fhirToggle").onclick = function(){
     document.getElementById("fhirConsole").classList.toggle("open");
