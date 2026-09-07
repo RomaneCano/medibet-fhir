@@ -155,6 +155,16 @@
   .odds-row.loser{opacity:.55;}
 
   .stake-row{display:flex;gap:10px;align-items:center;padding:16px 20px;background:var(--panel2);flex-wrap:wrap;}
+  .symptom-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+  .symptom-chip{
+    border:1px solid var(--line);background:var(--panel2);color:var(--ink);
+    padding:10px 16px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:500;
+    transition:.12s ease;
+  }
+  .symptom-chip:hover{border-color:var(--gold);}
+  .symptom-chip.on{background:rgba(255,180,0,.14);border-color:var(--gold);color:var(--gold);font-weight:700;}
+  select optgroup{color:var(--gold);font-weight:700;background:var(--bg);}
+  select option{color:var(--ink);background:var(--bg);}
   input[type=number], input[type=text]{
     background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:8px;
     padding:9px 11px;font-size:14px;font-family:"IBM Plex Mono",monospace;
@@ -298,94 +308,145 @@
     "Eya Rejeb": "6a9eb9f92788f33b659d11f1"
   };
 
-  var DOSSIERS = [
-    {
-      id:"dossier-1",
-      patient:{ id: "6a9eb9d22788f33b659d11e9", name:"Camille Beaumont", age:29, gender:"female" },
-      motif:"Fièvre + mal de gorge depuis 3 jours",
-      vitals:{ temp:"38.9°C", ta:"118/74", fc:"96 bpm", satO2:"98%" },
-      symptoms:["Fièvre","Odynophagie","Adénopathies cervicales","Fatigue"],
-      options:[
-        {code:"rhino", label:"Rhino-pharyngite virale", cote:1.4},
-        {code:"angine-v", label:"Angine virale", cote:2.1},
-        {code:"angine-b", label:"Angine bactérienne (SGA)", cote:3.6},
-        {code:"mono", label:"Mononucléose infectieuse", cote:8.5}
-      ]
-    },
-    {
-      id:"dossier-2",
-      patient:{ id: "6a9eb9d32788f33b659d11ea", name:"Yanis Fontaine", age:41, gender:"male" },
-      motif:"Douleur lombaire aiguë après le sport",
-      vitals:{ temp:"37.1°C", ta:"131/82", fc:"78 bpm", satO2:"99%" },
-      symptoms:["Lombalgie", "Contracture paravertébrale", "Pas de signe neuro"],
-      options:[
-        {code:"lombalgie", label:"Lombalgie commune", cote:1.3},
-        {code:"sciatique", label:"Sciatique L5", cote:3.2},
-        {code:"hernie", label:"Hernie discale", cote:6.0},
-        {code:"fracture", label:"Fracture de fatigue", cote:14.0}
-      ]
-    },
-    {
-      id:"dossier-3",
-      patient:{ id: "6a9eb9d42788f33b659d11eb", name:"Inès Chevallier", age:8, gender:"female" },
-      motif:"Éruption cutanée + démangeaisons",
-      vitals:{ temp:"37.6°C", ta:"—", fc:"102 bpm", satO2:"99%" },
-      symptoms:["Vésicules disséminées","Prurit","Fièvre légère"],
-      options:[
-        {code:"varicelle", label:"Varicelle", cote:1.6},
-        {code:"urticaire", label:"Urticaire allergique", cote:2.8},
-        {code:"zona", label:"Zona pédiatrique", cote:11.0},
-        {code:"gale", label:"Gale", cote:9.0}
-      ]
-    },
-    {
-      id:"dossier-4",
-      patient:{ id: "6a9eb9d42788f33b659d11ec", name:"Marceau Guillet", age:63, gender:"male" },
-      motif:"Douleur thoracique à l'effort",
-      vitals:{ temp:"36.8°C", ta:"152/94", fc:"88 bpm", satO2:"96%" },
-      symptoms:["Douleur rétrosternale","Dyspnée d'effort","ATCD tabac"],
-      options:[
-        {code:"angor", label:"Angor stable", cote:2.4},
-        {code:"reflux", label:"Reflux gastro-œsophagien", cote:1.9},
-        {code:"pericardite", label:"Péricardite", cote:7.5},
-        {code:"idm", label:"Syndrome coronarien aigu", cote:5.0}
-      ]
-    },
-    {
-      id:"dossier-5",
-      patient:{ id: "6a9eb9d62788f33b659d11ed", name:"Sofia Marchetti", age:24, gender:"female" },
-      motif:"Douleurs abdominales + vomissements",
-      vitals:{ temp:"38.2°C", ta:"110/68", fc:"100 bpm", satO2:"98%" },
-      symptoms:["Douleur FID","Vomissements","Défense abdominale légère"],
-      options:[
-        {code:"gastro", label:"Gastro-entérite aiguë", cote:1.5},
-        {code:"appendicite", label:"Appendicite", cote:3.0},
-        {code:"kyste", label:"Kyste ovarien", cote:6.5},
-        {code:"grossesse", label:"GEU (grossesse extra-utérine)", cote:16.0}
-      ]
-    },
-    {
-      id:"dossier-6",
-      patient:{ id: "6a9eb9d82788f33b659d11ee", name:"Hugo Lemaitre", age:35, gender:"male" },
-      motif:"Céphalées intenses depuis 2 jours",
-      vitals:{ temp:"37.0°C", ta:"124/80", fc:"74 bpm", satO2:"99%" },
-      symptoms:["Céphalées pulsatiles","Photophobie","Pas de raideur nucale"],
-      options:[
-        {code:"migraine", label:"Migraine", cote:1.7},
-        {code:"tension", label:"Céphalée de tension", cote:1.9},
-        {code:"sinusite", label:"Sinusite", cote:3.4},
-        {code:"meningite", label:"Méningite", cote:22.0}
-      ]
-    }
+  /* ---------------- symptômes & base de connaissance maladies ----------------
+     Le patient coche ses symptômes ; notre algorithme d'aide au pré-diagnostic
+     croise ces symptômes avec la base ci-dessous pour proposer les diagnostics
+     les plus probables (avec une cote). Le médecin, lui, choisit dans la base
+     complète — bien plus large que les seules suggestions faites au patient. */
+  var SYMPTOMS = [
+    {id:"fievre", label:"Fièvre", emoji:"🌡️"},
+    {id:"toux", label:"Toux", emoji:"😷"},
+    {id:"mal_gorge", label:"Mal de gorge", emoji:"🗣️"},
+    {id:"fatigue", label:"Fatigue", emoji:"😴"},
+    {id:"cephalees", label:"Céphalées", emoji:"🤕"},
+    {id:"dlr_thorax", label:"Douleur thoracique", emoji:"🫀"},
+    {id:"dlr_abdo", label:"Douleur abdominale", emoji:"🤢"},
+    {id:"nausees", label:"Nausées", emoji:"🤮"},
+    {id:"vomissements", label:"Vomissements", emoji:"🤢"},
+    {id:"diarrhee", label:"Diarrhée", emoji:"💩"},
+    {id:"eruption", label:"Éruption cutanée", emoji:"🔴"},
+    {id:"demangeaisons", label:"Démangeaisons", emoji:"✋"},
+    {id:"dlr_articulaire", label:"Douleur articulaire", emoji:"🦴"},
+    {id:"dlr_musculaire", label:"Douleur musculaire", emoji:"💪"},
+    {id:"essoufflement", label:"Essoufflement", emoji:"🫁"},
+    {id:"vertiges", label:"Vertiges", emoji:"😵"},
+    {id:"perte_appetit", label:"Perte d'appétit", emoji:"🍽️"},
+    {id:"frissons", label:"Frissons", emoji:"🥶"},
+    {id:"ganglions", label:"Ganglions gonflés", emoji:"🔵"},
+    {id:"yeux_rouges", label:"Yeux rouges", emoji:"👁️"},
+    {id:"nez_qui_coule", label:"Nez qui coule", emoji:"🤧"},
+    {id:"dlr_lombaire", label:"Douleur lombaire", emoji:"🔻"},
+    {id:"palpitations", label:"Palpitations", emoji:"💓"},
+    {id:"confusion", label:"Confusion", emoji:"😶‍🌫️"},
+    {id:"perte_poids", label:"Perte de poids", emoji:"⚖️"}
   ];
-  var DOSSIER_BY_ID = {}; DOSSIERS.forEach(function(d){ DOSSIER_BY_ID[d.id]=d; });
+  var SYMPTOM_LABEL = {}; SYMPTOMS.forEach(function(s){ SYMPTOM_LABEL[s.id]=s.label; });
+
+  var DISEASES = [
+    // ORL / Respiratoire
+    {id:"rhino", label:"Rhino-pharyngite virale", cat:"ORL / Respiratoire", s:{nez_qui_coule:1,toux:.6,mal_gorge:.5,fievre:.3}},
+    {id:"angine-v", label:"Angine virale", cat:"ORL / Respiratoire", s:{mal_gorge:1,fievre:.6,ganglions:.4}},
+    {id:"angine-b", label:"Angine bactérienne (SGA)", cat:"ORL / Respiratoire", s:{mal_gorge:1,fievre:.8,ganglions:.7,frissons:.3}},
+    {id:"mono", label:"Mononucléose infectieuse", cat:"ORL / Respiratoire", s:{fatigue:1,ganglions:.9,mal_gorge:.6,fievre:.5}},
+    {id:"grippe", label:"Grippe saisonnière", cat:"ORL / Respiratoire", s:{fievre:1,frissons:.8,dlr_musculaire:.7,fatigue:.7,toux:.5}},
+    {id:"bronchite", label:"Bronchite aiguë", cat:"ORL / Respiratoire", s:{toux:1,essoufflement:.4,fievre:.3,fatigue:.3}},
+    {id:"sinusite", label:"Sinusite", cat:"ORL / Respiratoire", s:{cephalees:.8,nez_qui_coule:.7,fievre:.3}},
+    {id:"pneumonie", label:"Pneumonie", cat:"ORL / Respiratoire", s:{fievre:1,toux:.9,essoufflement:.8,dlr_thorax:.5,frissons:.5}},
+    {id:"viral-resp", label:"Syndrome viral respiratoire", cat:"ORL / Respiratoire", s:{fievre:.7,toux:.7,fatigue:.8,perte_appetit:.3,cephalees:.4}},
+    {id:"otite", label:"Otite", cat:"ORL / Respiratoire", s:{fievre:.5,cephalees:.3,fatigue:.2}},
+    // Digestif
+    {id:"gastro", label:"Gastro-entérite aiguë", cat:"Digestif", s:{vomissements:1,diarrhee:1,nausees:.8,fievre:.3,dlr_abdo:.5}},
+    {id:"appendicite", label:"Appendicite", cat:"Digestif", s:{dlr_abdo:1,nausees:.6,fievre:.5,perte_appetit:.5}},
+    {id:"rgo", label:"Reflux gastro-œsophagien", cat:"Digestif", s:{dlr_thorax:.5,dlr_abdo:.5,nausees:.3}},
+    {id:"ulcere", label:"Ulcère gastrique", cat:"Digestif", s:{dlr_abdo:1,nausees:.4,perte_poids:.3,perte_appetit:.4}},
+    {id:"intox-alim", label:"Intoxication alimentaire", cat:"Digestif", s:{vomissements:1,diarrhee:.9,dlr_abdo:.7,fievre:.3}},
+    {id:"sii", label:"Syndrome de l'intestin irritable", cat:"Digestif", s:{dlr_abdo:.8,diarrhee:.4,perte_appetit:.2}},
+    {id:"hepatite", label:"Hépatite virale", cat:"Digestif", s:{fatigue:.8,perte_appetit:.6,nausees:.5,dlr_abdo:.4,perte_poids:.3}},
+    // Dermatologie
+    {id:"varicelle", label:"Varicelle", cat:"Dermatologie", s:{eruption:1,demangeaisons:.8,fievre:.5}},
+    {id:"urticaire", label:"Urticaire allergique", cat:"Dermatologie", s:{eruption:.9,demangeaisons:1}},
+    {id:"zona", label:"Zona", cat:"Dermatologie", s:{eruption:.8,demangeaisons:.5,dlr_musculaire:.4,fievre:.2}},
+    {id:"gale", label:"Gale", cat:"Dermatologie", s:{demangeaisons:1,eruption:.5}},
+    {id:"eczema", label:"Eczéma", cat:"Dermatologie", s:{eruption:.7,demangeaisons:.9}},
+    {id:"rougeole", label:"Rougeole", cat:"Dermatologie", s:{eruption:.8,fievre:.7,toux:.4,yeux_rouges:.5}},
+    // Cardio-vasculaire
+    {id:"angor", label:"Angor stable", cat:"Cardio-vasculaire", s:{dlr_thorax:1,essoufflement:.5,palpitations:.3}},
+    {id:"sca", label:"Syndrome coronarien aigu", cat:"Cardio-vasculaire", s:{dlr_thorax:1,essoufflement:.7,palpitations:.5,vertiges:.3}},
+    {id:"pericardite", label:"Péricardite", cat:"Cardio-vasculaire", s:{dlr_thorax:.9,fievre:.4,essoufflement:.3}},
+    {id:"arythmie", label:"Trouble du rythme cardiaque", cat:"Cardio-vasculaire", s:{palpitations:1,vertiges:.5,essoufflement:.4}},
+    {id:"hta-poussee", label:"Poussée hypertensive", cat:"Cardio-vasculaire", s:{cephalees:.7,vertiges:.5,palpitations:.3}},
+    // Neurologie
+    {id:"migraine", label:"Migraine", cat:"Neurologie", s:{cephalees:1,nausees:.5,vertiges:.3,yeux_rouges:.2}},
+    {id:"tension", label:"Céphalée de tension", cat:"Neurologie", s:{cephalees:1,fatigue:.3}},
+    {id:"meningite", label:"Méningite", cat:"Neurologie", s:{cephalees:1,fievre:.8,confusion:.5,vomissements:.4}},
+    {id:"ait", label:"AVC mineur / AIT", cat:"Neurologie", s:{confusion:.7,vertiges:.6,cephalees:.4}},
+    {id:"crise-convulsive", label:"Crise convulsive", cat:"Neurologie", s:{confusion:.8,vertiges:.3}},
+    // Musculo-squelettique
+    {id:"lombalgie", label:"Lombalgie commune", cat:"Musculo-squelettique", s:{dlr_lombaire:1,dlr_musculaire:.4}},
+    {id:"sciatique", label:"Sciatique", cat:"Musculo-squelettique", s:{dlr_lombaire:.9,dlr_articulaire:.3}},
+    {id:"hernie", label:"Hernie discale", cat:"Musculo-squelettique", s:{dlr_lombaire:1,dlr_articulaire:.3}},
+    {id:"fracture-fatigue", label:"Fracture de fatigue", cat:"Musculo-squelettique", s:{dlr_lombaire:.6,dlr_articulaire:.5}},
+    {id:"arthrite", label:"Arthrite", cat:"Musculo-squelettique", s:{dlr_articulaire:1,fievre:.3,fatigue:.3}},
+    {id:"tendinite", label:"Tendinite", cat:"Musculo-squelettique", s:{dlr_articulaire:.7,dlr_musculaire:.5}},
+    {id:"fibromyalgie", label:"Fibromyalgie", cat:"Musculo-squelettique", s:{dlr_musculaire:1,fatigue:.8,dlr_articulaire:.5}},
+    // Infectieux général
+    {id:"paludisme", label:"Paludisme (retour de voyage)", cat:"Infectieux", s:{fievre:1,frissons:1,fatigue:.5,cephalees:.4}},
+    {id:"grippe-compliquee", label:"Grippe compliquée", cat:"Infectieux", s:{fievre:.8,essoufflement:.6,toux:.6,fatigue:.6}},
+    {id:"lyme", label:"Maladie de Lyme", cat:"Infectieux", s:{eruption:.5,fatigue:.5,dlr_articulaire:.5,fievre:.3}},
+    // Uro-gynéco
+    {id:"cystite", label:"Cystite", cat:"Uro-gynéco", s:{dlr_abdo:.4,fievre:.2}},
+    {id:"geu", label:"GEU (grossesse extra-utérine)", cat:"Uro-gynéco", s:{dlr_abdo:1,vertiges:.4}},
+    {id:"kyste-ovarien", label:"Kyste ovarien", cat:"Uro-gynéco", s:{dlr_abdo:.8,nausees:.2}},
+    // Endocrino
+    {id:"diabete-decompense", label:"Décompensation diabétique", cat:"Endocrino", s:{fatigue:.7,perte_poids:.6,perte_appetit:.3,confusion:.3,vertiges:.3}},
+    {id:"hypothyroidie", label:"Hypothyroïdie", cat:"Endocrino", s:{fatigue:1,dlr_musculaire:.3}},
+    {id:"hyperthyroidie", label:"Hyperthyroïdie", cat:"Endocrino", s:{palpitations:.7,perte_poids:.6,fatigue:.4}}
+  ];
+  var DISEASE_BY_ID = {}; DISEASES.forEach(function(d){ DISEASE_BY_ID[d.id]=d; });
+  var DISEASE_CATEGORIES = []; DISEASES.forEach(function(d){ if(DISEASE_CATEGORIES.indexOf(d.cat)===-1) DISEASE_CATEGORIES.push(d.cat); });
+
+  function diseaseLabel(code){ var d=DISEASE_BY_ID[code]; return d?d.label:code; }
+
+  /* Notre "algorithme IA" de pré-diagnostic : score chaque maladie de la base
+     selon le recouvrement avec les symptômes cochés par le patient, garde les
+     5 plus probables et leur attribue une cote inversement liée à leur rang
+     (favori proche de 1, outsiders à deux chiffres) — un vrai tableau de paris. */
+  var COTE_LADDER = [1.5, 2.8, 5.0, 9.0, 16.0];
+  function computeProbableDiagnoses(symptomIds){
+    var picked = {}; symptomIds.forEach(function(id){ picked[id]=true; });
+    var scored = DISEASES.map(function(d){
+      var score = 0, maxScore = 0;
+      Object.keys(d.s).forEach(function(sym){
+        maxScore += d.s[sym];
+        if(picked[sym]) score += d.s[sym];
+      });
+      return { d:d, score: maxScore>0 ? score/maxScore : 0, hits: Object.keys(d.s).filter(function(s){return picked[s];}).length };
+    }).filter(function(x){ return x.hits>0; })
+      .sort(function(a,b){ return b.score-a.score || b.hits-a.hits; });
+    var top = scored.slice(0,5);
+    if(top.length===0){
+      // aucun symptôme reconnu : on retombe sur des diagnostics bénins génériques
+      top = [DISEASE_BY_ID.rhino, DISEASE_BY_ID.gastro, DISEASE_BY_ID.tension].filter(Boolean).map(function(d){return {d:d,score:.2};});
+    }
+    var topScore = top[0].score || 1;
+    return top.map(function(x,i){
+      var jitter = Math.pow((topScore+.05)/(x.score+.05), .3);
+      var cote = Math.max(1.15, Math.min(30, (COTE_LADDER[i]||20) * jitter));
+      return { code:x.d.id, label:x.d.label, cote: Math.round(cote*20)/20 };
+    });
+  }
   function optLabel(dossier, code){
-    var found=(dossier.options||[]).filter(function(o){return o.code===code;})[0];
-    return found? found.label : code;
+    var found=(dossier.candidates||[]).filter(function(o){return o.code===code;})[0];
+    return found? found.label : diseaseLabel(code);
   }
   function optCote(dossier, code){
-    var found=(dossier.options||[]).filter(function(o){return o.code===code;})[0];
+    var found=(dossier.candidates||[]).filter(function(o){return o.code===code;})[0];
     return found? found.cote : 1;
+  }
+  function fmtDate(ts){
+    if(!ts) return "";
+    var d = new Date(ts);
+    return d.toLocaleDateString("fr-FR")+" "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
   }
 
   var RARITY_META = {
@@ -476,11 +537,9 @@
 
   var fhirClient = {
     /* GET /api/patient/{id} */
-    getPatient: function(id){
-      var d = DOSSIERS.filter(function(x){return x.patient.id===id;})[0];
+    getPatient: function(id, knownName){
       var mock = { resourceType:"Patient", id:id,
-        name:[{ use:"official", text:d?d.patient.name:id, family:d?d.patient.name.split(" ").slice(-1)[0]:undefined, given:d?[d.patient.name.split(" ")[0]]:undefined }],
-        gender: d?d.patient.gender:undefined, birthDate: d? String(2026-d.patient.age)+"-01-01" : undefined };
+        name:[{ use:"official", text:knownName||id, family:knownName?knownName.split(" ").slice(-1)[0]:undefined, given:knownName?[knownName.split(" ")[0]]:undefined }] };
       return request("GET", "/api/patient/"+id, null, mock);
     },
     /* POST /api/patient */
@@ -552,6 +611,23 @@
       end: end.toISOString(),
       participant: [{ actor:{ reference:"Patient/"+dossier.patient.id }, status:"accepted" }]
     };
+  }
+
+  /* Un vrai Patient FHIR est créé une seule fois par joueur (POST /api/patient),
+     puis son id est réutilisé (cache localStorage) pour toutes ses fiches suivantes. */
+  function ensurePatientFhirId(name){
+    var key = "medibet_patient_fhir_id_"+slug(name);
+    var cached = null;
+    try{ cached = localStorage.getItem(key); }catch(e){}
+    if(cached) return Promise.resolve(cached);
+    return fhirClient.createPatient({
+      resourceType:"Patient",
+      name:[{ use:"official", text:name, family:name.split(" ").slice(-1)[0], given:[name.split(" ")[0]] }]
+    }).then(function(res){
+      var id = res.id;
+      try{ localStorage.setItem(key, id); }catch(e){}
+      return id;
+    });
   }
 
   /* ---------------- audio synth (no external assets) ---------------- */
@@ -627,7 +703,7 @@
     return pariRef.get().then(function(snap){
       var pari = snap.exists ? snap.data() : null;
       var won = pari && pari.pronostic === diagnosticCode;
-      return dossierRef.set({
+      return dossierRef.update({
         status:"resolu", diagnostic:diagnosticCode, medecin:medecinName,
         resolvedAt:Date.now(), gagnant: !!won
       }).then(function(){
@@ -636,6 +712,43 @@
         }
       });
     });
+  }
+
+  /* Crée un nouveau dossier à partir des symptômes auto-déclarés par le patient. */
+  function createDossier(patientName, patientFhirId, symptomIds){
+    if(!db) return Promise.resolve(null);
+    var id = "dossier-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,6);
+    var data = {
+      patientName: patientName,
+      patientFhirId: patientFhirId,
+      symptoms: symptomIds,
+      candidates: computeProbableDiagnoses(symptomIds),
+      status: "attente",
+      createdAt: Date.now()
+    };
+    return db.doc("dossiers/"+id).set(data).then(function(){ return id; });
+  }
+
+  /* Normalise un doc "dossiers/{id}" tel que stocké en base vers la forme utilisée
+     par l'affichage et par les constructeurs de ressources FHIR. */
+  function dossierView(id){
+    var raw = live.dossiers[id];
+    if(!raw) return null;
+    return {
+      id:id,
+      patient: { id: raw.patientFhirId, name: raw.patientName },
+      symptoms: raw.symptoms||[],
+      candidates: raw.candidates||[],
+      options: raw.candidates||[],
+      status: raw.status||"attente",
+      diagnostic: raw.diagnostic,
+      medecin: raw.medecin,
+      createdAt: raw.createdAt||0,
+      resolvedAt: raw.resolvedAt
+    };
+  }
+  function allDossiers(){
+    return Object.keys(live.dossiers).map(dossierView).filter(Boolean);
   }
 
   function awardBooster(medecinName, cards){
@@ -717,6 +830,7 @@
     var body = "";
     if(state.screen==="landing") body = viewLanding();
     else if(state.screen==="patientHome") body = viewPatientHome();
+    else if(state.screen==="patientCreate") body = viewPatientCreate();
     else if(state.screen==="dossier") body = viewDossierPatient();
     else if(state.screen==="procheJoin") body = viewProcheJoin();
     else if(state.screen==="medecinHome") body = viewMedecinHome();
@@ -755,63 +869,83 @@
 
   /* ---------------- PATIENT HOME ---------------- */
   function viewPatientHome(){
-    var rows = DOSSIERS.map(function(d){
-      var dyn = live.dossiers[d.id] || {status:"ouvert"};
-      var mine = live.paris[d.id];
-      return dossierCardSummary(d, dyn, mine);
+    var mine = allDossiers().filter(function(d){ return d.patient.name===state.name; })
+      .sort(function(a,b){ return b.createdAt-a.createdAt; });
+    var rows = mine.map(function(d){
+      var pari = live.paris[d.id];
+      return dossierCardSummary(d, pari);
     }).join("");
     return (
-      '<div class="section-head"><h1>Dossiers ouverts au pari</h1><span class="muted">'+esc(state.name)+' · Équipe Patient</span></div>'+
-      '<div class="grid grid-2">'+rows+'</div>'
+      '<div class="section-head"><h1>Mes dossiers</h1><span class="muted">'+esc(state.name)+' · Équipe Patient</span></div>'+
+      '<div class="pack-cta" style="padding:20px;"><button class="btn btn-gold" id="btnNewDossier">➕ Décrire mes symptômes</button>'+
+      '<p class="muted" style="margin-top:8px;">Renseigne tes symptômes, notre algorithme te propose les diagnostics les plus probables avec leur cote.</p></div>'+
+      (mine.length ? '<div class="grid grid-2">'+rows+'</div>' : '<div class="empty">Aucun dossier pour l\'instant — clique ci-dessus pour commencer.</div>')
     );
   }
-  function dossierCardSummary(d, dyn, mine){
-    var statusOuvert = dyn.status!=="resolu";
-    var already = mine && (mine.mises||[]).some(function(m){return m.name===state.name;});
+  function dossierCardSummary(d, pari){
+    var enAttente = d.status!=="resolu";
+    var already = pari && (pari.mises||[]).some(function(m){return m.name===state.name;});
     return (
       '<div class="dossier">'+
         '<div class="dossier-top">'+
-          '<div><h3>'+esc(d.patient.name)+' <span class="faint">· '+d.patient.age+' ans</span></h3><div class="dossier-id mono">'+d.patient.id+'</div></div>'+
-          '<span class="status-tag '+(statusOuvert?"status-ouvert":"status-resolu")+'">'+(statusOuvert?"Ouvert":"Résolu")+'</span>'+
+          '<div><h3>Dossier du '+fmtDate(d.createdAt)+'</h3><div class="dossier-id mono">'+d.patient.id+'</div></div>'+
+          '<span class="status-tag '+(enAttente?"status-ouvert":"status-resolu")+'">'+(enAttente?"En attente du médecin":"Résolu")+'</span>'+
         '</div>'+
-        '<div class="vitals"><span>'+esc(d.motif)+'</span></div>'+
+        '<div class="vitals"><span>'+d.symptoms.map(function(s){return SYMPTOM_LABEL[s]||s;}).join(", ")+'</span></div>'+
         '<div style="padding:14px 20px;">'+
-          (statusOuvert ?
+          (enAttente ?
             '<button class="btn btn-gold btn-sm" data-open="'+d.id+'">'+(already?"Voir mon pari":"Placer un pari")+'</button>' :
-            resultLine(d, dyn, mine)
+            resultLine(d, pari)
           )+
         '</div>'+
       '</div>'
     );
   }
-  function resultLine(d, dyn, mine){
-    var mineBet = mine && (mine.mises||[]).filter(function(m){return m.name===state.name;})[0];
-    if(!mineBet) return '<span class="muted">Diagnostic posé : <b>'+esc(optLabel(d,dyn.diagnostic))+'</b></span>';
-    var won = mine.pronostic === dyn.diagnostic;
-    var gain = won ? Math.round(mineBet.montant*mine.cote) : 0;
+  function resultLine(d, pari){
+    var mineBet = pari && (pari.mises||[]).filter(function(m){return m.name===state.name;})[0];
+    if(!mineBet) return '<span class="muted">Diagnostic posé : <b>'+esc(optLabel(d,d.diagnostic))+'</b></span>';
+    var won = pari.pronostic === d.diagnostic;
+    var gain = won ? Math.round(mineBet.montant*pari.cote) : 0;
     return '<div class="result-banner '+(won?"result-win":"result-lose")+'">'+
-      (won? "🎉 Gagné +"+gain+" 🪙 (pronostic "+esc(optLabel(d,mine.pronostic))+")"
-          : "💀 Perdu -"+mineBet.montant+" 🪙, le vrai diagnostic était "+esc(optLabel(d,dyn.diagnostic)))+
+      (won? "🎉 Gagné +"+gain+" 🪙 (pronostic "+esc(optLabel(d,pari.pronostic))+")"
+          : "💀 Perdu -"+mineBet.montant+" 🪙, le vrai diagnostic était "+esc(optLabel(d,d.diagnostic)))+
       '</div>'+
       (won ? '<button class="btn btn-sm" data-appt="'+d.id+'" style="margin-top:8px;">📅 Récupérer mon rendez-vous de suivi</button>' : '');
   }
 
+  /* ---------------- PATIENT: CREER UN DOSSIER (symptômes) ---------------- */
+  function viewPatientCreate(){
+    var picked = state.pickedSymptoms || [];
+    var chips = SYMPTOMS.map(function(s){
+      var on = picked.indexOf(s.id)>=0;
+      return '<button class="symptom-chip'+(on?" on":"")+'" data-symptom="'+s.id+'">'+s.emoji+' '+esc(s.label)+'</button>';
+    }).join("");
+    return (
+      '<div class="section-head"><h1>Quels sont tes symptômes ?</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      '<p class="muted">Coche tout ce qui s\'applique — notre algorithme d\'aide au pré-diagnostic croisera ça avec sa base de maladies.</p>'+
+      '<div class="symptom-grid">'+chips+'</div>'+
+      '<div class="btn-row" style="margin-top:20px;">'+
+        '<button class="btn btn-gold" id="btnSubmitSymptoms" '+(picked.length?"":"disabled")+'>Envoyer au médecin ('+picked.length+' symptôme'+(picked.length>1?"s":"")+')</button>'+
+      '</div>'
+    );
+  }
+
   /* ---------------- PATIENT: DOSSIER DETAIL / BETTING BOARD ---------------- */
   function viewDossierPatient(){
-    var d = DOSSIER_BY_ID[state.activeDossier];
+    var d = dossierView(state.activeDossier);
     if(!d) return '<div class="empty">Dossier introuvable.</div>';
     var fhirFound = state.fhirCheck && state.fhirCheck[d.id];
-    var dyn = fhirFound ? Object.assign({status:"resolu"}, live.dossiers[d.id], fhirFound) : (live.dossiers[d.id] || {status:"ouvert"});
+    if(fhirFound){ d.status="resolu"; d.diagnostic=fhirFound.diagnostic; d.medecin=fhirFound.medecin; }
     var pari = live.paris[d.id];
-    var resolved = dyn.status==="resolu";
+    var resolved = d.status==="resolu";
     var myBet = pari && (pari.mises||[]).filter(function(m){return m.name===state.name;})[0];
 
-    var rows = d.options.map(function(o){
+    var rows = d.candidates.map(function(o){
       var cls = "odds-row";
-      if(resolved){ cls += (o.code===dyn.diagnostic) ? " winner":" loser"; }
+      if(resolved){ cls += (o.code===d.diagnostic) ? " winner":" loser"; }
       else if(pari && pari.pronostic===o.code) cls += " picked";
       return '<div class="'+cls+'">'+
-        '<span class="odds-name">'+esc(o.label)+(resolved && o.code===dyn.diagnostic?" ✅":"")+'</span>'+
+        '<span class="odds-name">'+esc(o.label)+(resolved && o.code===d.diagnostic?" ✅":"")+'</span>'+
         '<span class="odds-cote tabular">'+o.cote.toFixed(2)+'</span>'+
       '</div>';
     }).join("");
@@ -820,7 +954,7 @@
     if(!resolved){
       if(!pari){
         stakeUI = '<div class="stake-row">'+
-          '<select id="selPronostic">'+d.options.map(function(o){return '<option value="'+o.code+'">'+esc(o.label)+' (cote '+o.cote.toFixed(2)+')</option>';}).join("")+'</select>'+
+          '<select id="selPronostic">'+d.candidates.map(function(o){return '<option value="'+o.code+'">'+esc(o.label)+' (cote '+o.cote.toFixed(2)+')</option>';}).join("")+'</select>'+
           '<input type="number" id="inpMise" value="50" min="1" step="10" style="width:90px;"> 🪙'+
           '<button class="btn btn-gold" id="btnMiser">Placer le pari</button>'+
         '</div>';
@@ -848,17 +982,20 @@
         '<span class="faint" style="font-size:12px;">GET /api/observation?subject.reference=Patient/'+d.patient.id+'</span>'+
       '</div>' : "";
 
+    var waitingBanner = !pari ? "" : (!resolved ?
+      '<div class="note" style="margin:0 0 14px;">📡 Diagnostic en attente du médecin — dès qu\'il/elle publie une Observation FHIR sur ce dossier, ton pari se résout automatiquement.</div>' : "");
+
     return (
-      '<div class="section-head"><h1>'+esc(d.patient.name)+'</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      '<div class="section-head"><h1>Dossier du '+fmtDate(d.createdAt)+'</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
       '<div class="dossier">'+
-        '<div class="vitals"><span><b>Motif</b> · '+esc(d.motif)+'</span><span><b>Symptômes</b> · '+d.symptoms.join(", ")+'</span></div>'+
+        '<div class="vitals"><span><b>Symptômes déclarés</b> · '+d.symptoms.map(function(s){return SYMPTOM_LABEL[s]||s;}).join(", ")+'</span></div>'+
         '<div class="odds-board">'+rows+'</div>'+
         stakeUI+
         proches+
         fhirCheckUI+
-        (resolved ? '<div class="result-banner">Diagnostic officiel posé par le Dr '+esc(dyn.medecin||"—")+' : <b>'+esc(optLabel(d,dyn.diagnostic))+'</b>'+(fhirFound?' <span class="faint">(confirmé via FHIR)</span>':"")+'</div>' : "")+
+        (resolved ? '<div class="result-banner">Diagnostic officiel posé par le Dr '+esc(d.medecin||"—")+' : <b>'+esc(optLabel(d,d.diagnostic))+'</b>'+(fhirFound?' <span class="faint">(confirmé via FHIR)</span>':"")+'</div>' : "")+
       '</div>'+
-      (pari && !resolved ? shareCode : "")
+      (pari && !resolved ? waitingBanner+shareCode : "")
     );
   }
 
@@ -878,11 +1015,11 @@
       var coding = (obs.code && obs.code.coding && obs.code.coding[0]) || {};
       var codeFromServer = coding.code;
       var textFromServer = (obs.code && obs.code.text) || coding.display || "";
-      var match = dossier.options.filter(function(o){ return o.code===codeFromServer; })[0]
-        || dossier.options.filter(function(o){ return o.label.toLowerCase()===textFromServer.toLowerCase(); })[0];
-      if(!match) return null;
+      var matchId = DISEASE_BY_ID[codeFromServer] ? codeFromServer :
+        (DISEASES.filter(function(x){ return x.label.toLowerCase()===String(textFromServer).toLowerCase(); })[0]||{}).id;
+      if(!matchId) return null;
       var medecinName = (obs.performer && obs.performer[0] && obs.performer[0].display) || "—";
-      return { diagnostic: match.code, medecin: medecinName };
+      return { diagnostic: matchId, medecin: medecinName };
     });
   }
 
@@ -893,7 +1030,7 @@
         '<h2>Rejoindre un pari</h2>'+
         '<p class="muted">Entre le code dossier que ton proche t\'a envoyé.</p>'+
         '<div class="btn-row" style="margin-top:14px;">'+
-          '<input type="text" id="inpCode" placeholder="dossier-1" style="flex:1;">'+
+          '<input type="text" id="inpCode" placeholder="dossier-abc123" style="flex:1;">'+
           '<button class="btn btn-gold" id="btnJoin">Voir le pari</button>'+
         '</div>'+
       '</div>'
@@ -903,8 +1040,9 @@
   /* ---------------- MEDECIN HOME ---------------- */
   function viewMedecinHome(){
     var mine = live.medecins[slug(state.name)] || {cards:[],diagCount:0};
-    var open = DOSSIERS.filter(function(d){ var dyn=live.dossiers[d.id]; return !dyn || dyn.status!=="resolu"; });
-    var done = DOSSIERS.filter(function(d){ var dyn=live.dossiers[d.id]; return dyn && dyn.status==="resolu"; });
+    var all = allDossiers();
+    var attente = all.filter(function(d){ return d.status!=="resolu"; }).sort(function(a,b){ return a.createdAt-b.createdAt; });
+    var resolus = all.filter(function(d){ return d.status==="resolu"; }).sort(function(a,b){ return b.resolvedAt-a.resolvedAt; });
     return (
       '<div class="section-head">'+
         '<h1>File d\'attente diagnostic</h1>'+
@@ -915,43 +1053,45 @@
           '<button class="btn btn-sm" id="goTrades">🔁 Échanges</button>'+
         '</div>'+
       '</div>'+
-      '<div class="grid grid-2">'+
-        open.map(function(d){ return medecinDossierSummary(d,false); }).join("")+
-      '</div>'+
-      (done.length ? '<div class="section-head"><h2>Dossiers clôturés</h2></div><div class="grid grid-2">'+
-        done.map(function(d){ return medecinDossierSummary(d,true); }).join("")+'</div>' : "")
+      '<div class="section-head"><h2>En attente de diagnostic</h2><span class="hint muted">'+attente.length+' dossier(s), le plus ancien en premier</span></div>'+
+      (attente.length ? '<div class="grid grid-2">'+attente.map(function(d){ return medecinDossierSummary(d,false); }).join("")+'</div>'
+        : '<div class="empty">Aucun dossier en attente pour l\'instant.</div>')+
+      (resolus.length ? '<div class="section-head"><h2>Dossiers déjà examinés</h2><span class="hint muted">'+resolus.length+' dossier(s), le plus récent en premier</span></div><div class="grid grid-2">'+
+        resolus.map(function(d){ return medecinDossierSummary(d,true); }).join("")+'</div>' : "")
     );
   }
   function medecinDossierSummary(d, closed){
-    var dyn = live.dossiers[d.id]||{};
     var pari = live.paris[d.id];
     return '<div class="dossier"><div class="dossier-top">'+
-      '<div><h3>'+esc(d.patient.name)+' <span class="faint">· '+d.patient.age+' ans</span></h3><div class="dossier-id mono">'+d.patient.id+'</div></div>'+
+      '<div><h3>'+esc(d.patient.name)+'</h3><div class="dossier-id mono">'+fmtDate(d.createdAt)+'</div></div>'+
       (pari ? '<span class="status-tag status-ouvert">'+pari.mises.length+' mise(s)</span>' : '<span class="status-tag status-ouvert">Aucun pari</span>')+
-      '</div><div class="vitals"><span>'+esc(d.motif)+'</span></div>'+
+      '</div><div class="vitals"><span>'+d.symptoms.map(function(s){return SYMPTOM_LABEL[s]||s;}).join(", ")+'</span></div>'+
       '<div style="padding:14px 20px;">'+
-      (closed ? '<span class="muted">Diagnostic posé : <b>'+esc(optLabel(d,dyn.diagnostic))+'</b> par Dr '+esc(dyn.medecin)+'</span>'
+      (closed ? '<span class="muted">Diagnostic posé : <b>'+esc(diseaseLabel(d.diagnostic))+'</b> par Dr '+esc(d.medecin)+' le '+fmtDate(d.resolvedAt)+'</span>'
               : '<button class="btn btn-gold btn-sm" data-mopen="'+d.id+'">Examiner le dossier</button>')+
       '</div></div>';
   }
 
   /* ---------------- MEDECIN: DOSSIER DETAIL ---------------- */
   function viewMedecinDossier(){
-    var d = DOSSIER_BY_ID[state.activeDossier];
+    var d = dossierView(state.activeDossier);
     if(!d) return '<div class="empty">Dossier introuvable.</div>';
     var pari = live.paris[d.id];
+    var optgroups = DISEASE_CATEGORIES.map(function(cat){
+      var opts = DISEASES.filter(function(x){return x.cat===cat;})
+        .map(function(x){return '<option value="'+x.id+'">'+esc(x.label)+'</option>';}).join("");
+      return '<optgroup label="'+esc(cat)+'">'+opts+'</optgroup>';
+    }).join("");
+    var suggested = d.candidates.map(function(o){return o.label;}).join(", ");
     return (
-      '<div class="section-head"><h1>'+esc(d.patient.name)+'</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      '<div class="section-head"><h1>'+esc(d.patient.name)+' <span class="faint" style="font-size:14px;">· dossier du '+fmtDate(d.createdAt)+'</span></h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
       '<div class="dossier">'+
-        '<div class="vitals">'+
-          '<span><b>Temp.</b> '+d.vitals.temp+'</span><span><b>TA</b> '+d.vitals.ta+'</span>'+
-          '<span><b>FC</b> '+d.vitals.fc+'</span><span><b>SpO2</b> '+d.vitals.satO2+'</span>'+
-        '</div>'+
-        '<div style="padding:16px 20px;"><b>Motif</b> · '+esc(d.motif)+'<br><span class="muted">Symptômes : '+d.symptoms.join(", ")+'</span></div>'+
+        '<div style="padding:16px 20px;"><b>Symptômes déclarés par le patient</b><br><span class="muted">'+d.symptoms.map(function(s){return SYMPTOM_LABEL[s]||s;}).join(", ")+'</span></div>'+
+        '<div class="note" style="margin:0 20px 16px;">Pistes suggérées par l\'algorithme au patient (pour info, votre choix n\'est pas limité à celles-ci) : '+esc(suggested)+'</div>'+
         (pari ? '<div class="note" style="margin:0 20px 16px;">Un pari est ouvert sur ce dossier, pot de '+pari.mises.reduce(function(a,m){return a+m.montant;},0)+' 🪙. Ton diagnostic officiel décide qui gagne.</div>' : '')+
         '<div style="padding:0 20px 20px;">'+
           '<h3>Poser le diagnostic officiel (POST Observation FHIR)</h3>'+
-          '<select id="selDiag" style="margin-top:8px;">'+d.options.map(function(o){return '<option value="'+o.code+'">'+esc(o.label)+'</option>';}).join("")+'</select>'+
+          '<select id="selDiag" style="margin-top:8px;">'+optgroups+'</select>'+
           ' <button class="btn btn-gold" id="btnDiag">Valider le diagnostic</button>'+
         '</div>'+
       '</div>'
@@ -1076,14 +1216,26 @@
     if(t.id==="goColleagues"){ sfx.click(); setState({screen:"colleagues", viewingColleague:null}); return; }
     if(t.id==="goTrades"){ sfx.click(); setState({screen:"trades"}); return; }
 
+    if(t.id==="btnNewDossier"){
+      sfx.click(); setState({screen:"patientCreate", pickedSymptoms:[]}); return;
+    }
+    if(t.hasAttribute && t.hasAttribute("data-symptom")){
+      sfx.click();
+      var symId = t.getAttribute("data-symptom");
+      var list = (state.pickedSymptoms||[]).slice();
+      var idx = list.indexOf(symId);
+      if(idx>=0) list.splice(idx,1); else list.push(symId);
+      setState({pickedSymptoms:list});
+      return;
+    }
     if(t.hasAttribute && t.hasAttribute("data-open")){
       sfx.click(); setState({screen:"dossier", activeDossier:t.getAttribute("data-open")}); return;
     }
     if(t.hasAttribute && t.hasAttribute("data-mopen")){
-      var dOpen = DOSSIER_BY_ID[t.getAttribute("data-mopen")];
+      var dOpen = dossierView(t.getAttribute("data-mopen"));
       sfx.click();
       var myPractId = PRACTITIONER_IDS[state.name];
-      fhirClient.getPatient(dOpen.patient.id);
+      fhirClient.getPatient(dOpen.patient.id, dOpen.patient.name);
       if(myPractId) fhirClient.getPractitioner(myPractId, state.name);
       setState({screen:"medecinDossier", activeDossier:t.getAttribute("data-mopen")});
       return;
@@ -1092,7 +1244,7 @@
       setState({viewingColleague:t.getAttribute("data-view")}); return;
     }
     if(t.hasAttribute && t.hasAttribute("data-check")){
-      var dCheck = DOSSIER_BY_ID[t.getAttribute("data-check")];
+      var dCheck = dossierView(t.getAttribute("data-check"));
       t.disabled = true; t.textContent = "Interrogation du serveur FHIR…";
       checkFhirForDiagnosis(dCheck).then(function(found){
         t.disabled = false;
@@ -1111,9 +1263,9 @@
       return;
     }
     if(t.hasAttribute && t.hasAttribute("data-appt")){
-      var d = DOSSIER_BY_ID[t.getAttribute("data-appt")];
+      var d = dossierView(t.getAttribute("data-appt"));
       sfx.coin();
-      fhirClient.getPatient(d.patient.id).then(function(){
+      fhirClient.getPatient(d.patient.id, d.patient.name).then(function(){
         return fhirClient.createAppointment(buildAppointmentResource(d));
       }).then(function(appt){
         alert("Rendez-vous de suivi confirmé pour le "+new Date(appt.start).toLocaleDateString("fr-FR")+" (Appointment/"+appt.id+")");
@@ -1123,18 +1275,34 @@
       return;
     }
 
+    if(t.id==="btnSubmitSymptoms"){
+      var symptoms = state.pickedSymptoms||[];
+      if(!symptoms.length) return;
+      t.disabled = true; t.textContent = "Envoi au serveur FHIR…";
+      sfx.place();
+      ensurePatientFhirId(state.name).then(function(fhirId){
+        return createDossier(state.name, fhirId, symptoms);
+      }).then(function(newId){
+        if(newId) setState({screen:"dossier", activeDossier:newId, pickedSymptoms:[]});
+        else { t.disabled=false; t.textContent="Envoyer au médecin"; }
+      }).catch(function(){
+        alert("Impossible de joindre l'API FHIR (voir la console FHIR).");
+        t.disabled = false; t.textContent = "Envoyer au médecin";
+      });
+      return;
+    }
     if(t.id==="btnMiser"){
       var sel = document.getElementById("selPronostic"), inp = document.getElementById("inpMise");
-      var d2 = DOSSIER_BY_ID[state.activeDossier];
+      var d2 = dossierView(state.activeDossier);
       var code = sel.value, montant = parseInt(inp.value,10)||10;
       sfx.place();
-      fhirClient.getPatient(d2.patient.id).then(function(){
+      fhirClient.getPatient(d2.patient.id, d2.patient.name).then(function(){
         return placeBet(d2.id, code, optCote(d2,code), state.name, montant, "patient");
       });
       return;
     }
     if(t.id==="btnRejoindre"){
-      var d3 = DOSSIER_BY_ID[state.activeDossier];
+      var d3 = dossierView(state.activeDossier);
       var inp2 = document.getElementById("inpMiseJoin");
       var pari = live.paris[d3.id];
       sfx.place();
@@ -1143,7 +1311,7 @@
     }
     if(t.id==="btnJoin"){
       var code2 = document.getElementById("inpCode").value.trim();
-      if(DOSSIER_BY_ID[code2]){
+      if(live.dossiers[code2]){
         state.role = "proche";
         var procheName = prompt("Ton prénom, pour la mise ?","Proche");
         state.name = procheName || "Proche anonyme";
@@ -1153,10 +1321,10 @@
     }
 
     if(t.id==="btnDiag"){
-      var d4 = DOSSIER_BY_ID[state.activeDossier];
+      var d4 = dossierView(state.activeDossier);
       var diagCode = document.getElementById("selDiag").value;
       sfx.win();
-      fhirClient.createObservation(buildObservationResource(d4, diagCode, optLabel(d4,diagCode), state.name)).then(function(){
+      fhirClient.createObservation(buildObservationResource(d4, diagCode, diseaseLabel(diagCode), state.name)).then(function(){
         return resolveDossier(d4.id, diagCode, state.name);
       }).then(function(){
         var cards = [drawCard(), drawCard(), drawCard()];
