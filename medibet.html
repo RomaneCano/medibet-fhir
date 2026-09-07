@@ -582,6 +582,66 @@
     getAppointment: function(id){
       var mock = { resourceType:"Appointment", id:id, status:"booked" };
       return request("GET", "/api/appointment/"+id, null, mock);
+    },
+    /* Ressource FHIR générique "Basic" — prévue par le standard pour tout ce qui n'a pas
+       de type dédié. On l'utilise comme backend de jeu réel (dossiers, paris, collections,
+       échanges), partagé pour de vrai entre tous les postes via le serveur du TP, sans
+       dépendre d'un état côté Claude qui n'existe pas hors de l'artifact. */
+    listBasic: function(){ return request("GET", "/api/basic", null, []); },
+    createBasic: function(body){
+      var mock = Object.assign({resourceType:"Basic", id:newId("basic")}, body);
+      return request("POST", "/api/basic", body, mock);
+    },
+    updateBasic: function(id, body){
+      var mock = Object.assign({resourceType:"Basic", id:id}, body);
+      return request("PUT", "/api/basic/"+id, body, mock);
+    }
+  };
+
+  /* ---------------- gameStore : état de jeu partagé via ressources FHIR Basic ----------------
+     Chaque dossier/pari/médecin/échange est une ressource Basic, avec code.text pour le type
+     et une extension par champ (JSON.stringify pour les valeurs composées). Utilisé partout où
+     la capacité "db" de Claude n'est pas disponible (site public Netlify, exécution locale) —
+     c'est donc le chemin qui tourne réellement pendant la démonstration en conditions réelles. */
+  var GAME_TYPE = { dossier:"medibet-dossier", pari:"medibet-pari", medecin:"medibet-medecin", trade:"medibet-trade" };
+  function gsEncode(type, obj){
+    var extension = Object.keys(obj).filter(function(k){ return k!=="_id"; }).map(function(k){
+      var v = obj[k];
+      return { url:k, valueString: typeof v==="string" ? v : JSON.stringify(v) };
+    });
+    return { resourceType:"Basic", code:{text:type}, extension:extension };
+  }
+  function gsDecode(resource){
+    var o = {};
+    (resource.extension||[]).forEach(function(e){
+      var raw = e.valueString;
+      var parsed = raw;
+      try{ parsed = JSON.parse(raw); }catch(err){ parsed = raw; }
+      o[e.url] = parsed;
+    });
+    o._id = resource.id;
+    return o;
+  }
+  var gameStore = {
+    fetchAll: function(){
+      return fhirClient.listBasic().then(function(list){
+        var buckets = { dossiers:{}, paris:{}, medecins:{}, trades:{} };
+        (list||[]).forEach(function(r){
+          var type = r.code && r.code.text;
+          var obj = gsDecode(r);
+          if(type===GAME_TYPE.dossier) buckets.dossiers[r.id] = obj;
+          else if(type===GAME_TYPE.pari) buckets.paris[obj.dossierId] = obj;
+          else if(type===GAME_TYPE.medecin) buckets.medecins[obj.slug] = obj;
+          else if(type===GAME_TYPE.trade) buckets.trades[r.id] = obj;
+        });
+        return buckets;
+      });
+    },
+    create: function(type, obj){
+      return fhirClient.createBasic(gsEncode(type, obj)).then(function(r){ return r.id; });
+    },
+    update: function(id, type, obj){
+      return fhirClient.updateBasic(id, gsEncode(type, obj));
     }
   };
 
@@ -643,13 +703,37 @@
     o.connect(g); g.connect(c.destination);
     o.start(c.currentTime+start); o.stop(c.currentTime+start+dur+.02);
   }
+  /* Glissando (sirène/boing/trombone) — sweep de fréquence entre f0 et f1. */
+  function sweep(f0, f1, start, dur, type, gain){
+    var c = ac(); if(!c) return;
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type||"sine";
+    o.frequency.setValueAtTime(Math.max(f0,1), c.currentTime+start);
+    o.frequency.exponentialRampToValueAtTime(Math.max(f1,1), c.currentTime+start+dur);
+    g.gain.setValueAtTime(0, c.currentTime+start);
+    g.gain.linearRampToValueAtTime(gain||.06, c.currentTime+start+.008);
+    g.gain.exponentialRampToValueAtTime(.0001, c.currentTime+start+dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(c.currentTime+start); o.stop(c.currentTime+start+dur+.02);
+  }
   var sfx = {
-    click:function(){ tone(600,0,.05,"square",.03); },
-    coin:function(){ tone(880,0,.08,"square",.05); tone(1320,.07,.12,"square",.05); },
-    place:function(){ tone(300,0,.08,"sawtooth",.04); tone(500,.06,.1,"sawtooth",.04); },
-    pack:function(){ for(var i=0;i<10;i++) tone(400+i*60, i*.03, .09, "triangle", .035); },
-    win:function(){ [523,659,784,1046].forEach(function(f,i){ tone(f, i*.09, .3,"triangle",.06); }); },
-    lose:function(){ tone(220,0,.28,"sawtooth",.05); tone(160,.12,.32,"sawtooth",.05); },
+    click:function(){ sweep(500,750,0,.05,"sine",.03); },
+    coin:function(){ tone(880,0,.07,"square",.05); tone(1320,.06,.1,"square",.05); tone(1760,.11,.08,"square",.04); },
+    place:function(){ sweep(280,760,0,.16,"square",.045); },
+    pack:function(){
+      for(var i=0;i<10;i++) tone(400+i*60, i*.03, .09, "triangle", .035);
+      sweep(220,1100,.32,.16,"sine",.05);
+    },
+    win:function(){
+      [523,659,784,1046].forEach(function(f,i){ tone(f, i*.09, .3,"triangle",.06); });
+      sweep(1200,2200,.38,.22,"square",.045);
+    },
+    lose:function(){
+      sweep(320,140,0,.32,"sawtooth",.06);
+      sweep(300,110,.3,.38,"sawtooth",.06);
+    },
+    boing:function(){ sweep(180,920,0,.09,"sine",.07); sweep(920,140,.08,.22,"sine",.06); },
+    honk:function(){ tone(240,0,.09,"square",.06); tone(190,.09,.14,"square",.06); },
     legendary:function(){ for(var i=0;i<16;i++) tone(300+i*90, i*.045, .18, "triangle", .045); }
   };
 
@@ -676,48 +760,65 @@
   var live = { dossiers:{}, paris:{}, medecins:{}, trades:{} };
 
   function ensureMedecinDoc(name){
-    if(!db) return Promise.resolve();
-    var id = slug(name);
-    return db.doc("medecins/"+id).get().then(function(snap){
-      if(!snap.exists){
-        return db.doc("medecins/"+id).set({ name:name, cards:[], diagCount:0, createdAt:Date.now() });
-      }
-    });
+    var s = slug(name);
+    if(db){
+      return db.doc("medecins/"+s).get().then(function(snap){
+        if(!snap.exists){
+          return db.doc("medecins/"+s).set({ name:name, cards:[], diagCount:0, createdAt:Date.now() });
+        }
+      });
+    }
+    if(live.medecins[s]) return Promise.resolve();
+    return gameStore.create(GAME_TYPE.medecin, { slug:s, name:name, cards:[], diagCount:0, boostersOpened:0, createdAt:Date.now() });
   }
   function slug(s){ return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,""); }
 
   function placeBet(dossierId, pronosticCode, cote, name, montant, role){
-    if(!db) return Promise.resolve();
-    var ref = db.doc("paris/"+dossierId);
-    return ref.get().then(function(snap){
-      var data = snap.exists ? snap.data() : { dossierId:dossierId, pronostic:pronosticCode, cote:cote, mises:[], status:"ouvert" };
-      data.mises = (data.mises||[]).concat([{ name:name, montant:montant, role:role, t:Date.now() }]);
-      return ref.set(data);
-    });
+    var mise = { name:name, montant:montant, role:role, t:Date.now() };
+    if(db){
+      var ref = db.doc("paris/"+dossierId);
+      return ref.get().then(function(snap){
+        var data = snap.exists ? snap.data() : { dossierId:dossierId, pronostic:pronosticCode, cote:cote, mises:[], status:"ouvert" };
+        data.mises = (data.mises||[]).concat([mise]);
+        return ref.set(data);
+      });
+    }
+    var existing = live.paris[dossierId];
+    if(existing){
+      return gameStore.update(existing._id, GAME_TYPE.pari, Object.assign({}, existing, { mises:(existing.mises||[]).concat([mise]) }));
+    }
+    return gameStore.create(GAME_TYPE.pari, { dossierId:dossierId, pronostic:pronosticCode, cote:cote, mises:[mise], status:"ouvert" });
   }
 
   function resolveDossier(dossierId, diagnosticCode, medecinName){
-    if(!db) return Promise.resolve();
-    var dossierRef = db.doc("dossiers/"+dossierId);
-    var pariRef = db.doc("paris/"+dossierId);
-    return pariRef.get().then(function(snap){
-      var pari = snap.exists ? snap.data() : null;
-      var won = pari && pari.pronostic === diagnosticCode;
-      return dossierRef.update({
-        status:"resolu", diagnostic:diagnosticCode, medecin:medecinName,
-        resolvedAt:Date.now(), gagnant: !!won
-      }).then(function(){
-        if(pari){
-          return pariRef.set(Object.assign({}, pari, { status: won?"gagne":"perdu" }));
-        }
+    if(db){
+      var dossierRef = db.doc("dossiers/"+dossierId);
+      var pariRef = db.doc("paris/"+dossierId);
+      return pariRef.get().then(function(snap){
+        var pari = snap.exists ? snap.data() : null;
+        var won = pari && pari.pronostic === diagnosticCode;
+        return dossierRef.update({
+          status:"resolu", diagnostic:diagnosticCode, medecin:medecinName,
+          resolvedAt:Date.now(), gagnant: !!won
+        }).then(function(){
+          if(pari){
+            return pariRef.set(Object.assign({}, pari, { status: won?"gagne":"perdu" }));
+          }
+        });
       });
-    });
+    }
+    var dossier = live.dossiers[dossierId];
+    var pari = live.paris[dossierId];
+    var won = pari && pari.pronostic === diagnosticCode;
+    var p1 = gameStore.update(dossierId, GAME_TYPE.dossier, Object.assign({}, dossier, {
+      status:"resolu", diagnostic:diagnosticCode, medecin:medecinName, resolvedAt:Date.now(), gagnant: !!won
+    }));
+    var p2 = pari ? gameStore.update(pari._id, GAME_TYPE.pari, Object.assign({}, pari, { status: won?"gagne":"perdu" })) : Promise.resolve();
+    return Promise.all([p1,p2]);
   }
 
   /* Crée un nouveau dossier à partir des symptômes auto-déclarés par le patient. */
   function createDossier(patientName, patientFhirId, symptomIds){
-    if(!db) return Promise.resolve(null);
-    var id = "dossier-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,6);
     var data = {
       patientName: patientName,
       patientFhirId: patientFhirId,
@@ -726,7 +827,11 @@
       status: "attente",
       createdAt: Date.now()
     };
-    return db.doc("dossiers/"+id).set(data).then(function(){ return id; });
+    if(db){
+      var id = "dossier-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,6);
+      return db.doc("dossiers/"+id).set(data).then(function(){ return id; });
+    }
+    return gameStore.create(GAME_TYPE.dossier, data);
   }
 
   /* Normalise un doc "dossiers/{id}" tel que stocké en base vers la forme utilisée
@@ -752,50 +857,79 @@
   }
 
   function awardBooster(medecinName, cards){
-    if(!db) return Promise.resolve();
-    var id = slug(medecinName);
-    var ref = db.doc("medecins/"+id);
-    return ref.get().then(function(snap){
-      var data = snap.exists? snap.data() : {name:medecinName, cards:[], diagCount:0};
-      var owned = data.cards||[];
-      cards.forEach(function(c){
-        var found = owned.filter(function(o){return o.id===c.id;})[0];
-        if(found) found.count = (found.count||1)+1;
-        else owned.push({id:c.id, count:1});
+    var s = slug(medecinName);
+    if(db){
+      var ref = db.doc("medecins/"+s);
+      return ref.get().then(function(snap){
+        var data = snap.exists? snap.data() : {name:medecinName, cards:[], diagCount:0};
+        var owned = data.cards||[];
+        cards.forEach(function(c){
+          var found = owned.filter(function(o){return o.id===c.id;})[0];
+          if(found) found.count = (found.count||1)+1;
+          else owned.push({id:c.id, count:1});
+        });
+        data.cards = owned;
+        data.diagCount = (data.diagCount||0)+1;
+        return ref.set(data);
       });
-      data.cards = owned;
-      data.diagCount = (data.diagCount||0)+1;
-      return ref.set(data);
+    }
+    var existing = live.medecins[s] || {slug:s, name:medecinName, cards:[], diagCount:0, boostersOpened:0};
+    var owned2 = (existing.cards||[]).slice();
+    cards.forEach(function(c){
+      var found = owned2.filter(function(o){return o.id===c.id;})[0];
+      if(found) found.count = (found.count||1)+1; else owned2.push({id:c.id, count:1});
     });
+    var patch = Object.assign({}, existing, { cards:owned2, diagCount:(existing.diagCount||0)+1 });
+    return existing._id ? gameStore.update(existing._id, GAME_TYPE.medecin, patch) : gameStore.create(GAME_TYPE.medecin, patch);
   }
 
   function proposeTrade(from, offerCardId, wantCardId){
-    if(!db) return Promise.resolve();
-    return db.collection("trades").add({ from:from, offerCardId:offerCardId, wantCardId:wantCardId, status:"ouvert", t:Date.now() });
+    var data = { from:from, offerCardId:offerCardId, wantCardId:wantCardId, status:"ouvert", t:Date.now() };
+    if(db) return db.collection("trades").add(data);
+    return gameStore.create(GAME_TYPE.trade, data);
   }
   function acceptTrade(trade, byName){
-    if(!db) return Promise.resolve();
-    var fromRef = db.doc("medecins/"+slug(trade.from));
-    var toRef = db.doc("medecins/"+slug(byName));
-    return Promise.all([fromRef.get(), toRef.get()]).then(function(results){
-      var fromData = results[0].data(), toData = results[1].data();
-      function removeOne(list, cardId){
-        var f = list.filter(function(c){return c.id===cardId;})[0];
-        if(f){ f.count--; }
-        return list.filter(function(c){return c.count>0;});
-      }
-      function addOne(list, cardId){
-        var f = list.filter(function(c){return c.id===cardId;})[0];
-        if(f) f.count = (f.count||1)+1; else list.push({id:cardId, count:1});
-        return list;
-      }
-      fromData.cards = addOne(removeOne(fromData.cards||[], trade.offerCardId), trade.wantCardId);
-      toData.cards = addOne(removeOne(toData.cards||[], trade.wantCardId), trade.offerCardId);
-      return Promise.all([
-        fromRef.set(fromData), toRef.set(toData),
-        db.doc("trades/"+trade._id).set(Object.assign({}, trade, {status:"accepte"}))
-      ]);
-    });
+    if(db){
+      var fromRef = db.doc("medecins/"+slug(trade.from));
+      var toRef = db.doc("medecins/"+slug(byName));
+      return Promise.all([fromRef.get(), toRef.get()]).then(function(results){
+        var fromData = results[0].data(), toData = results[1].data();
+        function removeOne(list, cardId){
+          var f = list.filter(function(c){return c.id===cardId;})[0];
+          if(f){ f.count--; }
+          return list.filter(function(c){return c.count>0;});
+        }
+        function addOne(list, cardId){
+          var f = list.filter(function(c){return c.id===cardId;})[0];
+          if(f) f.count = (f.count||1)+1; else list.push({id:cardId, count:1});
+          return list;
+        }
+        fromData.cards = addOne(removeOne(fromData.cards||[], trade.offerCardId), trade.wantCardId);
+        toData.cards = addOne(removeOne(toData.cards||[], trade.wantCardId), trade.offerCardId);
+        return Promise.all([
+          fromRef.set(fromData), toRef.set(toData),
+          db.doc("trades/"+trade._id).set(Object.assign({}, trade, {status:"accepte"}))
+        ]);
+      });
+    }
+    function removeOneG(list, cardId){
+      var f = list.filter(function(c){return c.id===cardId;})[0];
+      if(f){ f.count--; }
+      return list.filter(function(c){return c.count>0;});
+    }
+    function addOneG(list, cardId){
+      var f = list.filter(function(c){return c.id===cardId;})[0];
+      if(f) f.count = (f.count||1)+1; else list.push({id:cardId, count:1});
+      return list;
+    }
+    var fromData = live.medecins[slug(trade.from)], toData = live.medecins[slug(byName)];
+    var fromPatch = Object.assign({}, fromData, { cards: addOneG(removeOneG((fromData.cards||[]).slice(), trade.offerCardId), trade.wantCardId) });
+    var toPatch = Object.assign({}, toData, { cards: addOneG(removeOneG((toData.cards||[]).slice(), trade.wantCardId), trade.offerCardId) });
+    return Promise.all([
+      gameStore.update(fromData._id, GAME_TYPE.medecin, fromPatch),
+      gameStore.update(toData._id, GAME_TYPE.medecin, toPatch),
+      gameStore.update(trade._id, GAME_TYPE.trade, Object.assign({}, trade, { status:"accepte" }))
+    ]);
   }
 
   /* ---------------- state ---------------- */
@@ -1254,6 +1388,7 @@
           sfx.win();
           render();
         } else {
+          sfx.honk();
           t.textContent = "Aucun diagnostic pour l'instant, réessayer";
         }
       }).catch(function(){
@@ -1339,6 +1474,7 @@
     }
 
     if(t.id==="btnOpenPack"){
+      sfx.boing();
       openBoosterFlow();
       return;
     }
@@ -1375,9 +1511,8 @@
     });
     overlay.querySelector("#btnCloseReveal").onclick = function(){
       overlay.remove();
-      var id = slug(state.name);
-      db.doc("medecins/"+id).get().then(function(snap){
-        var data = snap.data();
+      var s = slug(state.name);
+      function applyPack(data){
         data.boostersOpened = (data.boostersOpened||0)+1;
         var owned = data.cards||[];
         cards.forEach(function(c){
@@ -1385,8 +1520,16 @@
           if(found) found.count = (found.count||1)+1; else owned.push({id:c.id,count:1});
         });
         data.cards = owned;
-        db.doc("medecins/"+id).set(data);
-      });
+        return data;
+      }
+      if(db){
+        db.doc("medecins/"+s).get().then(function(snap){
+          db.doc("medecins/"+s).set(applyPack(snap.data()));
+        });
+      } else {
+        var existing = live.medecins[s];
+        if(existing) gameStore.update(existing._id, GAME_TYPE.medecin, applyPack(Object.assign({}, existing)));
+      }
     };
   }
 
@@ -1454,14 +1597,30 @@
     }, function(){});
   }
 
+  /* Site public / exécution locale : pas de capacité "db" Claude disponible, donc l'état de
+     jeu partagé tourne entièrement sur les ressources FHIR Basic (voir gameStore), avec un
+     rafraîchissement périodique en l'absence de push temps réel côté serveur. */
+  function startPolling(){
+    function tick(){
+      gameStore.fetchAll().then(function(buckets){
+        live = buckets;
+        render();
+      }).catch(function(){});
+    }
+    tick();
+    setInterval(tick, 4000);
+  }
+
   render();
 
   if(window.claude && window.claude.use){
     window.claude.use("db").then(function(d){
       db = d;
       if(db){ dbReady = true; subscribe(); }
-      else { render(); }
+      else { startPolling(); }
     });
+  } else {
+    startPolling();
   }
 
 })();
