@@ -1,0 +1,1157 @@
+<title>MediBet</title>
+<meta name="description" content="Le jackpot du diagnostic : les patients misent sur leur maladie, les médecins tranchent et ouvrent des boosters.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#0a0d12;
+    --panel:#121722;
+    --panel2:#182031;
+    --raised:#1d273b;
+    --ink:#eef3f7;
+    --muted:#8ea0b5;
+    --faint:#5b6c82;
+    --gold:#ffb400;
+    --gold-ink:#3a2600;
+    --crimson:#ff4d5e;
+    --mint:#34e2a1;
+    --violet:#b98bff;
+    --line:#243149;
+    --line-soft:#1a2334;
+    --shadow: 0 20px 50px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #1a2540 0%, transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{background:var(--gold);color:var(--gold-ink);}
+  a{color:var(--gold);}
+  button{font-family:inherit;}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+  .tabular{font-variant-numeric:tabular-nums;}
+
+  /* ---------- shell ---------- */
+  #app{max-width:1180px;margin:0 auto;padding:0 20px 60px;}
+
+  .marquee{
+    position:sticky;top:0;z-index:40;
+    background:linear-gradient(180deg, #0d121b 0%, #0d121bee 80%, transparent);
+    padding:18px 0 10px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--line-soft);
+    backdrop-filter:blur(6px);
+  }
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand .logo{
+    font-family:"Monoton",cursive;
+    font-size:30px;letter-spacing:2px;
+    color:var(--gold);
+    text-shadow:0 0 6px rgba(255,180,0,.55), 0 0 22px rgba(255,180,0,.25);
+  }
+  .brand .tag{font-size:11px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+  .marquee-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--panel2);border:1px solid var(--line);
+    border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);
+  }
+  .pill b{color:var(--ink);font-weight:600;}
+  .btn{
+    appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--ink);
+    padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;
+    transition:transform .12s ease, border-color .12s ease, background .12s ease;
+  }
+  .btn:hover{border-color:var(--gold);transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+  .btn-gold{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;border:none;box-shadow:0 8px 20px -8px rgba(255,180,0,.6);}
+  .btn-gold:hover{filter:brightness(1.06);}
+  .btn-ghost{background:transparent;}
+  .btn-danger{border-color:rgba(255,77,94,.4);color:var(--crimson);}
+  .btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px;}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  main{padding-top:26px;}
+  h1,h2,h3{text-wrap:balance;margin:0 0 4px;}
+  h1{font-size:26px;}
+  h2{font-size:19px;}
+  h3{font-size:15px;}
+  .muted{color:var(--muted);}
+  .faint{color:var(--faint);}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:34px 0 14px;flex-wrap:wrap;}
+  .section-head:first-child{margin-top:0;}
+
+  .card{
+    background:var(--panel);border:1px solid var(--line-soft);border-radius:16px;
+    padding:20px;box-shadow:var(--shadow);
+  }
+  .grid{display:grid;gap:16px;}
+  .grid-2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));}
+  .grid-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+
+  /* ---------- landing ---------- */
+  .landing{display:grid;place-items:center;min-height:70vh;text-align:center;}
+  .landing .logo-big{
+    font-family:"Monoton",cursive;font-size:clamp(42px,9vw,84px);
+    color:var(--gold);text-shadow:0 0 10px rgba(255,180,0,.55), 0 0 40px rgba(255,180,0,.3);
+    margin-bottom:6px; animation:flicker 4s infinite;
+  }
+  @keyframes flicker{
+    0%,100%{opacity:1;} 92%{opacity:1;} 93%{opacity:.6;} 94%{opacity:1;} 96%{opacity:.75;} 97%{opacity:1;}
+  }
+  .landing p.sub{color:var(--muted);font-size:15px;max-width:520px;margin:0 auto 30px;}
+  .role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:760px;width:100%;}
+  .role-card{
+    background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:26px 20px;cursor:pointer;
+    transition:.15s ease; text-align:left;
+  }
+  .role-card:hover{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 14px 30px -14px rgba(255,180,0,.35);}
+  .role-card .emoji{font-size:34px;}
+  .role-card h3{margin-top:10px;font-size:17px;}
+  .role-card p{color:var(--muted);font-size:13px;margin:6px 0 0;}
+
+  .roster{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;}
+  .name-chip{
+    border:1px solid var(--line);background:var(--panel2);color:var(--ink);
+    padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:500;
+  }
+  .name-chip:hover{border-color:var(--gold);}
+  .name-chip.active{border-color:var(--gold);background:rgba(255,180,0,.12);}
+
+  /* ---------- dossier / betting board ---------- */
+  .dossier{
+    background:var(--panel);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden;
+  }
+  .dossier-top{padding:18px 20px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line-soft);}
+  .dossier-id{font-size:11px;color:var(--faint);}
+  .status-tag{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+  .status-ouvert{background:rgba(52,226,161,.12);color:var(--mint);border:1px solid rgba(52,226,161,.3);}
+  .status-resolu{background:rgba(139,148,255,.12);color:var(--violet);border:1px solid rgba(185,139,255,.3);}
+  .vitals{display:flex;gap:18px;flex-wrap:wrap;padding:14px 20px;font-size:13px;color:var(--muted);background:var(--panel2);}
+  .vitals b{color:var(--ink);}
+  .odds-board{padding:10px 14px;display:flex;flex-direction:column;gap:0;}
+  .odds-row{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 8px;border-bottom:1px dashed var(--line-soft);
+  }
+  .odds-row:last-child{border-bottom:none;}
+  .odds-name{font-weight:600;font-size:14.5px;}
+  .odds-cote{
+    font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:17px;color:var(--gold);
+    background:rgba(255,180,0,.08);border:1px solid rgba(255,180,0,.25);border-radius:8px;
+    padding:4px 10px;min-width:64px;text-align:center;
+  }
+  .odds-row.picked{background:rgba(255,180,0,.06);border-radius:10px;}
+  .odds-row.winner{background:rgba(52,226,161,.08);}
+  .odds-row.loser{opacity:.55;}
+
+  .stake-row{display:flex;gap:10px;align-items:center;padding:16px 20px;background:var(--panel2);flex-wrap:wrap;}
+  input[type=number], input[type=text]{
+    background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+    padding:9px 11px;font-size:14px;font-family:"IBM Plex Mono",monospace;
+  }
+  .mise-list{padding:12px 20px;display:flex;flex-direction:column;gap:6px;}
+  .mise-item{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--line-soft);}
+  .mise-item b{color:var(--ink);}
+  .pot-total{padding:14px 20px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);border-top:1px solid var(--line-soft);}
+
+  .result-banner{padding:16px 20px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:10px;}
+  .result-win{color:var(--mint);}
+  .result-lose{color:var(--crimson);}
+
+  /* ---------- booster / cards ---------- */
+  .pack-cta{
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;
+    padding:40px 20px;text-align:center;
+  }
+  .pack-art{
+    width:120px;height:160px;border-radius:14px;
+    background:linear-gradient(145deg,#2a1a4d,#5b2fa8 40%,#ffb400 140%);
+    box-shadow:0 20px 45px -18px rgba(255,180,0,.5), inset 0 0 0 2px rgba(255,255,255,.15);
+    display:grid;place-items:center;font-size:38px;cursor:pointer;
+    animation:float 3.2s ease-in-out infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-10px) rotate(2deg);}}
+
+  .rarity-COMMUN{--rc:#8ea0b5;}
+  .rarity-RARE{--rc:#4da3ff;}
+  .rarity-EPIQUE{--rc:#b98bff;}
+  .rarity-LEGENDAIRE{--rc:#ffb400;}
+  .rarity-MYTHIQUE{--rc:#ff4d5e;}
+
+  .card-tile{
+    border-radius:14px;border:1px solid var(--line);background:var(--panel2);
+    padding:14px;text-align:center;position:relative;overflow:hidden;
+  }
+  .card-tile .glow{position:absolute;inset:-40%;background:radial-gradient(circle,var(--rc) 0%,transparent 65%);opacity:.18;pointer-events:none;}
+  .card-tile .emoji{font-size:36px;display:block;margin-bottom:8px;filter:drop-shadow(0 0 8px var(--rc));}
+  .card-tile .name{font-weight:700;font-size:13px;}
+  .card-tile .rarity{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--rc);font-weight:700;margin-top:4px;}
+  .card-tile .count{position:absolute;top:8px;right:10px;font-size:11px;color:var(--muted);font-family:"IBM Plex Mono",monospace;}
+  .card-tile.owned-0{opacity:.28;filter:grayscale(1);}
+
+  .reveal-overlay{
+    position:fixed;inset:0;background:rgba(4,6,10,.86);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:22px;
+  }
+  .reveal-cards{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;max-width:640px;}
+  .reveal-card{
+    width:140px;padding:18px 10px;border-radius:16px;background:var(--panel);
+    border:2px solid var(--rc);text-align:center;
+    box-shadow:0 0 30px -6px var(--rc);
+    animation:pop .5s cubic-bezier(.2,1.5,.4,1) both;
+  }
+  @keyframes pop{from{transform:scale(.3) rotate(-8deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
+  .reveal-card .emoji{font-size:46px;}
+  .reveal-card .name{font-weight:700;font-size:13.5px;margin-top:8px;}
+  .reveal-card .rarity{font-size:10.5px;color:var(--rc);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-top:4px;}
+
+  /* ---------- trades / colleagues ---------- */
+  .medecin-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line-soft);}
+  .medecin-row:last-child{border-bottom:none;}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-size:15px;}
+
+  .trade-item{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line-soft);font-size:13.5px;}
+  select{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13.5px;}
+
+  /* ---------- fhir console ---------- */
+  .fhir-toggle{
+    position:fixed;bottom:18px;right:18px;z-index:60;
+    background:var(--panel2);border:1px solid var(--line);color:var(--mint);
+    border-radius:999px;padding:10px 16px;font-size:12.5px;font-family:"IBM Plex Mono",monospace;
+    cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;
+  }
+  .fhir-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);animation:blink 1.6s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .fhir-console{
+    position:fixed;bottom:0;left:0;right:0;height:280px;background:#070a0f;border-top:1px solid var(--line);
+    z-index:59;transform:translateY(100%);transition:transform .25s ease;
+    display:flex;flex-direction:column;
+  }
+  .fhir-console.open{transform:translateY(0);}
+  .fhir-console-head{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line-soft);}
+  .fhir-console-head .title{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--mint);}
+  .fhir-log{flex:1;overflow-y:auto;padding:10px 16px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.65;}
+  .fhir-log .l{margin-bottom:9px;white-space:pre-wrap;word-break:break-all;}
+  .fhir-log .m{color:var(--gold);}
+  .fhir-log .p{color:var(--muted);}
+  .fhir-log .r{color:var(--faint);padding-left:14px;}
+
+  .note{
+    font-size:12.5px;color:var(--faint);border:1px dashed var(--line);border-radius:10px;padding:10px 14px;
+    background:var(--panel2);
+  }
+  .empty{padding:34px 20px;text-align:center;color:var(--muted);font-size:14px;}
+  .kbd{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-family:"IBM Plex Mono",monospace;font-size:12px;}
+
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+</style>
+
+<div id="app"></div>
+<button class="fhir-toggle" id="fhirToggle"><span class="fhir-dot"></span> FHIR trace</button>
+<div class="fhir-console" id="fhirConsole">
+  <div class="fhir-console-head">
+    <span class="title">// api.alliance4u.io — flux FHIR (simulé dans cet artifact)</span>
+    <button class="btn btn-sm btn-ghost" id="fhirClose">Fermer ✕</button>
+  </div>
+  <div class="fhir-log" id="fhirLog"></div>
+</div>
+<div id="overlayRoot"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================================
+   CONFIG — pointeur vers la vraie plateforme d'intermédiation FHIR du TP.
+   Cet artifact tourne dans le bac à sable de Claude (CSP), qui bloque les
+   appels réseau vers des hôtes externes arbitraires : impossible d'appeler
+   fhir.alliance4u.io depuis cette page publiée. Le module fhirClient
+   ci-dessous respecte EXACTEMENT les routes/méthodes de la doc de l'API
+   (POST /api/{resource}, GET /api/{resource}/{id}, GET /api/{resource}?filtre,
+   PUT, DELETE) et journalise chaque appel dans la console FHIR en bas de
+   page. Pour la vraie soutenance : mettre MOCK_MODE=false et remplacer
+   mockFetch par un vrai fetch(FHIR_BASE+path) une fois le code exécuté
+   hors artifact (poste local / serveur de l'équipe), avec vos identifiants
+   FHIR de boarding list.
+   ========================================================================= */
+  var FHIR_BASE = "https://fhir.alliance4u.io";
+  var MOCK_MODE = true;
+
+  var TEAMS = {
+    patient: { label: "Équipe Patient", members: ["Romane Cano","Rémi Delarue","Neirouz Attia"] },
+    medecin: { label: "Équipe Médecin", members: ["Alexandre Desoutter","Aimé Goetschel","Eya Rejeb"] }
+  };
+
+  function fhirId(seed){
+    var s = "5f2028a13fb7504a"+seed;
+    return s.slice(0,24);
+  }
+
+  var DOSSIERS = [
+    {
+      id:"dossier-1",
+      patient:{ id: fhirId("458798d"), name:"Camille Beaumont", age:29, gender:"female" },
+      motif:"Fièvre + mal de gorge depuis 3 jours",
+      vitals:{ temp:"38.9°C", ta:"118/74", fc:"96 bpm", satO2:"98%" },
+      symptoms:["Fièvre","Odynophagie","Adénopathies cervicales","Fatigue"],
+      options:[
+        {code:"rhino", label:"Rhino-pharyngite virale", cote:1.4},
+        {code:"angine-v", label:"Angine virale", cote:2.1},
+        {code:"angine-b", label:"Angine bactérienne (SGA)", cote:3.6},
+        {code:"mono", label:"Mononucléose infectieuse", cote:8.5}
+      ]
+    },
+    {
+      id:"dossier-2",
+      patient:{ id: fhirId("543020d"), name:"Yanis Fontaine", age:41, gender:"male" },
+      motif:"Douleur lombaire aiguë après le sport",
+      vitals:{ temp:"37.1°C", ta:"131/82", fc:"78 bpm", satO2:"99%" },
+      symptoms:["Lombalgie", "Contracture paravertébrale", "Pas de signe neuro"],
+      options:[
+        {code:"lombalgie", label:"Lombalgie commune", cote:1.3},
+        {code:"sciatique", label:"Sciatique L5", cote:3.2},
+        {code:"hernie", label:"Hernie discale", cote:6.0},
+        {code:"fracture", label:"Fracture de fatigue", cote:14.0}
+      ]
+    },
+    {
+      id:"dossier-3",
+      patient:{ id: fhirId("5430420d"), name:"Inès Chevalier", age:8, gender:"female" },
+      motif:"Éruption cutanée + démangeaisons",
+      vitals:{ temp:"37.6°C", ta:"—", fc:"102 bpm", satO2:"99%" },
+      symptoms:["Vésicules disséminées","Prurit","Fièvre légère"],
+      options:[
+        {code:"varicelle", label:"Varicelle", cote:1.6},
+        {code:"urticaire", label:"Urticaire allergique", cote:2.8},
+        {code:"zona", label:"Zona pédiatrique", cote:11.0},
+        {code:"gale", label:"Gale", cote:9.0}
+      ]
+    },
+    {
+      id:"dossier-4",
+      patient:{ id: fhirId("77e2ae56"), name:"Marceau Guillet", age:63, gender:"male" },
+      motif:"Douleur thoracique à l'effort",
+      vitals:{ temp:"36.8°C", ta:"152/94", fc:"88 bpm", satO2:"96%" },
+      symptoms:["Douleur rétrosternale","Dyspnée d'effort","ATCD tabac"],
+      options:[
+        {code:"angor", label:"Angor stable", cote:2.4},
+        {code:"reflux", label:"Reflux gastro-œsophagien", cote:1.9},
+        {code:"pericardite", label:"Péricardite", cote:7.5},
+        {code:"idm", label:"Syndrome coronarien aigu", cote:5.0}
+      ]
+    },
+    {
+      id:"dossier-5",
+      patient:{ id: fhirId("902bfae1"), name:"Sofia Marchetti", age:24, gender:"female" },
+      motif:"Douleurs abdominales + vomissements",
+      vitals:{ temp:"38.2°C", ta:"110/68", fc:"100 bpm", satO2:"98%" },
+      symptoms:["Douleur FID","Vomissements","Défense abdominale légère"],
+      options:[
+        {code:"gastro", label:"Gastro-entérite aiguë", cote:1.5},
+        {code:"appendicite", label:"Appendicite", cote:3.0},
+        {code:"kyste", label:"Kyste ovarien", cote:6.5},
+        {code:"grossesse", label:"GEU (grossesse extra-utérine)", cote:16.0}
+      ]
+    },
+    {
+      id:"dossier-6",
+      patient:{ id: fhirId("11cfae02"), name:"Hugo Lemaitre", age:35, gender:"male" },
+      motif:"Céphalées intenses depuis 2 jours",
+      vitals:{ temp:"37.0°C", ta:"124/80", fc:"74 bpm", satO2:"99%" },
+      symptoms:["Céphalées pulsatiles","Photophobie","Pas de raideur nucale"],
+      options:[
+        {code:"migraine", label:"Migraine", cote:1.7},
+        {code:"tension", label:"Céphalée de tension", cote:1.9},
+        {code:"sinusite", label:"Sinusite", cote:3.4},
+        {code:"meningite", label:"Méningite", cote:22.0}
+      ]
+    }
+  ];
+  var DOSSIER_BY_ID = {}; DOSSIERS.forEach(function(d){ DOSSIER_BY_ID[d.id]=d; });
+  function optLabel(dossier, code){
+    var found=(dossier.options||[]).filter(function(o){return o.code===code;})[0];
+    return found? found.label : code;
+  }
+  function optCote(dossier, code){
+    var found=(dossier.options||[]).filter(function(o){return o.code===code;})[0];
+    return found? found.cote : 1;
+  }
+
+  var RARITY_META = {
+    COMMUN:    { color:"#8ea0b5", weight:58, label:"Commun" },
+    RARE:      { color:"#4da3ff", weight:26, label:"Rare" },
+    EPIQUE:    { color:"#b98bff", weight:12, label:"Épique" },
+    LEGENDAIRE:{ color:"#ffb400", weight:3.5, label:"Légendaire" },
+    MYTHIQUE:  { color:"#ff4d5e", weight:.5, label:"Mythique" }
+  };
+  var CARD_POOL = [
+    {id:"rhino-skibidi", name:"Rhino Skibidi", rarity:"COMMUN", emoji:"🤧"},
+    {id:"gastro-ohio", name:"Gastro Ohio", rarity:"COMMUN", emoji:"🚽"},
+    {id:"angine-fanum", name:"Angine Fanum Tax", rarity:"COMMUN", emoji:"🗣️"},
+    {id:"grippette-cap", name:"Grippette No Cap", rarity:"COMMUN", emoji:"🤒"},
+    {id:"otite-mid", name:"Otite Mid", rarity:"COMMUN", emoji:"👂"},
+    {id:"bronchite-rizz", name:"Bronchite Rizzlée", rarity:"RARE", emoji:"😮‍💨"},
+    {id:"tendinite-sigma", name:"Tendinite du Sigma", rarity:"RARE", emoji:"💪"},
+    {id:"zona-baka", name:"Zona Baka", rarity:"RARE", emoji:"⚡"},
+    {id:"migraine-gyat", name:"Migraine Gyatt Rush", rarity:"RARE", emoji:"🌪️"},
+    {id:"mono-aura", name:"Mononucléose Aura +9000", rarity:"EPIQUE", emoji:"✨"},
+    {id:"lombalgie-grind", name:"Lombalgie Grindset", rarity:"EPIQUE", emoji:"🏋️"},
+    {id:"urticaire-delulu", name:"Urticaire Delulu", rarity:"EPIQUE", emoji:"🌸"},
+    {id:"sussy-syndrome", name:"Syndrome Sussy Total", rarity:"LEGENDAIRE", emoji:"🕵️"},
+    {id:"fievre-ohio", name:"Fièvre Skibidi Ohio Rizz", rarity:"LEGENDAIRE", emoji:"🔥"},
+    {id:"final-boss", name:"PANDÉMIE FINAL BOSS", rarity:"MYTHIQUE", emoji:"👑"}
+  ];
+  function drawCard(){
+    var total = 0, byRarity = {};
+    Object.keys(RARITY_META).forEach(function(r){ total += RARITY_META[r].weight; });
+    var roll = Math.random()*total, acc=0, chosenRarity="COMMUN";
+    var order = ["MYTHIQUE","LEGENDAIRE","EPIQUE","RARE","COMMUN"];
+    for(var i=0;i<order.length;i++){
+      acc += RARITY_META[order[i]].weight;
+      if(roll<=acc){ chosenRarity = order[i]; break; }
+    }
+    var pool = CARD_POOL.filter(function(c){return c.rarity===chosenRarity;});
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+
+  /* ---------------- fhir mock client (shape-accurate) ---------------- */
+  var fhirLog = [];
+  function logFhir(method, path, body, response){
+    fhirLog.push({method:method, path:path, body:body, response:response, t:new Date()});
+    if(fhirLog.length>60) fhirLog.shift();
+    renderFhirLog();
+  }
+  function mockDelay(){ return 260+Math.random()*260; }
+  var fhirClient = {
+    getPatient: function(id){
+      var d = DOSSIERS.filter(function(x){return x.patient.id===id;})[0];
+      var resource = d ? {
+        resourceType:"Patient", id:id,
+        name:[{text:d.patient.name}], gender:d.patient.gender, birthDate:"—"
+      } : {resourceType:"Patient", id:id};
+      return new Promise(function(res){ setTimeout(function(){
+        logFhir("GET","/api/patient/"+id, null, resource);
+        res(resource);
+      }, mockDelay()); });
+    },
+    createObservation: function(body){
+      var resource = Object.assign({resourceType:"Observation", id:"obs-"+Math.random().toString(36).slice(2,10), status:"final"}, body);
+      return new Promise(function(res){ setTimeout(function(){
+        logFhir("POST","/api/observation", body, resource);
+        res(resource);
+      }, mockDelay()); });
+    },
+    getObservationsForPatient: function(patientId){
+      return new Promise(function(res){ setTimeout(function(){
+        logFhir("GET","/api/observation?subject.reference=Patient/"+patientId, null, {resourceType:"Bundle", type:"searchset"});
+        res([]);
+      }, mockDelay()); });
+    },
+    createAppointment: function(body){
+      var resource = Object.assign({resourceType:"Appointment", id:"appt-"+Math.random().toString(36).slice(2,10), status:"booked"}, body);
+      return new Promise(function(res){ setTimeout(function(){
+        logFhir("POST","/api/appointment", body, resource);
+        res(resource);
+      }, mockDelay()); });
+    },
+    getAppointment: function(id){
+      return new Promise(function(res){ setTimeout(function(){
+        logFhir("GET","/api/appointment/"+id, null, {resourceType:"Appointment", id:id});
+        res({resourceType:"Appointment", id:id});
+      }, mockDelay()); });
+    }
+  };
+
+  /* ---------------- audio synth (no external assets) ---------------- */
+  var actx = null;
+  function ac(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+  function tone(freq, start, dur, type, gain){
+    var c = ac(); if(!c) return;
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type||"sine"; o.frequency.setValueAtTime(freq, c.currentTime+start);
+    g.gain.setValueAtTime(0, c.currentTime+start);
+    g.gain.linearRampToValueAtTime(gain||.06, c.currentTime+start+.01);
+    g.gain.exponentialRampToValueAtTime(.0001, c.currentTime+start+dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(c.currentTime+start); o.stop(c.currentTime+start+dur+.02);
+  }
+  var sfx = {
+    click:function(){ tone(600,0,.05,"square",.03); },
+    coin:function(){ tone(880,0,.08,"square",.05); tone(1320,.07,.12,"square",.05); },
+    place:function(){ tone(300,0,.08,"sawtooth",.04); tone(500,.06,.1,"sawtooth",.04); },
+    pack:function(){ for(var i=0;i<10;i++) tone(400+i*60, i*.03, .09, "triangle", .035); },
+    win:function(){ [523,659,784,1046].forEach(function(f,i){ tone(f, i*.09, .3,"triangle",.06); }); },
+    lose:function(){ tone(220,0,.28,"sawtooth",.05); tone(160,.12,.32,"sawtooth",.05); },
+    legendary:function(){ for(var i=0;i<16;i++) tone(300+i*90, i*.045, .18, "triangle", .045); }
+  };
+
+  /* ---------------- confetti ---------------- */
+  function confettiBurst(rootEl, colors){
+    var n = 46;
+    for(var i=0;i<n;i++){
+      var s = document.createElement("div");
+      var c = colors[Math.floor(Math.random()*colors.length)];
+      var dx = (Math.random()-.5)*520, dy = 260+Math.random()*260, rot=(Math.random()-.5)*720;
+      s.style.cssText = "position:fixed;left:50%;top:38%;width:8px;height:12px;background:"+c+";z-index:120;pointer-events:none;border-radius:2px;";
+      s.style.transition = "transform 1.1s cubic-bezier(.2,.7,.3,1), opacity 1.1s ease";
+      rootEl.appendChild(s);
+      requestAnimationFrame(function(el,dx,dy,rot){ return function(){
+        el.style.transform = "translate("+dx+"px,"+dy+"px) rotate("+rot+"deg)";
+        el.style.opacity = "0";
+      };}(s,dx,dy,rot));
+      setTimeout(function(el){ el.remove(); }, 1300, s);
+    }
+  }
+
+  /* ---------------- db wiring ---------------- */
+  var db = null, dbReady = false;
+  var live = { dossiers:{}, paris:{}, medecins:{}, trades:{} };
+
+  function ensureMedecinDoc(name){
+    if(!db) return Promise.resolve();
+    var id = slug(name);
+    return db.doc("medecins/"+id).get().then(function(snap){
+      if(!snap.exists){
+        return db.doc("medecins/"+id).set({ name:name, cards:[], diagCount:0, createdAt:Date.now() });
+      }
+    });
+  }
+  function slug(s){ return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,""); }
+
+  function placeBet(dossierId, pronosticCode, cote, name, montant, role){
+    if(!db) return Promise.resolve();
+    var ref = db.doc("paris/"+dossierId);
+    return ref.get().then(function(snap){
+      var data = snap.exists ? snap.data() : { dossierId:dossierId, pronostic:pronosticCode, cote:cote, mises:[], status:"ouvert" };
+      data.mises = (data.mises||[]).concat([{ name:name, montant:montant, role:role, t:Date.now() }]);
+      return ref.set(data);
+    });
+  }
+
+  function resolveDossier(dossierId, diagnosticCode, medecinName){
+    if(!db) return Promise.resolve();
+    var dossierRef = db.doc("dossiers/"+dossierId);
+    var pariRef = db.doc("paris/"+dossierId);
+    return pariRef.get().then(function(snap){
+      var pari = snap.exists ? snap.data() : null;
+      var won = pari && pari.pronostic === diagnosticCode;
+      return dossierRef.set({
+        status:"resolu", diagnostic:diagnosticCode, medecin:medecinName,
+        resolvedAt:Date.now(), gagnant: !!won
+      }).then(function(){
+        if(pari){
+          return pariRef.set(Object.assign({}, pari, { status: won?"gagne":"perdu" }));
+        }
+      });
+    });
+  }
+
+  function awardBooster(medecinName, cards){
+    if(!db) return Promise.resolve();
+    var id = slug(medecinName);
+    var ref = db.doc("medecins/"+id);
+    return ref.get().then(function(snap){
+      var data = snap.exists? snap.data() : {name:medecinName, cards:[], diagCount:0};
+      var owned = data.cards||[];
+      cards.forEach(function(c){
+        var found = owned.filter(function(o){return o.id===c.id;})[0];
+        if(found) found.count = (found.count||1)+1;
+        else owned.push({id:c.id, count:1});
+      });
+      data.cards = owned;
+      data.diagCount = (data.diagCount||0)+1;
+      return ref.set(data);
+    });
+  }
+
+  function proposeTrade(from, offerCardId, wantCardId){
+    if(!db) return Promise.resolve();
+    return db.collection("trades").add({ from:from, offerCardId:offerCardId, wantCardId:wantCardId, status:"ouvert", t:Date.now() });
+  }
+  function acceptTrade(trade, byName){
+    if(!db) return Promise.resolve();
+    var fromRef = db.doc("medecins/"+slug(trade.from));
+    var toRef = db.doc("medecins/"+slug(byName));
+    return Promise.all([fromRef.get(), toRef.get()]).then(function(results){
+      var fromData = results[0].data(), toData = results[1].data();
+      function removeOne(list, cardId){
+        var f = list.filter(function(c){return c.id===cardId;})[0];
+        if(f){ f.count--; }
+        return list.filter(function(c){return c.count>0;});
+      }
+      function addOne(list, cardId){
+        var f = list.filter(function(c){return c.id===cardId;})[0];
+        if(f) f.count = (f.count||1)+1; else list.push({id:cardId, count:1});
+        return list;
+      }
+      fromData.cards = addOne(removeOne(fromData.cards||[], trade.offerCardId), trade.wantCardId);
+      toData.cards = addOne(removeOne(toData.cards||[], trade.wantCardId), trade.offerCardId);
+      return Promise.all([
+        fromRef.set(fromData), toRef.set(toData),
+        db.doc("trades/"+trade._id).set(Object.assign({}, trade, {status:"accepte"}))
+      ]);
+    });
+  }
+
+  /* ---------------- state ---------------- */
+  var state = { screen:"landing", role:null, name:null, activeDossier:null, revealCards:null };
+
+  function setState(patch){ Object.assign(state, patch); render(); }
+
+  /* ---------------- render helpers ---------------- */
+  function el(html){ var t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstElementChild; }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  function header(){
+    var balance = state.role==="medecin" ? "" :
+      '<span class="pill">🎯 Rôle : <b>'+(state.role==="proche"?"Proche":"Patient")+'</b></span>';
+    return (
+      '<div class="marquee">'+
+        '<div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span></div>'+
+        (state.screen==="landing" ? "" :
+        '<div class="marquee-right">'+
+          '<span class="pill">👤 <b>'+esc(state.name||"—")+'</b></span>'+
+          balance+
+          '<button class="btn btn-sm" id="btnHome">↩ Accueil</button>'+
+        '</div>')+
+      '</div>'
+    );
+  }
+
+  function render(){
+    var app = document.getElementById("app");
+    var body = "";
+    if(state.screen==="landing") body = viewLanding();
+    else if(state.screen==="patientHome") body = viewPatientHome();
+    else if(state.screen==="dossier") body = viewDossierPatient();
+    else if(state.screen==="procheJoin") body = viewProcheJoin();
+    else if(state.screen==="medecinHome") body = viewMedecinHome();
+    else if(state.screen==="medecinDossier") body = viewMedecinDossier();
+    else if(state.screen==="collection") body = viewCollection();
+    else if(state.screen==="colleagues") body = viewColleagues();
+    else if(state.screen==="trades") body = viewTrades();
+    app.innerHTML = header() + '<main>'+body+'</main>';
+    wireCommon();
+    renderFhirLog();
+  }
+
+  function wireCommon(){
+    var home = document.getElementById("btnHome");
+    if(home) home.onclick = function(){ sfx.click(); setState({screen:"landing", role:null, name:null, activeDossier:null}); };
+  }
+
+  /* ---------------- LANDING ---------------- */
+  function viewLanding(){
+    return (
+      '<div class="landing">'+
+        '<div class="logo-big">MediBet</div>'+
+        '<p class="sub">Le patient mise sur son diagnostic, ses proches suivent la cote, le médecin abat sa carte — et ouvre un booster à chaque verdict. Propulsé par la plateforme d\\'intermédiation FHIR.</p>'+
+        '<div class="role-grid">'+
+          roleCard("patient","🎰","Je suis Patient","Choisis ton dossier, place ta mise sur ton diagnostic.")+
+          roleCard("medecin","🩺","Je suis Médecin","Pose le vrai diagnostic, encaisse un booster maladie.")+
+          roleCard("proche","💸","Je suis Proche","Rejoins le pari d\\'un proche avec un code dossier.")+
+        '</div>'+
+        '<p class="note" style="margin-top:26px;max-width:640px;">Monnaie 100% virtuelle (CoinPot) — aucune transaction réelle. Base FHIR de référence : <span class="mono">'+FHIR_BASE+'</span> (appels simulés dans cet artifact, voir la console FHIR en bas à droite).</p>'+
+      '</div>'
+    );
+  }
+  function roleCard(role, emoji, title, desc){
+    return '<div class="role-card" data-role="'+role+'"><div class="emoji">'+emoji+'</div><h3>'+title+'</h3><p>'+desc+'</p></div>';
+  }
+
+  /* ---------------- PATIENT HOME ---------------- */
+  function viewPatientHome(){
+    var rows = DOSSIERS.map(function(d){
+      var dyn = live.dossiers[d.id] || {status:"ouvert"};
+      var mine = live.paris[d.id];
+      return dossierCardSummary(d, dyn, mine);
+    }).join("");
+    return (
+      '<div class="section-head"><h1>Dossiers ouverts au pari</h1><span class="muted">'+esc(state.name)+' · Équipe Patient</span></div>'+
+      '<div class="grid grid-2">'+rows+'</div>'
+    );
+  }
+  function dossierCardSummary(d, dyn, mine){
+    var statusOuvert = dyn.status!=="resolu";
+    var already = mine && (mine.mises||[]).some(function(m){return m.name===state.name;});
+    return (
+      '<div class="dossier">'+
+        '<div class="dossier-top">'+
+          '<div><h3>'+esc(d.patient.name)+' <span class="faint">· '+d.patient.age+' ans</span></h3><div class="dossier-id mono">'+d.patient.id+'</div></div>'+
+          '<span class="status-tag '+(statusOuvert?"status-ouvert":"status-resolu")+'">'+(statusOuvert?"Ouvert":"Résolu")+'</span>'+
+        '</div>'+
+        '<div class="vitals"><span>'+esc(d.motif)+'</span></div>'+
+        '<div style="padding:14px 20px;">'+
+          (statusOuvert ?
+            '<button class="btn btn-gold btn-sm" data-open="'+d.id+'">'+(already?"Voir mon pari":"Placer un pari")+'</button>' :
+            resultLine(d, dyn, mine)
+          )+
+        '</div>'+
+      '</div>'
+    );
+  }
+  function resultLine(d, dyn, mine){
+    var mineBet = mine && (mine.mises||[]).filter(function(m){return m.name===state.name;})[0];
+    if(!mineBet) return '<span class="muted">Diagnostic posé : <b>'+esc(optLabel(d,dyn.diagnostic))+'</b></span>';
+    var won = mine.pronostic === dyn.diagnostic;
+    var gain = won ? Math.round(mineBet.montant*mine.cote) : 0;
+    return '<div class="result-banner '+(won?"result-win":"result-lose")+'">'+
+      (won? "🎉 Gagné +"+gain+" 🪙 (pronostic "+esc(optLabel(d,mine.pronostic))+")"
+          : "💀 Perdu -"+mineBet.montant+" 🪙 — le vrai diagnostic était "+esc(optLabel(d,dyn.diagnostic)))+
+      '</div>'+
+      (won ? '<button class="btn btn-sm" data-appt="'+d.id+'" style="margin-top:8px;">📅 Récupérer mon rendez-vous de suivi</button>' : '');
+  }
+
+  /* ---------------- PATIENT: DOSSIER DETAIL / BETTING BOARD ---------------- */
+  function viewDossierPatient(){
+    var d = DOSSIER_BY_ID[state.activeDossier];
+    if(!d) return '<div class="empty">Dossier introuvable.</div>';
+    var dyn = live.dossiers[d.id] || {status:"ouvert"};
+    var pari = live.paris[d.id];
+    var resolved = dyn.status==="resolu";
+    var myBet = pari && (pari.mises||[]).filter(function(m){return m.name===state.name;})[0];
+
+    var rows = d.options.map(function(o){
+      var cls = "odds-row";
+      if(resolved){ cls += (o.code===dyn.diagnostic) ? " winner":" loser"; }
+      else if(pari && pari.pronostic===o.code) cls += " picked";
+      return '<div class="'+cls+'">'+
+        '<span class="odds-name">'+esc(o.label)+(resolved && o.code===dyn.diagnostic?" ✅":"")+'</span>'+
+        '<span class="odds-cote tabular">'+o.cote.toFixed(2)+'</span>'+
+      '</div>';
+    }).join("");
+
+    var stakeUI = "";
+    if(!resolved){
+      if(!pari){
+        stakeUI = '<div class="stake-row">'+
+          '<select id="selPronostic">'+d.options.map(function(o){return '<option value="'+o.code+'">'+esc(o.label)+' — cote '+o.cote.toFixed(2)+'</option>';}).join("")+'</select>'+
+          '<input type="number" id="inpMise" value="50" min="1" step="10" style="width:90px;"> 🪙'+
+          '<button class="btn btn-gold" id="btnMiser">Placer le pari</button>'+
+        '</div>';
+      } else if(!myBet){
+        stakeUI = '<div class="stake-row"><span class="muted">Pari déjà lancé sur <b>'+esc(optLabel(d,pari.pronostic))+'</b> — rejoins la mise :</span>'+
+          '<input type="number" id="inpMiseJoin" value="20" min="1" step="10" style="width:90px;"> 🪙'+
+          '<button class="btn btn-gold" id="btnRejoindre">Ajouter ma mise</button></div>';
+      } else {
+        stakeUI = '<div class="stake-row"><span class="muted">Ta mise : <b>'+myBet.montant+' 🪙</b> sur <b>'+esc(optLabel(d,pari.pronostic))+'</b> (cote '+pari.cote.toFixed(2)+')</span></div>';
+      }
+    }
+
+    var proches = pari && (pari.mises||[]).length ? (
+      '<div class="mise-list">'+
+        pari.mises.map(function(m){ return '<div class="mise-item"><span>'+esc(m.name)+' <span class="faint">('+m.role+')</span></span><b>'+m.montant+' 🪙</b></div>'; }).join("")+
+      '</div>'+
+      '<div class="pot-total"><span>Pot total</span><b class="tabular">'+pari.mises.reduce(function(a,m){return a+m.montant;},0)+' 🪙</b></div>'
+    ) : "";
+
+    var shareCode = '<div class="note" style="margin-top:14px;">Code dossier à partager à tes proches pour qu\\'ils misent avec toi : <span class="kbd">'+d.id+'</span></div>';
+
+    return (
+      '<div class="section-head"><h1>'+esc(d.patient.name)+'</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      '<div class="dossier">'+
+        '<div class="vitals"><span><b>Motif</b> · '+esc(d.motif)+'</span><span><b>Symptômes</b> · '+d.symptoms.join(", ")+'</span></div>'+
+        '<div class="odds-board">'+rows+'</div>'+
+        stakeUI+
+        proches+
+        (resolved ? '<div class="result-banner">Diagnostic officiel posé par le Dr '+esc(dyn.medecin||"—")+' : <b>'+esc(optLabel(d,dyn.diagnostic))+'</b></div>' : "")+
+      '</div>'+
+      (pari && !resolved ? shareCode : "")
+    );
+  }
+
+  /* ---------------- PROCHE JOIN ---------------- */
+  function viewProcheJoin(){
+    return (
+      '<div style="max-width:480px;margin:40px auto;" class="card">'+
+        '<h2>Rejoindre un pari</h2>'+
+        '<p class="muted">Entre le code dossier que ton proche t\\'a envoyé.</p>'+
+        '<div class="btn-row" style="margin-top:14px;">'+
+          '<input type="text" id="inpCode" placeholder="dossier-1" style="flex:1;">'+
+          '<button class="btn btn-gold" id="btnJoin">Voir le pari</button>'+
+        '</div>'+
+      '</div>'
+    );
+  }
+
+  /* ---------------- MEDECIN HOME ---------------- */
+  function viewMedecinHome(){
+    var mine = live.medecins[slug(state.name)] || {cards:[],diagCount:0};
+    var open = DOSSIERS.filter(function(d){ var dyn=live.dossiers[d.id]; return !dyn || dyn.status!=="resolu"; });
+    var done = DOSSIERS.filter(function(d){ var dyn=live.dossiers[d.id]; return dyn && dyn.status==="resolu"; });
+    return (
+      '<div class="section-head">'+
+        '<h1>File d\\'attente diagnostic</h1>'+
+        '<div class="btn-row">'+
+          '<span class="pill">📦 Boosters ouverts : <b class="tabular">'+(mine.diagCount||0)+'</b></span>'+
+          '<button class="btn btn-sm" id="goCollection">🗂️ Ma collection</button>'+
+          '<button class="btn btn-sm" id="goColleagues">🏆 Collègues</button>'+
+          '<button class="btn btn-sm" id="goTrades">🔁 Échanges</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="grid grid-2">'+
+        open.map(function(d){ return medecinDossierSummary(d,false); }).join("")+
+      '</div>'+
+      (done.length ? '<div class="section-head"><h2>Dossiers clôturés</h2></div><div class="grid grid-2">'+
+        done.map(function(d){ return medecinDossierSummary(d,true); }).join("")+'</div>' : "")
+    );
+  }
+  function medecinDossierSummary(d, closed){
+    var dyn = live.dossiers[d.id]||{};
+    var pari = live.paris[d.id];
+    return '<div class="dossier"><div class="dossier-top">'+
+      '<div><h3>'+esc(d.patient.name)+' <span class="faint">· '+d.patient.age+' ans</span></h3><div class="dossier-id mono">'+d.patient.id+'</div></div>'+
+      (pari ? '<span class="status-tag status-ouvert">'+pari.mises.length+' mise(s)</span>' : '<span class="status-tag status-ouvert">Aucun pari</span>')+
+      '</div><div class="vitals"><span>'+esc(d.motif)+'</span></div>'+
+      '<div style="padding:14px 20px;">'+
+      (closed ? '<span class="muted">Diagnostic posé : <b>'+esc(optLabel(d,dyn.diagnostic))+'</b> par Dr '+esc(dyn.medecin)+'</span>'
+              : '<button class="btn btn-gold btn-sm" data-mopen="'+d.id+'">Examiner le dossier</button>')+
+      '</div></div>';
+  }
+
+  /* ---------------- MEDECIN: DOSSIER DETAIL ---------------- */
+  function viewMedecinDossier(){
+    var d = DOSSIER_BY_ID[state.activeDossier];
+    if(!d) return '<div class="empty">Dossier introuvable.</div>';
+    var pari = live.paris[d.id];
+    return (
+      '<div class="section-head"><h1>'+esc(d.patient.name)+'</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      '<div class="dossier">'+
+        '<div class="vitals">'+
+          '<span><b>Temp.</b> '+d.vitals.temp+'</span><span><b>TA</b> '+d.vitals.ta+'</span>'+
+          '<span><b>FC</b> '+d.vitals.fc+'</span><span><b>SpO2</b> '+d.vitals.satO2+'</span>'+
+        '</div>'+
+        '<div style="padding:16px 20px;"><b>Motif</b> · '+esc(d.motif)+'<br><span class="muted">Symptômes : '+d.symptoms.join(", ")+'</span></div>'+
+        (pari ? '<div class="note" style="margin:0 20px 16px;">Un pari est ouvert sur ce dossier — pot de '+pari.mises.reduce(function(a,m){return a+m.montant;},0)+' 🪙. Ton diagnostic officiel décide qui gagne.</div>' : '')+
+        '<div style="padding:0 20px 20px;">'+
+          '<h3>Poser le diagnostic officiel (POST Observation FHIR)</h3>'+
+          '<select id="selDiag" style="margin-top:8px;">'+d.options.map(function(o){return '<option value="'+o.code+'">'+esc(o.label)+'</option>';}).join("")+'</select>'+
+          ' <button class="btn btn-gold" id="btnDiag">Valider le diagnostic</button>'+
+        '</div>'+
+      '</div>'
+    );
+  }
+
+  /* ---------------- COLLECTION ---------------- */
+  function cardTile(cardId, count){
+    var c = CARD_POOL.filter(function(x){return x.id===cardId;})[0];
+    if(!c) return "";
+    var owned = count>0;
+    return '<div class="card-tile rarity-'+c.rarity+' '+(owned?"":"owned-0")+'">'+
+      '<div class="glow"></div>'+
+      (owned? '<span class="count">×'+count+'</span>':'')+
+      '<span class="emoji">'+c.emoji+'</span>'+
+      '<div class="name">'+esc(c.name)+'</div>'+
+      '<div class="rarity">'+RARITY_META[c.rarity].label+'</div>'+
+    '</div>';
+  }
+  function viewCollection(){
+    var mine = live.medecins[slug(state.name)] || {cards:[]};
+    var ownedMap = {}; (mine.cards||[]).forEach(function(c){ ownedMap[c.id]=c.count; });
+    var tiles = CARD_POOL.map(function(c){ return cardTile(c.id, ownedMap[c.id]||0); }).join("");
+    var canOpen = (mine.diagCount||0) > ((mine.boostersOpened)||0);
+    return (
+      '<div class="section-head"><h1>Ma collection</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      boosterCTA(mine)+
+      '<div class="section-head"><h2>Collection complète</h2><span class="muted tabular">'+(mine.cards||[]).length+' / '+CARD_POOL.length+' cartes découvertes</span></div>'+
+      '<div class="grid grid-3">'+tiles+'</div>'
+    );
+  }
+  function boosterCTA(mine){
+    var pending = (mine.diagCount||0) - (mine.boostersOpened||0);
+    if(pending<=0) return '<div class="note">Pose un diagnostic pour gagner un booster maladie 🎁</div>';
+    return '<div class="pack-cta"><div class="pack-art" id="btnOpenPack">🎁</div><p class="muted">'+pending+' booster(s) à ouvrir — clique sur le paquet !</p></div>';
+  }
+
+  /* ---------------- COLLEAGUES / LEADERBOARD ---------------- */
+  function viewColleagues(){
+    var all = Object.keys(live.medecins).map(function(k){ return live.medecins[k]; })
+      .sort(function(a,b){ return (b.cards||[]).reduce(function(s,c){return s+c.count;},0) - (a.cards||[]).reduce(function(s,c){return s+c.count;},0); });
+    var rows = all.map(function(m){
+      var total = (m.cards||[]).reduce(function(s,c){return s+c.count;},0);
+      var rare = (m.cards||[]).filter(function(c){ var meta=CARD_POOL.filter(function(x){return x.id===c.id;})[0]; return meta && (meta.rarity==="LEGENDAIRE"||meta.rarity==="MYTHIQUE"); }).length;
+      return '<div class="medecin-row"><div style="display:flex;align-items:center;gap:10px;"><div class="avatar">🩺</div><div><b>'+esc(m.name)+'</b><div class="faint" style="font-size:12px;">'+(m.diagCount||0)+' diagnostics posés</div></div></div>'+
+      '<div style="display:flex;align-items:center;gap:10px;"><span class="pill">'+total+' cartes</span><span class="pill">✨ '+rare+' rares+</span>'+
+      '<button class="btn btn-sm" data-view="'+esc(m.name)+'">Voir</button></div></div>';
+    }).join("") || '<div class="empty">Aucun médecin n\\'a encore posé de diagnostic.</div>';
+    var viewed = state.viewingColleague ? viewColleagueDetail(state.viewingColleague) : "";
+    return (
+      '<div class="section-head"><h1>Classement des collègues</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      '<div class="card">'+rows+'</div>'+
+      viewed
+    );
+  }
+  function viewColleagueDetail(name){
+    var m = live.medecins[slug(name)]; if(!m) return "";
+    var ownedMap = {}; (m.cards||[]).forEach(function(c){ ownedMap[c.id]=c.count; });
+    return '<div class="section-head"><h2>Collection de '+esc(name)+'</h2></div><div class="grid grid-3">'+
+      CARD_POOL.map(function(c){ return cardTile(c.id, ownedMap[c.id]||0); }).join("")+'</div>';
+  }
+
+  /* ---------------- TRADES ---------------- */
+  function viewTrades(){
+    var mine = live.medecins[slug(state.name)] || {cards:[]};
+    var myCards = (mine.cards||[]).filter(function(c){return c.count>0;});
+    var openTrades = Object.keys(live.trades).map(function(k){ var t=live.trades[k]; t._id=k; return t; })
+      .filter(function(t){ return t.status==="ouvert"; });
+    var cardOpts = function(list){ return list.map(function(c){ var meta=CARD_POOL.filter(function(x){return x.id===c.id;})[0]; return '<option value="'+c.id+'">'+esc(meta?meta.name:c.id)+'</option>'; }).join(""); };
+    return (
+      '<div class="section-head"><h1>Échanges entre collègues</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      '<div class="card">'+
+        '<h3>Proposer un échange</h3>'+
+        (myCards.length ? '<div class="btn-row" style="margin-top:10px;">'+
+          '<select id="selOffer">'+cardOpts(myCards)+'</select>'+
+          '<span class="muted">contre</span>'+
+          '<select id="selWant">'+cardOpts(CARD_POOL)+'</select>'+
+          '<button class="btn btn-gold btn-sm" id="btnPropose">Proposer</button>'+
+        '</div>' : '<p class="muted">Ouvre des boosters pour avoir des cartes à échanger.</p>')+
+      '</div>'+
+      '<div class="section-head"><h2>Offres ouvertes</h2></div>'+
+      '<div class="card">'+
+        (openTrades.length ? openTrades.map(function(t){
+          var offerMeta = CARD_POOL.filter(function(c){return c.id===t.offerCardId;})[0];
+          var wantMeta = CARD_POOL.filter(function(c){return c.id===t.wantCardId;})[0];
+          return '<div class="trade-item"><span><b>'+esc(t.from)+'</b> échange '+offerMeta.emoji+' '+esc(offerMeta.name)+' contre '+wantMeta.emoji+' '+esc(wantMeta.name)+'</span>'+
+            (t.from!==state.name ? '<button class="btn btn-sm" data-accept="'+t._id+'">Accepter</button>' : '<span class="faint">en attente</span>')+
+          '</div>';
+        }).join("") : '<div class="empty">Aucune offre pour le moment.</div>')+
+      '</div>'
+    );
+  }
+
+  /* ---------------- FHIR console ---------------- */
+  function renderFhirLog(){
+    var box = document.getElementById("fhirLog"); if(!box) return;
+    box.innerHTML = fhirLog.slice().reverse().map(function(e){
+      return '<div class="l"><span class="m">'+e.method+'</span> <span class="p">'+e.path+'</span><br>'+
+        '<span class="r">→ '+esc(JSON.stringify(e.response).slice(0,180))+'</span></div>';
+    }).join("") || '<div class="faint">Aucun appel FHIR pour le moment — interagis avec MediBet pour voir les requêtes.</div>';
+  }
+
+  /* ---------------- event delegation ---------------- */
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+
+    var roleCardEl = t.closest && t.closest(".role-card");
+    if(roleCardEl){
+      var role = roleCardEl.getAttribute("data-role");
+      sfx.click();
+      if(role==="proche"){ setState({screen:"procheJoin", role:"proche"}); return; }
+      state.role = role; render();
+      return;
+    }
+
+    if(t.id==="btnBack"){ sfx.click();
+      if(state.role==="medecin") setState({screen:"medecinHome", activeDossier:null});
+      else setState({screen:"patientHome", activeDossier:null});
+      return;
+    }
+    if(t.id==="goCollection"){ sfx.click(); setState({screen:"collection"}); return; }
+    if(t.id==="goColleagues"){ sfx.click(); setState({screen:"colleagues", viewingColleague:null}); return; }
+    if(t.id==="goTrades"){ sfx.click(); setState({screen:"trades"}); return; }
+
+    if(t.hasAttribute && t.hasAttribute("data-open")){
+      sfx.click(); setState({screen:"dossier", activeDossier:t.getAttribute("data-open")}); return;
+    }
+    if(t.hasAttribute && t.hasAttribute("data-mopen")){
+      sfx.click(); setState({screen:"medecinDossier", activeDossier:t.getAttribute("data-mopen")}); return;
+    }
+    if(t.hasAttribute && t.hasAttribute("data-view")){
+      setState({viewingColleague:t.getAttribute("data-view")}); return;
+    }
+    if(t.hasAttribute && t.hasAttribute("data-appt")){
+      var d = DOSSIER_BY_ID[t.getAttribute("data-appt")];
+      sfx.coin();
+      fhirClient.getPatient(d.patient.id).then(function(){
+        return fhirClient.createAppointment({ subject:{reference:"Patient/"+d.patient.id}, description:"Consultation de suivi", start:new Date(Date.now()+7*864e5).toISOString() });
+      }).then(function(appt){
+        alert("Rendez-vous de suivi confirmé — "+new Date(appt.start).toLocaleDateString("fr-FR")+" (Appointment/"+appt.id+")");
+      });
+      return;
+    }
+
+    if(t.id==="btnMiser"){
+      var sel = document.getElementById("selPronostic"), inp = document.getElementById("inpMise");
+      var d2 = DOSSIER_BY_ID[state.activeDossier];
+      var code = sel.value, montant = parseInt(inp.value,10)||10;
+      sfx.place();
+      fhirClient.getPatient(d2.patient.id).then(function(){
+        return placeBet(d2.id, code, optCote(d2,code), state.name, montant, "patient");
+      });
+      return;
+    }
+    if(t.id==="btnRejoindre"){
+      var d3 = DOSSIER_BY_ID[state.activeDossier];
+      var inp2 = document.getElementById("inpMiseJoin");
+      var pari = live.paris[d3.id];
+      sfx.place();
+      placeBet(d3.id, pari.pronostic, pari.cote, state.name, parseInt(inp2.value,10)||10, state.role==="proche"?"proche":"patient");
+      return;
+    }
+    if(t.id==="btnJoin"){
+      var code2 = document.getElementById("inpCode").value.trim();
+      if(DOSSIER_BY_ID[code2]){
+        state.role = "proche";
+        var procheName = prompt("Ton prénom, pour la mise ?","Proche");
+        state.name = procheName || "Proche anonyme";
+        setState({screen:"dossier", activeDossier:code2});
+      } else alert("Code dossier inconnu.");
+      return;
+    }
+
+    if(t.id==="btnDiag"){
+      var d4 = DOSSIER_BY_ID[state.activeDossier];
+      var diagCode = document.getElementById("selDiag").value;
+      sfx.win();
+      fhirClient.createObservation({
+        subject:{reference:"Patient/"+d4.patient.id},
+        code:{text: optLabel(d4,diagCode)},
+        performer:[{display: state.name}]
+      }).then(function(){
+        return resolveDossier(d4.id, diagCode, state.name);
+      }).then(function(){
+        var cards = [drawCard(), drawCard(), drawCard()];
+        return awardBooster(state.name, []).then(function(){ return cards; });
+      }).then(function(cards){
+        state.pendingBooster = cards;
+        setState({screen:"medecinHome", activeDossier:null});
+      });
+      return;
+    }
+
+    if(t.id==="btnOpenPack"){
+      openBoosterFlow();
+      return;
+    }
+    if(t.id==="btnPropose"){
+      var off = document.getElementById("selOffer").value, want = document.getElementById("selWant").value;
+      proposeTrade(state.name, off, want).then(function(){ render(); });
+      return;
+    }
+    if(t.hasAttribute && t.hasAttribute("data-accept")){
+      var tid = t.getAttribute("data-accept");
+      var trade = live.trades[tid]; trade._id = tid;
+      acceptTrade(trade, state.name).then(function(){ sfx.win(); render(); });
+      return;
+    }
+  });
+
+  function openBoosterFlow(){
+    var mine = live.medecins[slug(state.name)] || {cards:[]};
+    var pending = (mine.diagCount||0) - (mine.boostersOpened||0);
+    if(pending<=0) return;
+    var cards = state.pendingBooster || [drawCard(), drawCard(), drawCard()];
+    state.pendingBooster = null;
+    sfx.pack();
+    var overlay = el('<div class="reveal-overlay"><h2>Booster maladie</h2><div class="reveal-cards"></div><button class="btn btn-gold" id="btnCloseReveal">Encaisser</button></div>');
+    document.getElementById("overlayRoot").appendChild(overlay);
+    var wrap = overlay.querySelector(".reveal-cards");
+    cards.forEach(function(c, i){
+      setTimeout(function(){
+        var isMythique = c.rarity==="MYTHIQUE";
+        var tile = el('<div class="reveal-card rarity-'+c.rarity+'"><span class="emoji">'+c.emoji+'</span><div class="name">'+esc(c.name)+'</div><div class="rarity">'+RARITY_META[c.rarity].label+'</div></div>');
+        wrap.appendChild(tile);
+        if(isMythique){ sfx.legendary(); confettiBurst(document.body, ["#ffb400","#ff4d5e","#b98bff","#34e2a1"]); }
+      }, i*380);
+    });
+    overlay.querySelector("#btnCloseReveal").onclick = function(){
+      overlay.remove();
+      var id = slug(state.name);
+      db.doc("medecins/"+id).get().then(function(snap){
+        var data = snap.data();
+        data.boostersOpened = (data.boostersOpened||0)+1;
+        var owned = data.cards||[];
+        cards.forEach(function(c){
+          var found = owned.filter(function(o){return o.id===c.id;})[0];
+          if(found) found.count = (found.count||1)+1; else owned.push({id:c.id,count:1});
+        });
+        data.cards = owned;
+        db.doc("medecins/"+id).set(data);
+      });
+    };
+  }
+
+  document.addEventListener("keydown", function(){});
+
+  document.getElementById("fhirToggle").onclick = function(){
+    document.getElementById("fhirConsole").classList.toggle("open");
+  };
+  document.getElementById("fhirClose").onclick = function(){
+    document.getElementById("fhirConsole").classList.remove("open");
+  };
+
+  /* ---------------- name selection wiring (delegated, role already chosen) ---------------- */
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+    if(t.classList && t.classList.contains("name-chip")){
+      var nm = t.getAttribute("data-name");
+      state.name = nm;
+      sfx.click();
+      if(state.role==="medecin"){
+        ensureMedecinDoc(nm).then(function(){ setState({screen:"medecinHome"}); });
+      } else {
+        setState({screen:"patientHome"});
+      }
+    }
+  });
+
+  /* re-render role picker to include roster once a role is chosen but no name yet */
+  var _origRender = render;
+  render = function(){
+    _origRender();
+    if(state.role && !state.name && (state.screen==="landing")){
+      var app = document.getElementById("app");
+      var roster = TEAMS[state.role].members.map(function(m){ return '<button class="name-chip" data-name="'+esc(m)+'">'+esc(m)+'</button>'; }).join("");
+      app.querySelector("main").innerHTML =
+        '<div class="landing"><h2>'+TEAMS[state.role].label+'</h2><p class="sub">Qui es-tu ?</p><div class="roster">'+roster+'</div>'+
+        '<button class="btn btn-ghost btn-sm" style="margin-top:20px;" id="btnCancelRole">← Changer de rôle</button></div>';
+      var cancel = document.getElementById("btnCancelRole");
+      if(cancel) cancel.onclick = function(){ setState({role:null}); };
+    }
+  };
+
+  /* ---------------- db bootstrap ---------------- */
+  function subscribe(){
+    db.collection("dossiers").onSnapshot(function(snap){
+      snap.docs.forEach(function(doc){ live.dossiers[doc.id] = doc.data(); });
+      render();
+    }, function(){});
+    db.collection("paris").onSnapshot(function(snap){
+      live.paris = {};
+      snap.docs.forEach(function(doc){ live.paris[doc.id] = doc.data(); });
+      render();
+    }, function(){});
+    db.collection("medecins").onSnapshot(function(snap){
+      live.medecins = {};
+      snap.docs.forEach(function(doc){ live.medecins[doc.id] = doc.data(); });
+      render();
+    }, function(){});
+    db.collection("trades").onSnapshot(function(snap){
+      live.trades = {};
+      snap.docs.forEach(function(doc){ live.trades[doc.id] = doc.data(); });
+      render();
+    }, function(){});
+  }
+
+  render();
+
+  if(window.claude && window.claude.use){
+    window.claude.use("db").then(function(d){
+      db = d;
+      if(db){ dbReady = true; subscribe(); }
+      else { render(); }
+    });
+  }
+
+})();
+</script>
