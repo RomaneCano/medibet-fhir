@@ -197,6 +197,9 @@
   .rarity-EPIQUE{--rc:#b98bff;}
   .rarity-LEGENDAIRE{--rc:#ffb400;}
   .rarity-MYTHIQUE{--rc:#ff4d5e;}
+  .rarity-COLLECTOR{--rc:#34e2a1;}
+  .reveal-card.rarity-COLLECTOR{animation:pop .5s cubic-bezier(.2,1.5,.4,1) both, collectorPulse 1.2s ease-in-out infinite .5s;}
+  @keyframes collectorPulse{0%,100%{box-shadow:0 0 30px -6px var(--rc);}50%{box-shadow:0 0 55px 6px var(--rc);}}
 
   .card-tile{
     border-radius:14px;border:1px solid var(--line);background:var(--panel2);
@@ -262,6 +265,14 @@
   }
   .empty{padding:34px 20px;text-align:center;color:var(--muted);font-size:14px;}
   .kbd{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-family:"IBM Plex Mono",monospace;font-size:12px;}
+  .pill-wallet{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;font-weight:700;border:none;}
+  .share-box{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(255,180,0,.14),rgba(255,180,0,.05));
+    border:2px solid var(--gold);border-radius:14px;padding:16px 20px;margin:18px 0;
+  }
+  .share-label{font-size:13px;color:var(--muted);margin-bottom:6px;}
+  .share-code{font-family:"IBM Plex Mono",monospace;font-size:22px;font-weight:700;color:var(--gold);letter-spacing:.02em;}
 
   ::-webkit-scrollbar{width:9px;height:9px;}
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
@@ -338,7 +349,19 @@
     {id:"dlr_lombaire", label:"Douleur lombaire", emoji:"🔻"},
     {id:"palpitations", label:"Palpitations", emoji:"💓"},
     {id:"confusion", label:"Confusion", emoji:"😶‍🌫️"},
-    {id:"perte_poids", label:"Perte de poids", emoji:"⚖️"}
+    {id:"perte_poids", label:"Perte de poids", emoji:"⚖️"},
+    {id:"saignement_nez", label:"Saignement de nez", emoji:"🩸"},
+    {id:"brulures_urinaires", label:"Brûlures urinaires", emoji:"🚻"},
+    {id:"perte_gout", label:"Perte de goût/odorat", emoji:"👃"},
+    {id:"gonflement_jambes", label:"Gonflement des jambes", emoji:"🦵"},
+    {id:"insomnie", label:"Insomnie", emoji:"🌙"},
+    {id:"anxiete", label:"Anxiété", emoji:"😬"},
+    {id:"sueurs_nocturnes", label:"Sueurs nocturnes", emoji:"💦"},
+    {id:"engourdissement", label:"Engourdissement", emoji:"🫱"},
+    {id:"vision_trouble", label:"Vision trouble", emoji:"🌫️"},
+    {id:"acouphenes", label:"Acouphènes", emoji:"🔔"},
+    {id:"toux_grasse", label:"Toux grasse", emoji:"🫗"},
+    {id:"soif_intense", label:"Soif intense", emoji:"🥤"}
   ];
   var SYMPTOM_LABEL = {}; SYMPTOMS.forEach(function(s){ SYMPTOM_LABEL[s.id]=s.label; });
 
@@ -400,7 +423,24 @@
     // Endocrino
     {id:"diabete-decompense", label:"Décompensation diabétique", cat:"Endocrino", s:{fatigue:.7,perte_poids:.6,perte_appetit:.3,confusion:.3,vertiges:.3}},
     {id:"hypothyroidie", label:"Hypothyroïdie", cat:"Endocrino", s:{fatigue:1,dlr_musculaire:.3}},
-    {id:"hyperthyroidie", label:"Hyperthyroïdie", cat:"Endocrino", s:{palpitations:.7,perte_poids:.6,fatigue:.4}}
+    {id:"hyperthyroidie", label:"Hyperthyroïdie", cat:"Endocrino", s:{palpitations:.7,perte_poids:.6,fatigue:.4}},
+    {id:"diabete-type2", label:"Diabète de type 2", cat:"Endocrino", s:{soif_intense:1,brulures_urinaires:.3,fatigue:.4,perte_poids:.3}},
+    // ORL / Ophtalmo complémentaire
+    {id:"conjonctivite", label:"Conjonctivite", cat:"ORL / Respiratoire", s:{yeux_rouges:1,demangeaisons:.3}},
+    {id:"perte-audition", label:"Perte d'audition / acouphènes", cat:"ORL / Respiratoire", s:{acouphenes:1,vertiges:.3}},
+    {id:"glaucome", label:"Glaucome", cat:"ORL / Respiratoire", s:{vision_trouble:1,cephalees:.3}},
+    {id:"anosmie-covid", label:"Anosmie post-virale", cat:"ORL / Respiratoire", s:{perte_gout:1,fatigue:.3,toux_grasse:.3}},
+    // Neurologie complémentaire
+    {id:"labyrinthite", label:"Labyrinthite", cat:"Neurologie", s:{vertiges:1,acouphenes:.6,nausees:.4}},
+    {id:"neuropathie", label:"Neuropathie périphérique", cat:"Neurologie", s:{engourdissement:1,dlr_musculaire:.3}},
+    {id:"trouble-anxieux", label:"Trouble anxieux", cat:"Neurologie", s:{anxiete:1,palpitations:.5,insomnie:.6,sueurs_nocturnes:.3}},
+    {id:"apnee-sommeil", label:"Apnée du sommeil", cat:"Neurologie", s:{insomnie:.5,fatigue:.8,sueurs_nocturnes:.3}},
+    // Cardio-vasculaire complémentaire
+    {id:"phlebite", label:"Phlébite", cat:"Cardio-vasculaire", s:{gonflement_jambes:1,dlr_musculaire:.3,essoufflement:.2}},
+    {id:"epistaxis-hta", label:"Saignement de nez lié à l'hypertension", cat:"Cardio-vasculaire", s:{saignement_nez:1,cephalees:.3}},
+    // Infectieux / Hémato complémentaire
+    {id:"anemie", label:"Anémie", cat:"Infectieux", s:{fatigue:1,vertiges:.4,essoufflement:.3}},
+    {id:"infection-urinaire", label:"Infection urinaire", cat:"Uro-gynéco", s:{brulures_urinaires:1,fievre:.3,dlr_abdo:.3}}
   ];
   var DISEASE_BY_ID = {}; DISEASES.forEach(function(d){ DISEASE_BY_ID[d.id]=d; });
   var DISEASE_CATEGORIES = []; DISEASES.forEach(function(d){ if(DISEASE_CATEGORIES.indexOf(d.cat)===-1) DISEASE_CATEGORIES.push(d.cat); });
@@ -450,34 +490,55 @@
   }
 
   var RARITY_META = {
-    COMMUN:    { color:"#8ea0b5", weight:58, label:"Commun" },
+    COMMUN:    { color:"#8ea0b5", weight:52, label:"Commun" },
     RARE:      { color:"#4da3ff", weight:26, label:"Rare" },
-    EPIQUE:    { color:"#b98bff", weight:12, label:"Épique" },
-    LEGENDAIRE:{ color:"#ffb400", weight:3.5, label:"Légendaire" },
-    MYTHIQUE:  { color:"#ff4d5e", weight:.5, label:"Mythique" }
+    EPIQUE:    { color:"#b98bff", weight:14, label:"Épique" },
+    LEGENDAIRE:{ color:"#ffb400", weight:5.5, label:"Légendaire" },
+    MYTHIQUE:  { color:"#ff4d5e", weight:1.5, label:"Mythique" },
+    COLLECTOR: { color:"#34e2a1", weight:.05, label:"Collector" }
   };
   var CARD_POOL = [
+    // Commun
     {id:"rhino-skibidi", name:"Rhino Skibidi", rarity:"COMMUN", emoji:"🤧"},
     {id:"gastro-ohio", name:"Gastro Ohio", rarity:"COMMUN", emoji:"🚽"},
     {id:"angine-fanum", name:"Angine Fanum Tax", rarity:"COMMUN", emoji:"🗣️"},
     {id:"grippette-cap", name:"Grippette No Cap", rarity:"COMMUN", emoji:"🤒"},
     {id:"otite-mid", name:"Otite Mid", rarity:"COMMUN", emoji:"👂"},
+    {id:"sinusite-skibidi", name:"Sinusite Skibidi", rarity:"COMMUN", emoji:"🤧"},
+    {id:"conjonctivite-ohio", name:"Conjonctivite Ohio Rizz", rarity:"COMMUN", emoji:"👁️"},
+    {id:"nez-qui-coule-frfr", name:"Nez Qui Coule Fr Fr", rarity:"COMMUN", emoji:"💧"},
+    // Rare
     {id:"bronchite-rizz", name:"Bronchite Rizzlée", rarity:"RARE", emoji:"😮‍💨"},
     {id:"tendinite-sigma", name:"Tendinite du Sigma", rarity:"RARE", emoji:"💪"},
     {id:"zona-baka", name:"Zona Baka", rarity:"RARE", emoji:"⚡"},
     {id:"migraine-gyat", name:"Migraine Gyatt Rush", rarity:"RARE", emoji:"🌪️"},
+    {id:"labyrinthite-sigma", name:"Labyrinthite Sigma Grindset", rarity:"RARE", emoji:"🌀"},
+    {id:"anemie-delulu", name:"Anémie Delulu", rarity:"RARE", emoji:"😶‍🌫️"},
+    {id:"toux-grasse-nocap", name:"Toux Grasse No Cap", rarity:"RARE", emoji:"🫗"},
+    {id:"insomnie-gyat", name:"Insomnie Gyatt Rush", rarity:"RARE", emoji:"🌙"},
+    // Épique
     {id:"mono-aura", name:"Mononucléose Aura +9000", rarity:"EPIQUE", emoji:"✨"},
     {id:"lombalgie-grind", name:"Lombalgie Grindset", rarity:"EPIQUE", emoji:"🏋️"},
     {id:"urticaire-delulu", name:"Urticaire Delulu", rarity:"EPIQUE", emoji:"🌸"},
+    {id:"diabete-sussy", name:"Diabète Sussy Baka", rarity:"EPIQUE", emoji:"🍬"},
+    {id:"anxieux-aura", name:"Trouble Anxieux Aura +9000", rarity:"EPIQUE", emoji:"😬"},
+    {id:"phlebite-ohio", name:"Phlébite Ohio Final", rarity:"EPIQUE", emoji:"🦵"},
+    // Légendaire
     {id:"sussy-syndrome", name:"Syndrome Sussy Total", rarity:"LEGENDAIRE", emoji:"🕵️"},
     {id:"fievre-ohio", name:"Fièvre Skibidi Ohio Rizz", rarity:"LEGENDAIRE", emoji:"🔥"},
-    {id:"final-boss", name:"PANDÉMIE FINAL BOSS", rarity:"MYTHIQUE", emoji:"👑"}
+    {id:"glaucome-rizzler", name:"Glaucome Skibidi Rizzler", rarity:"LEGENDAIRE", emoji:"🌫️"},
+    {id:"apnee-goated", name:"Apnée du Sommeil GOATED", rarity:"LEGENDAIRE", emoji:"😴"},
+    // Mythique
+    {id:"final-boss", name:"PANDÉMIE FINAL BOSS", rarity:"MYTHIQUE", emoji:"👑"},
+    {id:"neuropathie-cosmique", name:"Neuropathie Cosmique Ultra Instinct", rarity:"MYTHIQUE", emoji:"⚡"},
+    // Collector — ultra-rare, drop quasi symbolique
+    {id:"collector-brainrot", name:"CARTE COLLECTOR — Le Docteur Suprême Rizzlord", rarity:"COLLECTOR", emoji:"🏆"}
   ];
   function drawCard(){
     var total = 0, byRarity = {};
     Object.keys(RARITY_META).forEach(function(r){ total += RARITY_META[r].weight; });
     var roll = Math.random()*total, acc=0, chosenRarity="COMMUN";
-    var order = ["MYTHIQUE","LEGENDAIRE","EPIQUE","RARE","COMMUN"];
+    var order = ["COLLECTOR","MYTHIQUE","LEGENDAIRE","EPIQUE","RARE","COMMUN"];
     for(var i=0;i<order.length;i++){
       acc += RARITY_META[order[i]].weight;
       if(roll<=acc){ chosenRarity = order[i]; break; }
@@ -603,7 +664,8 @@
      et une extension par champ (JSON.stringify pour les valeurs composées). Utilisé partout où
      la capacité "db" de Claude n'est pas disponible (site public Netlify, exécution locale) —
      c'est donc le chemin qui tourne réellement pendant la démonstration en conditions réelles. */
-  var GAME_TYPE = { dossier:"medibet-dossier", pari:"medibet-pari", medecin:"medibet-medecin", trade:"medibet-trade" };
+  var GAME_TYPE = { dossier:"medibet-dossier", pari:"medibet-pari", medecin:"medibet-medecin", trade:"medibet-trade", patient:"medibet-patient" };
+  var FREEBET_WELCOME = 500;
   function gsEncode(type, obj){
     var extension = Object.keys(obj).filter(function(k){ return k!=="_id"; }).map(function(k){
       var v = obj[k];
@@ -625,7 +687,7 @@
   var gameStore = {
     fetchAll: function(){
       return fhirClient.listBasic().then(function(list){
-        var buckets = { dossiers:{}, paris:{}, medecins:{}, trades:{} };
+        var buckets = { dossiers:{}, paris:{}, medecins:{}, trades:{}, patients:{} };
         (list||[]).forEach(function(r){
           var type = r.code && r.code.text;
           var obj = gsDecode(r);
@@ -633,6 +695,7 @@
           else if(type===GAME_TYPE.pari) buckets.paris[obj.dossierId] = obj;
           else if(type===GAME_TYPE.medecin) buckets.medecins[obj.slug] = obj;
           else if(type===GAME_TYPE.trade) buckets.trades[r.id] = obj;
+          else if(type===GAME_TYPE.patient) buckets.patients[obj.slug] = obj;
         });
         return buckets;
       });
@@ -734,7 +797,12 @@
     },
     boing:function(){ sweep(180,920,0,.09,"sine",.07); sweep(920,140,.08,.22,"sine",.06); },
     honk:function(){ tone(240,0,.09,"square",.06); tone(190,.09,.14,"square",.06); },
-    legendary:function(){ for(var i=0;i<16;i++) tone(300+i*90, i*.045, .18, "triangle", .045); }
+    legendary:function(){ for(var i=0;i<16;i++) tone(300+i*90, i*.045, .18, "triangle", .045); },
+    epic:function(){ [440,554,659,880].forEach(function(f,i){ tone(f, i*.1, .35, "triangle", .06); }); },
+    collectorFanfare:function(){
+      for(var i=0;i<24;i++) tone(260+i*70, i*.04, .2, "triangle", .05);
+      setTimeout(function(){ [523,659,784,1046,1318].forEach(function(f,i){ tone(f, i*.1, .4, "square", .06); }); }, 900);
+    }
   };
 
   /* ---------------- confetti ---------------- */
@@ -757,7 +825,39 @@
 
   /* ---------------- db wiring ---------------- */
   var db = null, dbReady = false;
-  var live = { dossiers:{}, paris:{}, medecins:{}, trades:{} };
+  var live = { dossiers:{}, paris:{}, medecins:{}, trades:{}, patients:{} };
+
+  /* Portefeuille CoinPot du patient — un freebet de bienvenue à la création, crédité/débité
+     à chaque mise ou gain. */
+  function ensurePatientWallet(name){
+    var s = slug(name);
+    if(db){
+      return db.doc("patients/"+s).get().then(function(snap){
+        if(!snap.exists) return db.doc("patients/"+s).set({ name:name, balance:FREEBET_WELCOME, createdAt:Date.now() });
+      });
+    }
+    if(live.patients[s]) return Promise.resolve();
+    return gameStore.create(GAME_TYPE.patient, { slug:s, name:name, balance:FREEBET_WELCOME, createdAt:Date.now() });
+  }
+  function adjustPatientBalance(name, delta){
+    var s = slug(name);
+    if(db){
+      var ref = db.doc("patients/"+s);
+      return ref.get().then(function(snap){
+        var data = snap.exists ? snap.data() : { name:name, balance:FREEBET_WELCOME };
+        data.balance = Math.max(0, (data.balance||0)+delta);
+        return ref.set(data);
+      });
+    }
+    var existing = live.patients[s];
+    var patch = Object.assign({ slug:s, name:name, balance:FREEBET_WELCOME }, existing||{});
+    patch.balance = Math.max(0, (patch.balance||FREEBET_WELCOME)+delta);
+    return (existing && existing._id) ? gameStore.update(existing._id, GAME_TYPE.patient, patch) : gameStore.create(GAME_TYPE.patient, patch);
+  }
+  function patientBalance(name){
+    var p = live.patients[slug(name)];
+    return p ? p.balance : FREEBET_WELCOME;
+  }
 
   function ensureMedecinDoc(name){
     var s = slug(name);
@@ -942,8 +1042,10 @@
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 
   function header(){
-    var balance = state.role==="medecin" ? "" :
+    var rolePill = state.role==="medecin" ? "" :
       '<span class="pill">🎯 Rôle : <b>'+(state.role==="proche"?"Proche":"Patient")+'</b></span>';
+    var walletPill = (state.role==="medecin" || !state.name) ? "" :
+      '<span class="pill pill-wallet">💰 <b class="tabular">'+patientBalance(state.name)+'</b> CoinPot</span>';
     return (
       '<div class="marquee">'+
         '<div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span>'+
@@ -952,7 +1054,8 @@
         (state.screen==="landing" ? "" :
         '<div class="marquee-right">'+
           '<span class="pill">👤 <b>'+esc(state.name||"—")+'</b></span>'+
-          balance+
+          rolePill+
+          walletPill+
           '<button class="btn btn-sm" id="btnHome">↩ Accueil</button>'+
         '</div>')+
       '</div>'
@@ -965,6 +1068,7 @@
     if(state.screen==="landing") body = viewLanding();
     else if(state.screen==="patientHome") body = viewPatientHome();
     else if(state.screen==="patientCreate") body = viewPatientCreate();
+    else if(state.screen==="patientsBoard") body = viewPatientsBoard();
     else if(state.screen==="dossier") body = viewDossierPatient();
     else if(state.screen==="procheJoin") body = viewProcheJoin();
     else if(state.screen==="medecinHome") body = viewMedecinHome();
@@ -1010,9 +1114,12 @@
       return dossierCardSummary(d, pari);
     }).join("");
     return (
-      '<div class="section-head"><h1>Mes dossiers</h1><span class="muted">'+esc(state.name)+' · Équipe Patient</span></div>'+
+      '<div class="section-head"><h1>Mes dossiers</h1>'+
+        '<div class="btn-row"><span class="muted">'+esc(state.name)+' · Équipe Patient</span>'+
+        '<button class="btn btn-sm" id="goPatientsBoard">🏆 Classement</button></div>'+
+      '</div>'+
       '<div class="pack-cta" style="padding:20px;"><button class="btn btn-gold" id="btnNewDossier">➕ Décrire mes symptômes</button>'+
-      '<p class="muted" style="margin-top:8px;">Renseigne tes symptômes, notre algorithme te propose les diagnostics les plus probables avec leur cote.</p></div>'+
+      '<p class="muted" style="margin-top:8px;">Renseigne tes symptômes, notre algorithme te propose les diagnostics les plus probables avec leur cote. Freebet de bienvenue : '+FREEBET_WELCOME+' 🪙.</p></div>'+
       (mine.length ? '<div class="grid grid-2">'+rows+'</div>' : '<div class="empty">Aucun dossier pour l\'instant — clique ci-dessus pour commencer.</div>')
     );
   }
@@ -1064,6 +1171,24 @@
     );
   }
 
+  /* ---------------- PATIENT: CLASSEMENT ---------------- */
+  function viewPatientsBoard(){
+    var all = Object.keys(live.patients).map(function(k){ return live.patients[k]; })
+      .sort(function(a,b){ return (b.balance||0)-(a.balance||0); });
+    var medals = ["🥇","🥈","🥉"];
+    var rows = all.map(function(p, i){
+      return '<div class="medecin-row"><div style="display:flex;align-items:center;gap:10px;">'+
+        '<div class="avatar">'+(medals[i]||("#"+(i+1)))+'</div>'+
+        '<div><b>'+esc(p.name)+(p.name===state.name?" (toi)":"")+'</b></div></div>'+
+        '<span class="pill pill-wallet">💰 <b class="tabular">'+(p.balance||0)+'</b> CoinPot</span>'+
+      '</div>';
+    }).join("") || '<div class="empty">Personne n\'a encore de portefeuille CoinPot.</div>';
+    return (
+      '<div class="section-head"><h1>Classement des patients</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      '<div class="card">'+rows+'</div>'
+    );
+  }
+
   /* ---------------- PATIENT: DOSSIER DETAIL / BETTING BOARD ---------------- */
   function viewDossierPatient(){
     var d = dossierView(state.activeDossier);
@@ -1108,7 +1233,13 @@
       '<div class="pot-total"><span>Pot total</span><b class="tabular">'+pari.mises.reduce(function(a,m){return a+m.montant;},0)+' 🪙</b></div>'
     ) : "";
 
-    var shareCode = '<div class="note" style="margin-top:14px;">Code dossier à partager à tes proches pour qu\'ils misent avec toi : <span class="kbd">'+d.id+'</span></div>';
+    var shareCode = pari ? (
+      '<div class="share-box">'+
+        '<div><div class="share-label">📣 Code à partager à tes proches pour qu\'ils misent avec toi</div>'+
+        '<div class="share-code">'+d.id+'</div></div>'+
+        '<button class="btn btn-gold btn-sm" id="btnCopyCode" data-code="'+d.id+'">📋 Copier le code</button>'+
+      '</div>'
+    ) : "";
 
     var fhirCheckUI = (pari && !resolved) ?
       '<div class="stake-row" style="border-top:1px solid var(--line-soft);">'+
@@ -1121,6 +1252,7 @@
 
     return (
       '<div class="section-head"><h1>Dossier du '+fmtDate(d.createdAt)+'</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      (pari && !resolved ? shareCode : "")+
       '<div class="dossier">'+
         '<div class="vitals"><span><b>Symptômes déclarés</b> · '+d.symptoms.map(function(s){return SYMPTOM_LABEL[s]||s;}).join(", ")+'</span></div>'+
         '<div class="odds-board">'+rows+'</div>'+
@@ -1129,7 +1261,7 @@
         fhirCheckUI+
         (resolved ? '<div class="result-banner">Diagnostic officiel posé par le Dr '+esc(d.medecin||"—")+' : <b>'+esc(optLabel(d,d.diagnostic))+'</b>'+(fhirFound?' <span class="faint">(confirmé via FHIR)</span>':"")+'</div>' : "")+
       '</div>'+
-      (pari && !resolved ? waitingBanner+shareCode : "")
+      (pari && !resolved ? waitingBanner : "")
     );
   }
 
@@ -1207,14 +1339,32 @@
   }
 
   /* ---------------- MEDECIN: DOSSIER DETAIL ---------------- */
+  /* Probabilité (0-100%) de chaque maladie du catalogue complet compte tenu des
+     symptômes déclarés — affichée au médecin pour l'aider à trancher, sans jamais
+     restreindre son choix (il peut toujours poser un diagnostic à 0% de matching). */
+  function computeAllProbabilities(symptomIds){
+    var picked = {}; symptomIds.forEach(function(id){ picked[id]=true; });
+    return DISEASES.map(function(d){
+      var score=0, maxScore=0;
+      Object.keys(d.s).forEach(function(sym){ maxScore+=d.s[sym]; if(picked[sym]) score+=d.s[sym]; });
+      return { id:d.id, label:d.label, cat:d.cat, pct: maxScore>0 ? Math.round((score/maxScore)*100) : 0 };
+    }).sort(function(a,b){ return b.pct-a.pct || a.label.localeCompare(b.label); });
+  }
+
   function viewMedecinDossier(){
     var d = dossierView(state.activeDossier);
     if(!d) return '<div class="empty">Dossier introuvable.</div>';
     var pari = live.paris[d.id];
-    var optgroups = DISEASE_CATEGORIES.map(function(cat){
-      var opts = DISEASES.filter(function(x){return x.cat===cat;})
-        .map(function(x){return '<option value="'+x.id+'">'+esc(x.label)+'</option>';}).join("");
-      return '<optgroup label="'+esc(cat)+'">'+opts+'</optgroup>';
+    var ranked = computeAllProbabilities(d.symptoms);
+    var tiers = [
+      { label:"Probable (≥ 50%)", test:function(p){return p>=50;} },
+      { label:"Possible (20-49%)", test:function(p){return p>=20 && p<50;} },
+      { label:"Peu probable (< 20%)", test:function(p){return p<20;} }
+    ];
+    var optgroups = tiers.map(function(t){
+      var opts = ranked.filter(function(x){return t.test(x.pct);})
+        .map(function(x){return '<option value="'+x.id+'">'+esc(x.label)+' — '+x.pct+'% probable</option>';}).join("");
+      return opts ? '<optgroup label="'+esc(t.label)+'">'+opts+'</optgroup>' : "";
     }).join("");
     var suggested = d.candidates.map(function(o){return o.label;}).join(", ");
     return (
@@ -1245,16 +1395,25 @@
       '<div class="rarity">'+RARITY_META[c.rarity].label+'</div>'+
     '</div>';
   }
+  var RARITY_ORDER = ["COLLECTOR","MYTHIQUE","LEGENDAIRE","EPIQUE","RARE","COMMUN"];
   function viewCollection(){
     var mine = live.medecins[slug(state.name)] || {cards:[]};
     var ownedMap = {}; (mine.cards||[]).forEach(function(c){ ownedMap[c.id]=c.count; });
-    var tiles = CARD_POOL.map(function(c){ return cardTile(c.id, ownedMap[c.id]||0); }).join("");
-    var canOpen = (mine.diagCount||0) > ((mine.boostersOpened)||0);
+    var totalOwned = (mine.cards||[]).length;
+    var sections = RARITY_ORDER.map(function(r){
+      var cardsInTier = CARD_POOL.filter(function(c){return c.rarity===r;});
+      if(!cardsInTier.length) return "";
+      var ownedInTier = cardsInTier.filter(function(c){return ownedMap[c.id];}).length;
+      var tiles = cardsInTier.map(function(c){ return cardTile(c.id, ownedMap[c.id]||0); }).join("");
+      return '<div class="section-head" style="margin-top:26px;"><h2 style="color:'+RARITY_META[r].color+';">'+RARITY_META[r].label+'</h2>'+
+        '<span class="muted tabular">'+ownedInTier+' / '+cardsInTier.length+'</span></div>'+
+        '<div class="grid grid-3">'+tiles+'</div>';
+    }).join("");
     return (
       '<div class="section-head"><h1>Ma collection</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
       boosterCTA(mine)+
-      '<div class="section-head"><h2>Collection complète</h2><span class="muted tabular">'+(mine.cards||[]).length+' / '+CARD_POOL.length+' cartes découvertes</span></div>'+
-      '<div class="grid grid-3">'+tiles+'</div>'
+      '<div class="section-head"><h2>Collection complète</h2><span class="muted tabular">'+totalOwned+' / '+CARD_POOL.length+' cartes découvertes</span></div>'+
+      sections
     );
   }
   function boosterCTA(mine){
@@ -1269,7 +1428,7 @@
       .sort(function(a,b){ return (b.cards||[]).reduce(function(s,c){return s+c.count;},0) - (a.cards||[]).reduce(function(s,c){return s+c.count;},0); });
     var rows = all.map(function(m){
       var total = (m.cards||[]).reduce(function(s,c){return s+c.count;},0);
-      var rare = (m.cards||[]).filter(function(c){ var meta=CARD_POOL.filter(function(x){return x.id===c.id;})[0]; return meta && (meta.rarity==="LEGENDAIRE"||meta.rarity==="MYTHIQUE"); }).length;
+      var rare = (m.cards||[]).filter(function(c){ var meta=CARD_POOL.filter(function(x){return x.id===c.id;})[0]; return meta && (meta.rarity==="LEGENDAIRE"||meta.rarity==="MYTHIQUE"||meta.rarity==="COLLECTOR"); }).length;
       return '<div class="medecin-row"><div style="display:flex;align-items:center;gap:10px;"><div class="avatar">🩺</div><div><b>'+esc(m.name)+'</b><div class="faint" style="font-size:12px;">'+(m.diagCount||0)+' diagnostics posés</div></div></div>'+
       '<div style="display:flex;align-items:center;gap:10px;"><span class="pill">'+total+' cartes</span><span class="pill">✨ '+rare+' rares+</span>'+
       '<button class="btn btn-sm" data-view="'+esc(m.name)+'">Voir</button></div></div>';
@@ -1348,10 +1507,20 @@
     }
     if(t.id==="goCollection"){ sfx.click(); setState({screen:"collection"}); return; }
     if(t.id==="goColleagues"){ sfx.click(); setState({screen:"colleagues", viewingColleague:null}); return; }
+    if(t.id==="goPatientsBoard"){ sfx.click(); setState({screen:"patientsBoard"}); return; }
     if(t.id==="goTrades"){ sfx.click(); setState({screen:"trades"}); return; }
 
     if(t.id==="btnNewDossier"){
       sfx.click(); setState({screen:"patientCreate", pickedSymptoms:[]}); return;
+    }
+    if(t.id==="btnCopyCode"){
+      var codeVal = t.getAttribute("data-code");
+      sfx.coin();
+      var done = function(){ t.textContent = "✅ Copié !"; setTimeout(function(){ t.textContent = "📋 Copier le code"; }, 1500); };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(codeVal).then(done).catch(done);
+      } else { done(); }
+      return;
     }
     if(t.hasAttribute && t.hasAttribute("data-symptom")){
       sfx.click();
@@ -1385,7 +1554,19 @@
         if(found){
           state.fhirCheck = state.fhirCheck || {};
           state.fhirCheck[dCheck.id] = found;
-          sfx.win();
+          state.fhirCredited = state.fhirCredited || {};
+          var pariHere = live.paris[dCheck.id];
+          var myBetHere = pariHere && (pariHere.mises||[]).filter(function(m){return m.name===state.name;})[0];
+          var wonHere = myBetHere && pariHere.pronostic===found.diagnostic;
+          if(myBetHere && !state.fhirCredited[dCheck.id] && state.role!=="proche"){
+            state.fhirCredited[dCheck.id] = true;
+            if(wonHere){
+              var gainHere = Math.round(myBetHere.montant*pariHere.cote);
+              adjustPatientBalance(state.name, gainHere);
+              confettiBurst(document.body, ["#ffb400","#ff4d5e","#b98bff","#34e2a1"]);
+            }
+          }
+          if(myBetHere && !wonHere) sfx.lose(); else sfx.win();
           render();
         } else {
           sfx.honk();
@@ -1430,9 +1611,15 @@
       var sel = document.getElementById("selPronostic"), inp = document.getElementById("inpMise");
       var d2 = dossierView(state.activeDossier);
       var code = sel.value, montant = parseInt(inp.value,10)||10;
+      if(state.role!=="proche" && montant>patientBalance(state.name)){
+        alert("Solde CoinPot insuffisant (il te reste "+patientBalance(state.name)+" 🪙).");
+        return;
+      }
       sfx.place();
       fhirClient.getPatient(d2.patient.id, d2.patient.name).then(function(){
         return placeBet(d2.id, code, optCote(d2,code), state.name, montant, "patient");
+      }).then(function(){
+        if(state.role!=="proche") return adjustPatientBalance(state.name, -montant);
       });
       return;
     }
@@ -1440,8 +1627,15 @@
       var d3 = dossierView(state.activeDossier);
       var inp2 = document.getElementById("inpMiseJoin");
       var pari = live.paris[d3.id];
+      var montantJoin = parseInt(inp2.value,10)||10;
+      if(state.role!=="proche" && montantJoin>patientBalance(state.name)){
+        alert("Solde CoinPot insuffisant (il te reste "+patientBalance(state.name)+" 🪙).");
+        return;
+      }
       sfx.place();
-      placeBet(d3.id, pari.pronostic, pari.cote, state.name, parseInt(inp2.value,10)||10, state.role==="proche"?"proche":"patient");
+      placeBet(d3.id, pari.pronostic, pari.cote, state.name, montantJoin, state.role==="proche"?"proche":"patient").then(function(){
+        if(state.role!=="proche") return adjustPatientBalance(state.name, -montantJoin);
+      });
       return;
     }
     if(t.id==="btnJoin"){
@@ -1503,10 +1697,19 @@
     var wrap = overlay.querySelector(".reveal-cards");
     cards.forEach(function(c, i){
       setTimeout(function(){
-        var isMythique = c.rarity==="MYTHIQUE";
         var tile = el('<div class="reveal-card rarity-'+c.rarity+'"><span class="emoji">'+c.emoji+'</span><div class="name">'+esc(c.name)+'</div><div class="rarity">'+RARITY_META[c.rarity].label+'</div></div>');
         wrap.appendChild(tile);
-        if(isMythique){ sfx.legendary(); confettiBurst(document.body, ["#ffb400","#ff4d5e","#b98bff","#34e2a1"]); }
+        if(c.rarity==="COLLECTOR"){
+          sfx.collectorFanfare();
+          confettiBurst(document.body, ["#34e2a1","#ffb400","#ff4d5e","#b98bff","#ffffff"]);
+          setTimeout(function(){ confettiBurst(document.body, ["#34e2a1","#ffb400","#ff4d5e","#b98bff"]); }, 500);
+        } else if(c.rarity==="MYTHIQUE"){
+          sfx.legendary();
+          confettiBurst(document.body, ["#ffb400","#ff4d5e","#b98bff","#34e2a1"]);
+        } else if(c.rarity==="LEGENDAIRE"){
+          sfx.epic();
+          confettiBurst(document.body, ["#ffb400","#ffe08a"]);
+        }
       }, i*380);
     });
     overlay.querySelector("#btnCloseReveal").onclick = function(){
@@ -1554,7 +1757,7 @@
       if(state.role==="medecin"){
         ensureMedecinDoc(nm).then(function(){ setState({screen:"medecinHome"}); });
       } else {
-        setState({screen:"patientHome"});
+        ensurePatientWallet(nm).then(function(){ setState({screen:"patientHome"}); });
       }
     }
   });
@@ -1600,15 +1803,26 @@
   /* Site public / exécution locale : pas de capacité "db" Claude disponible, donc l'état de
      jeu partagé tourne entièrement sur les ressources FHIR Basic (voir gameStore), avec un
      rafraîchissement périodique en l'absence de push temps réel côté serveur. */
+  var lastLiveJSON = "";
+  function isEditingForm(){
+    var a = document.activeElement;
+    if(!a) return false;
+    var tag = a.tagName;
+    return tag==="SELECT" || tag==="INPUT" || tag==="TEXTAREA";
+  }
   function startPolling(){
     function tick(){
       gameStore.fetchAll().then(function(buckets){
+        var json = JSON.stringify(buckets);
+        if(json===lastLiveJSON) return; // rien n'a changé, ne pas re-rendre (préserve les formulaires en cours)
+        lastLiveJSON = json;
         live = buckets;
+        if(isEditingForm()) return; // un select/input est en cours d'usage : on attend la prochaine action pour rafraîchir l'affichage
         render();
       }).catch(function(){});
     }
     tick();
-    setInterval(tick, 4000);
+    setInterval(tick, 7000);
   }
 
   render();
