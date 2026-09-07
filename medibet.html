@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>MediBet</title>
 <meta name="description" content="Le jackpot du diagnostic : les patients misent sur leur maladie, les médecins tranchent et ouvrent des boosters.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -424,53 +425,130 @@
     return pool[Math.floor(Math.random()*pool.length)];
   }
 
-  /* ---------------- fhir mock client (shape-accurate) ---------------- */
+  /* ---------------- fhir client — vraies routes REST FHIR de la doc du TP ----------------
+     GET    /api/{resource}/{id}      → lire une ressource
+     GET    /api/{resource}           → lister toutes les ressources
+     GET    /api/{resource}?filtre    → lister filtré (ex. subject.reference=Patient/{id})
+     POST   /api/{resource}           → créer (body = ressource FHIR)
+     PUT    /api/{resource}/{id}      → modifier (body = ressource modifiée)
+     DELETE /api/{resource}/{id}      → supprimer
+     Content-Type: application/json sur toutes les requêtes.
+     MOCK_MODE=true (valeur par défaut de cet artifact publié) simule les réponses côté
+     client car le bac à sable Claude bloque les appels réseau vers un hôte externe
+     arbitraire. En clonant ce dépôt et en lançant `node serve.js` en local (ou tout
+     autre serveur), passez MOCK_MODE=false pour taper directement sur FHIR_BASE avec
+     vos identifiants FHIR de boarding list. ---------------------------------------- */
   var fhirLog = [];
-  function logFhir(method, path, body, response){
-    fhirLog.push({method:method, path:path, body:body, response:response, t:new Date()});
+  function logFhir(method, path, body, response, error){
+    fhirLog.push({method:method, path:path, body:body, response:response, error:error, t:new Date()});
     if(fhirLog.length>60) fhirLog.shift();
     renderFhirLog();
   }
   function mockDelay(){ return 260+Math.random()*260; }
+
+  function realRequest(method, path, body){
+    var url = FHIR_BASE + path;
+    return fetch(url, {
+      method: method,
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function(r){
+      return r.json().catch(function(){ return null; }).then(function(json){
+        logFhir(method, path, body, json);
+        return json;
+      });
+    }).catch(function(err){
+      logFhir(method, path, body, null, err.message);
+      throw err;
+    });
+  }
+  function mockRequest(method, path, body, mockResponse){
+    return new Promise(function(res){ setTimeout(function(){
+      logFhir(method, path, body, mockResponse);
+      res(mockResponse);
+    }, mockDelay()); });
+  }
+  function request(method, path, body, mockResponse){
+    return MOCK_MODE ? mockRequest(method, path, body, mockResponse) : realRequest(method, path, body);
+  }
+
+  function newId(prefix){ return prefix+"-"+Math.random().toString(36).slice(2,10); }
+
   var fhirClient = {
+    /* GET /api/patient/{id} */
     getPatient: function(id){
       var d = DOSSIERS.filter(function(x){return x.patient.id===id;})[0];
-      var resource = d ? {
-        resourceType:"Patient", id:id,
-        name:[{text:d.patient.name}], gender:d.patient.gender, birthDate:"—"
-      } : {resourceType:"Patient", id:id};
-      return new Promise(function(res){ setTimeout(function(){
-        logFhir("GET","/api/patient/"+id, null, resource);
-        res(resource);
-      }, mockDelay()); });
+      var mock = { resourceType:"Patient", id:id,
+        name:[{ use:"official", text:d?d.patient.name:id, family:d?d.patient.name.split(" ").slice(-1)[0]:undefined, given:d?[d.patient.name.split(" ")[0]]:undefined }],
+        gender: d?d.patient.gender:undefined, birthDate: d? String(2026-d.patient.age)+"-01-01" : undefined };
+      return request("GET", "/api/patient/"+id, null, mock);
     },
-    createObservation: function(body){
-      var resource = Object.assign({resourceType:"Observation", id:"obs-"+Math.random().toString(36).slice(2,10), status:"final"}, body);
-      return new Promise(function(res){ setTimeout(function(){
-        logFhir("POST","/api/observation", body, resource);
-        res(resource);
-      }, mockDelay()); });
+    /* POST /api/patient */
+    createPatient: function(patientResource){
+      var mock = Object.assign({resourceType:"Patient", id:newId("pat")}, patientResource);
+      return request("POST", "/api/patient", patientResource, mock);
     },
+    /* GET /api/practitioner/{id} */
+    getPractitioner: function(id, name){
+      var mock = { resourceType:"Practitioner", id:id, name:[{ use:"official", text:name||"Dr "+id }] };
+      return request("GET", "/api/practitioner/"+id, null, mock);
+    },
+    /* POST /api/observation — le diagnostic officiel du médecin */
+    createObservation: function(obsResource){
+      var mock = Object.assign({resourceType:"Observation", id:newId("obs"), status:"final"}, obsResource);
+      return request("POST", "/api/observation", obsResource, mock);
+    },
+    /* GET /api/observation?subject.reference=Patient/{id} */
     getObservationsForPatient: function(patientId){
-      return new Promise(function(res){ setTimeout(function(){
-        logFhir("GET","/api/observation?subject.reference=Patient/"+patientId, null, {resourceType:"Bundle", type:"searchset"});
-        res([]);
-      }, mockDelay()); });
+      var mock = { resourceType:"Bundle", type:"searchset", total:0, entry:[] };
+      return request("GET", "/api/observation?subject.reference=Patient/"+patientId, null, mock);
     },
-    createAppointment: function(body){
-      var resource = Object.assign({resourceType:"Appointment", id:"appt-"+Math.random().toString(36).slice(2,10), status:"booked"}, body);
-      return new Promise(function(res){ setTimeout(function(){
-        logFhir("POST","/api/appointment", body, resource);
-        res(resource);
-      }, mockDelay()); });
+    /* PUT /api/observation/{id} */
+    updateObservation: function(id, obsResource){
+      var mock = Object.assign({resourceType:"Observation", id:id}, obsResource);
+      return request("PUT", "/api/observation/"+id, obsResource, mock);
     },
+    /* DELETE /api/observation/{id} */
+    deleteObservation: function(id){
+      return request("DELETE", "/api/observation/"+id, null, { deleted:true, id:id });
+    },
+    /* POST /api/appointment — rendez-vous de suivi (Step 3 du TP) */
+    createAppointment: function(apptResource){
+      var mock = Object.assign({resourceType:"Appointment", id:newId("appt"), status:"booked"}, apptResource);
+      return request("POST", "/api/appointment", apptResource, mock);
+    },
+    /* GET /api/appointment/{id} */
     getAppointment: function(id){
-      return new Promise(function(res){ setTimeout(function(){
-        logFhir("GET","/api/appointment/"+id, null, {resourceType:"Appointment", id:id});
-        res({resourceType:"Appointment", id:id});
-      }, mockDelay()); });
+      var mock = { resourceType:"Appointment", id:id, status:"booked" };
+      return request("GET", "/api/appointment/"+id, null, mock);
     }
   };
+
+  /* Construit une ressource Observation FHIR R4 conforme à partir d'un diagnostic MediBet. */
+  function buildObservationResource(dossier, diagCode, diagLabel, medecinName){
+    return {
+      resourceType: "Observation",
+      status: "final",
+      code: { coding:[{ system:"http://medibet.local/diagnostics", code:diagCode, display:diagLabel }], text:diagLabel },
+      subject: { reference: "Patient/"+dossier.patient.id },
+      effectiveDateTime: new Date().toISOString(),
+      performer: [{ display: medecinName }],
+      valueCodeableConcept: { text: diagLabel }
+    };
+  }
+  /* Construit une ressource Appointment FHIR R4 conforme (rendez-vous de suivi). */
+  function buildAppointmentResource(dossier){
+    var start = new Date(Date.now()+7*864e5);
+    var end = new Date(start.getTime()+30*60000);
+    return {
+      resourceType: "Appointment",
+      status: "booked",
+      description: "Consultation de suivi",
+      start: start.toISOString(),
+      end: end.toISOString(),
+      participant: [{ actor:{ reference:"Patient/"+dossier.patient.id }, status:"accepted" }]
+    };
+  }
 
   /* ---------------- audio synth (no external assets) ---------------- */
   var actx = null;
@@ -617,7 +695,9 @@
       '<span class="pill">🎯 Rôle : <b>'+(state.role==="proche"?"Proche":"Patient")+'</b></span>';
     return (
       '<div class="marquee">'+
-        '<div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span></div>'+
+        '<div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span>'+
+          '<span class="pill" style="margin-left:8px;" title="'+FHIR_BASE+'">'+(MOCK_MODE?"🧪 FHIR simulé":"🟢 FHIR réel")+'</span>'+
+        '</div>'+
         (state.screen==="landing" ? "" :
         '<div class="marquee-right">'+
           '<span class="pill">👤 <b>'+esc(state.name||"—")+'</b></span>'+
@@ -655,11 +735,11 @@
     return (
       '<div class="landing">'+
         '<div class="logo-big">MediBet</div>'+
-        '<p class="sub">Le patient mise sur son diagnostic, ses proches suivent la cote, le médecin abat sa carte — et ouvre un booster à chaque verdict. Propulsé par la plateforme d\\'intermédiation FHIR.</p>'+
+        '<p class="sub">Le patient mise sur son diagnostic, ses proches suivent la cote, le médecin abat sa carte — et ouvre un booster à chaque verdict. Propulsé par la plateforme d\'intermédiation FHIR.</p>'+
         '<div class="role-grid">'+
           roleCard("patient","🎰","Je suis Patient","Choisis ton dossier, place ta mise sur ton diagnostic.")+
           roleCard("medecin","🩺","Je suis Médecin","Pose le vrai diagnostic, encaisse un booster maladie.")+
-          roleCard("proche","💸","Je suis Proche","Rejoins le pari d\\'un proche avec un code dossier.")+
+          roleCard("proche","💸","Je suis Proche","Rejoins le pari d\'un proche avec un code dossier.")+
         '</div>'+
         '<p class="note" style="margin-top:26px;max-width:640px;">Monnaie 100% virtuelle (CoinPot) — aucune transaction réelle. Base FHIR de référence : <span class="mono">'+FHIR_BASE+'</span> (appels simulés dans cet artifact, voir la console FHIR en bas à droite).</p>'+
       '</div>'
@@ -755,7 +835,7 @@
       '<div class="pot-total"><span>Pot total</span><b class="tabular">'+pari.mises.reduce(function(a,m){return a+m.montant;},0)+' 🪙</b></div>'
     ) : "";
 
-    var shareCode = '<div class="note" style="margin-top:14px;">Code dossier à partager à tes proches pour qu\\'ils misent avec toi : <span class="kbd">'+d.id+'</span></div>';
+    var shareCode = '<div class="note" style="margin-top:14px;">Code dossier à partager à tes proches pour qu\'ils misent avec toi : <span class="kbd">'+d.id+'</span></div>';
 
     return (
       '<div class="section-head"><h1>'+esc(d.patient.name)+'</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
@@ -775,7 +855,7 @@
     return (
       '<div style="max-width:480px;margin:40px auto;" class="card">'+
         '<h2>Rejoindre un pari</h2>'+
-        '<p class="muted">Entre le code dossier que ton proche t\\'a envoyé.</p>'+
+        '<p class="muted">Entre le code dossier que ton proche t\'a envoyé.</p>'+
         '<div class="btn-row" style="margin-top:14px;">'+
           '<input type="text" id="inpCode" placeholder="dossier-1" style="flex:1;">'+
           '<button class="btn btn-gold" id="btnJoin">Voir le pari</button>'+
@@ -791,7 +871,7 @@
     var done = DOSSIERS.filter(function(d){ var dyn=live.dossiers[d.id]; return dyn && dyn.status==="resolu"; });
     return (
       '<div class="section-head">'+
-        '<h1>File d\\'attente diagnostic</h1>'+
+        '<h1>File d\'attente diagnostic</h1>'+
         '<div class="btn-row">'+
           '<span class="pill">📦 Boosters ouverts : <b class="tabular">'+(mine.diagCount||0)+'</b></span>'+
           '<button class="btn btn-sm" id="goCollection">🗂️ Ma collection</button>'+
@@ -883,7 +963,7 @@
       return '<div class="medecin-row"><div style="display:flex;align-items:center;gap:10px;"><div class="avatar">🩺</div><div><b>'+esc(m.name)+'</b><div class="faint" style="font-size:12px;">'+(m.diagCount||0)+' diagnostics posés</div></div></div>'+
       '<div style="display:flex;align-items:center;gap:10px;"><span class="pill">'+total+' cartes</span><span class="pill">✨ '+rare+' rares+</span>'+
       '<button class="btn btn-sm" data-view="'+esc(m.name)+'">Voir</button></div></div>';
-    }).join("") || '<div class="empty">Aucun médecin n\\'a encore posé de diagnostic.</div>';
+    }).join("") || '<div class="empty">Aucun médecin n\'a encore posé de diagnostic.</div>';
     var viewed = state.viewingColleague ? viewColleagueDetail(state.viewingColleague) : "";
     return (
       '<div class="section-head"><h1>Classement des collègues</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
@@ -973,9 +1053,11 @@
       var d = DOSSIER_BY_ID[t.getAttribute("data-appt")];
       sfx.coin();
       fhirClient.getPatient(d.patient.id).then(function(){
-        return fhirClient.createAppointment({ subject:{reference:"Patient/"+d.patient.id}, description:"Consultation de suivi", start:new Date(Date.now()+7*864e5).toISOString() });
+        return fhirClient.createAppointment(buildAppointmentResource(d));
       }).then(function(appt){
         alert("Rendez-vous de suivi confirmé — "+new Date(appt.start).toLocaleDateString("fr-FR")+" (Appointment/"+appt.id+")");
+      }).catch(function(){
+        alert("Impossible de joindre l'API FHIR (voir la console FHIR).");
       });
       return;
     }
@@ -1013,11 +1095,7 @@
       var d4 = DOSSIER_BY_ID[state.activeDossier];
       var diagCode = document.getElementById("selDiag").value;
       sfx.win();
-      fhirClient.createObservation({
-        subject:{reference:"Patient/"+d4.patient.id},
-        code:{text: optLabel(d4,diagCode)},
-        performer:[{display: state.name}]
-      }).then(function(){
+      fhirClient.createObservation(buildObservationResource(d4, diagCode, optLabel(d4,diagCode), state.name)).then(function(){
         return resolveDossier(d4.id, diagCode, state.name);
       }).then(function(){
         var cards = [drawCard(), drawCard(), drawCard()];
@@ -1025,6 +1103,8 @@
       }).then(function(cards){
         state.pendingBooster = cards;
         setState({screen:"medecinHome", activeDossier:null});
+      }).catch(function(){
+        alert("Impossible de joindre l'API FHIR (voir la console FHIR).");
       });
       return;
     }

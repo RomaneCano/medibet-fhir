@@ -8,7 +8,7 @@ http.createServer((req, res) => {
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404); res.end('not found'); return; }
     const ext = path.extname(filePath);
-    const type = ext === '.html' ? 'text/html' : ext === '.js' ? 'text/javascript' : 'text/plain';
+    const type = ext === '.html' ? 'text/html; charset=utf-8' : ext === '.js' ? 'text/javascript; charset=utf-8' : 'text/plain; charset=utf-8';
     res.writeHead(200, { 'Content-Type': type });
     res.end(data);
   });
