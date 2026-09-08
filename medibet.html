@@ -715,6 +715,8 @@
      c'est donc le chemin qui tourne réellement pendant la démonstration en conditions réelles. */
   var GAME_TYPE = { dossier:"medibet-dossier", pari:"medibet-pari", medecin:"medibet-medecin", trade:"medibet-trade", patient:"medibet-patient" };
   var FREEBET_WELCOME = 500;
+  /* Nombre d'exemplaires d'une même carte requis pour un recyclage (voir recycleCard()/viewTrades()). */
+  var RECYCLE_COST = 10;
   function gsEncode(type, obj){
     var extension = Object.keys(obj).filter(function(k){ return k!=="_id"; }).map(function(k){
       var v = obj[k];
@@ -1032,13 +1034,14 @@
     return existing._id ? gameStore.update(existing._id, GAME_TYPE.medecin, patch) : gameStore.create(GAME_TYPE.medecin, patch);
   }
 
-  /* Recycle un doublon (carte possedee en plus d'un exemplaire) contre une
-     carte mystere fraichement tiree du pool. Retourne la carte obtenue. */
+  /* Recycle RECYCLE_COST exemplaires d'une même carte contre une carte
+     mystere fraichement tiree du pool (meme regle de probabilite qu'un
+     booster, via drawCard()). Retourne la carte obtenue. */
   function recycleCard(name, cardId){
     var newCard = drawCard();
     function removeOne(list){
       var f = list.filter(function(c){return c.id===cardId;})[0];
-      if(f) f.count--;
+      if(f) f.count -= RECYCLE_COST;
       return list.filter(function(c){return c.count>0;});
     }
     function addOne(list){
@@ -1477,20 +1480,22 @@
   /* ---------------- RECYCLAGE ----------------
      Avec un seul Médecin dans le jeu, l'échange pair-à-pair n'a plus de sens
      (personne d'autre pour accepter une offre). On garde l'idée d'une économie
-     de cartes en solo : un doublon (carte possédée en plus d'un exemplaire)
-     peut être recyclé contre une carte mystère fraîchement tirée du pool. */
+     de cartes en solo : 10 exemplaires d'une même carte peuvent être recyclés
+     contre une carte mystère fraîchement tirée du pool (même règle de
+     probabilité que l'ouverture d'un booster, voir drawCard()/RARITY_META). */
   function viewTrades(){
     var mine = live.medecins[slug(state.name)] || {cards:[]};
-    var duplicates = (mine.cards||[]).filter(function(c){return (c.count||0)>1;});
+    var duplicates = (mine.cards||[]).filter(function(c){return (c.count||0)>=RECYCLE_COST;});
     var rows = duplicates.map(function(c){
       var meta = CARD_POOL.filter(function(x){return x.id===c.id;})[0];
       if(!meta) return "";
-      return '<div class="trade-item"><span>'+meta.emoji+' <b>'+esc(meta.name)+'</b> <span class="faint">x'+c.count+'</span></span>'+
-        '<button class="btn btn-sm" data-recycle="'+meta.id+'">🔁 Recycler un doublon</button></div>';
-    }).join("") || '<div class="empty">Pas encore de doublon — ouvre plus de boosters pour en obtenir.</div>';
+      var batches = Math.floor(c.count/RECYCLE_COST);
+      return '<div class="trade-item"><span>'+meta.emoji+' <b>'+esc(meta.name)+'</b> <span class="faint">x'+c.count+' ('+batches+' recyclage'+(batches>1?"s":"")+' possible'+(batches>1?"s":"")+')</span></span>'+
+        '<button class="btn btn-sm" data-recycle="'+meta.id+'">🔁 Recycler '+RECYCLE_COST+' exemplaires</button></div>';
+    }).join("") || '<div class="empty">Pas encore de quoi recycler — il faut '+RECYCLE_COST+' exemplaires d\'une même carte (ouvre plus de boosters pour en obtenir).</div>';
     return (
       '<div class="section-head"><h1>Atelier de recyclage</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
-      '<p class="note">Un doublon (carte possédée en plusieurs exemplaires) peut être recyclé contre une carte mystère fraîchement tirée du pool — de quoi compléter sa collection sans dépendre d\'un autre médecin.</p>'+
+      '<p class="note">'+RECYCLE_COST+' exemplaires d\'une même carte peuvent être recyclés contre une carte mystère fraîchement tirée du pool (mêmes probabilités qu\'un booster) — de quoi compléter sa collection sans dépendre d\'un autre médecin.</p>'+
       '<div class="card">'+rows+'</div>'
     );
   }
