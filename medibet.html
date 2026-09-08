@@ -205,20 +205,41 @@
   .card-tile.owned-0{opacity:.28;filter:grayscale(1);}
 
   .reveal-overlay{
-    position:fixed;inset:0;background:rgba(4,6,10,.86);backdrop-filter:blur(4px);
-    display:flex;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:22px;
+    position:fixed;inset:0;width:100vw;height:100vh;
+    background:radial-gradient(circle at 50% 38%,rgba(30,14,54,.97),rgba(4,6,10,.99));
+    backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:30px;
+    padding:24px;
   }
-  .reveal-cards{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;max-width:640px;}
+  .reveal-pack-burst{
+    position:absolute;font-size:110px;filter:drop-shadow(0 0 40px var(--gold));
+    animation:packShake .55s ease-in-out;
+  }
+  .reveal-pack-burst.burst-out{animation:packBurst .5s cubic-bezier(.3,1,.4,1) forwards;}
+  @keyframes packShake{0%,100%{transform:rotate(0);}20%{transform:rotate(-8deg) scale(1.03);}40%{transform:rotate(7deg) scale(1.05);}60%{transform:rotate(-6deg) scale(1.05);}80%{transform:rotate(4deg) scale(1.02);}}
+  @keyframes packBurst{to{transform:scale(2.6);opacity:0;}}
+  .reveal-title{font-size:26px;letter-spacing:.02em;text-shadow:0 0 24px var(--gold);}
+  .reveal-cards{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;max-width:min(920px,92vw);perspective:1400px;}
+  .reveal-card-slot{width:180px;height:250px;}
   .reveal-card{
-    width:140px;padding:18px 10px;border-radius:16px;background:var(--panel);
-    border:2px solid var(--rc);text-align:center;
-    box-shadow:0 0 30px -6px var(--rc);
-    animation:pop .5s cubic-bezier(.2,1.5,.4,1) both;
+    position:relative;width:100%;height:100%;
+    transform-style:preserve-3d;transform:rotateY(180deg) scale(.85);
+    transition:transform .55s cubic-bezier(.2,1.4,.35,1);
   }
-  @keyframes pop{from{transform:scale(.3) rotate(-8deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
-  .reveal-card .emoji{font-size:46px;}
-  .reveal-card .name{font-weight:700;font-size:13.5px;margin-top:8px;}
-  .reveal-card .rarity{font-size:10.5px;color:var(--rc);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-top:4px;}
+  .reveal-card.flipped{transform:rotateY(0deg) scale(1);}
+  .rc-face{
+    position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    border-radius:18px;border:2px solid var(--rc);box-shadow:0 0 40px -8px var(--rc);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px;
+  }
+  .rc-back{
+    background:repeating-linear-gradient(135deg,var(--panel2) 0 10px,var(--panel) 10px 20px);
+    font-size:52px;color:var(--faint);transform:rotateY(180deg);
+  }
+  .rc-front{background:var(--panel);}
+  .rc-front .emoji{font-size:56px;}
+  .rc-front .name{font-weight:700;font-size:15px;margin-top:12px;}
+  .rc-front .rarity{font-size:11px;color:var(--rc);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-top:6px;}
 
   /* ---------- trades / colleagues ---------- */
   .medecin-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line-soft);}
@@ -497,6 +518,14 @@
     {id:"sinusite-skibidi", name:"Sinusite Skibidi", rarity:"COMMUN", emoji:"🤧"},
     {id:"conjonctivite-ohio", name:"Conjonctivite Ohio Rizz", rarity:"COMMUN", emoji:"👁️"},
     {id:"nez-qui-coule-frfr", name:"Nez Qui Coule Fr Fr", rarity:"COMMUN", emoji:"💧"},
+    {id:"toux-seche-nocap", name:"Toux Sèche No Cap", rarity:"COMMUN", emoji:"🌬️"},
+    {id:"mal-gorge-frfr", name:"Mal de Gorge Fr Fr", rarity:"COMMUN", emoji:"🗣️"},
+    {id:"fatigue-mid", name:"Fatigue Mid Tier", rarity:"COMMUN", emoji:"😩"},
+    {id:"rhinite-skibidi", name:"Rhinite Skibidi", rarity:"COMMUN", emoji:"🤧"},
+    {id:"aphtes-sigma", name:"Aphtes du Sigma", rarity:"COMMUN", emoji:"😬"},
+    {id:"verrue-ohio", name:"Verrue Ohio Rizz", rarity:"COMMUN", emoji:"🦶"},
+    {id:"piqure-baka", name:"Piqûre Baka", rarity:"COMMUN", emoji:"🦟"},
+    {id:"coup-soleil-delulu", name:"Coup de Soleil Delulu", rarity:"COMMUN", emoji:"☀️"},
     // Rare
     {id:"bronchite-rizz", name:"Bronchite Rizzlée", rarity:"RARE", emoji:"😮‍💨"},
     {id:"tendinite-sigma", name:"Tendinite du Sigma", rarity:"RARE", emoji:"💪"},
@@ -506,6 +535,12 @@
     {id:"anemie-delulu", name:"Anémie Delulu", rarity:"RARE", emoji:"😶‍🌫️"},
     {id:"toux-grasse-nocap", name:"Toux Grasse No Cap", rarity:"RARE", emoji:"🫗"},
     {id:"insomnie-gyat", name:"Insomnie Gyatt Rush", rarity:"RARE", emoji:"🌙"},
+    {id:"sciatique-grind", name:"Sciatique Grindset", rarity:"RARE", emoji:"🦴"},
+    {id:"colique-gyat", name:"Colique Néphrétique Gyatt", rarity:"RARE", emoji:"🪨"},
+    {id:"tachycardie-rizz", name:"Tachycardie Rizzlée", rarity:"RARE", emoji:"💓"},
+    {id:"vertige-ohio", name:"Vertige Ohio Final", rarity:"RARE", emoji:"🌀"},
+    {id:"eczema-delulu", name:"Eczéma Delulu", rarity:"RARE", emoji:"🌸"},
+    {id:"otite-externe-fanum", name:"Otite Externe Fanum Tax", rarity:"RARE", emoji:"👂"},
     // Épique
     {id:"mono-aura", name:"Mononucléose Aura +9000", rarity:"EPIQUE", emoji:"✨"},
     {id:"lombalgie-grind", name:"Lombalgie Grindset", rarity:"EPIQUE", emoji:"🏋️"},
@@ -513,16 +548,24 @@
     {id:"diabete-sussy", name:"Diabète Sussy Baka", rarity:"EPIQUE", emoji:"🍬"},
     {id:"anxieux-aura", name:"Trouble Anxieux Aura +9000", rarity:"EPIQUE", emoji:"😬"},
     {id:"phlebite-ohio", name:"Phlébite Ohio Final", rarity:"EPIQUE", emoji:"🦵"},
+    {id:"fibromyalgie-ultra", name:"Fibromyalgie Aura Ultra", rarity:"EPIQUE", emoji:"💫"},
+    {id:"colopathie-sussy", name:"Colopathie Sussy", rarity:"EPIQUE", emoji:"🫃"},
+    {id:"vertige-goated", name:"Vertige Positionnel GOATED", rarity:"EPIQUE", emoji:"🌪️"},
+    {id:"canal-carpien-sigma", name:"Canal Carpien du Sigma", rarity:"EPIQUE", emoji:"✋"},
     // Légendaire
     {id:"sussy-syndrome", name:"Syndrome Sussy Total", rarity:"LEGENDAIRE", emoji:"🕵️"},
     {id:"fievre-ohio", name:"Fièvre Skibidi Ohio Rizz", rarity:"LEGENDAIRE", emoji:"🔥"},
     {id:"glaucome-rizzler", name:"Glaucome Skibidi Rizzler", rarity:"LEGENDAIRE", emoji:"🌫️"},
     {id:"apnee-goated", name:"Apnée du Sommeil GOATED", rarity:"LEGENDAIRE", emoji:"😴"},
+    {id:"avc-final-boss", name:"AVC Silencieux Final Boss", rarity:"LEGENDAIRE", emoji:"🧠"},
+    {id:"embolie-rizzlord", name:"Embolie Pulmonaire Rizzlord", rarity:"LEGENDAIRE", emoji:"🫁"},
     // Mythique
     {id:"final-boss", name:"PANDÉMIE FINAL BOSS", rarity:"MYTHIQUE", emoji:"👑"},
     {id:"neuropathie-cosmique", name:"Neuropathie Cosmique Ultra Instinct", rarity:"MYTHIQUE", emoji:"⚡"},
+    {id:"guillain-cosmique", name:"Syndrome Cosmique Ultra Rare", rarity:"MYTHIQUE", emoji:"🌌"},
     // Collector — ultra-rare, drop quasi symbolique
-    {id:"collector-brainrot", name:"CARTE COLLECTOR — Le Docteur Suprême Rizzlord", rarity:"COLLECTOR", emoji:"🏆"}
+    {id:"collector-brainrot", name:"CARTE COLLECTOR — Le Docteur Suprême Rizzlord", rarity:"COLLECTOR", emoji:"🏆"},
+    {id:"collector-diagnostic-parfait", name:"CARTE COLLECTOR — La Légende du Diagnostic Parfait", rarity:"COLLECTOR", emoji:"💎"}
   ];
   function drawCard(){
     var total = 0, byRarity = {};
@@ -973,53 +1016,31 @@
     return existing._id ? gameStore.update(existing._id, GAME_TYPE.medecin, patch) : gameStore.create(GAME_TYPE.medecin, patch);
   }
 
-  function proposeTrade(from, offerCardId, wantCardId){
-    var data = { from:from, offerCardId:offerCardId, wantCardId:wantCardId, status:"ouvert", t:Date.now() };
-    if(db) return db.collection("trades").add(data);
-    return gameStore.create(GAME_TYPE.trade, data);
-  }
-  function acceptTrade(trade, byName){
-    if(db){
-      var fromRef = db.doc("medecins/"+slug(trade.from));
-      var toRef = db.doc("medecins/"+slug(byName));
-      return Promise.all([fromRef.get(), toRef.get()]).then(function(results){
-        var fromData = results[0].data(), toData = results[1].data();
-        function removeOne(list, cardId){
-          var f = list.filter(function(c){return c.id===cardId;})[0];
-          if(f){ f.count--; }
-          return list.filter(function(c){return c.count>0;});
-        }
-        function addOne(list, cardId){
-          var f = list.filter(function(c){return c.id===cardId;})[0];
-          if(f) f.count = (f.count||1)+1; else list.push({id:cardId, count:1});
-          return list;
-        }
-        fromData.cards = addOne(removeOne(fromData.cards||[], trade.offerCardId), trade.wantCardId);
-        toData.cards = addOne(removeOne(toData.cards||[], trade.wantCardId), trade.offerCardId);
-        return Promise.all([
-          fromRef.set(fromData), toRef.set(toData),
-          db.doc("trades/"+trade._id).set(Object.assign({}, trade, {status:"accepte"}))
-        ]);
-      });
-    }
-    function removeOneG(list, cardId){
+  /* Recycle un doublon (carte possedee en plus d'un exemplaire) contre une
+     carte mystere fraichement tiree du pool. Retourne la carte obtenue. */
+  function recycleCard(name, cardId){
+    var newCard = drawCard();
+    function removeOne(list){
       var f = list.filter(function(c){return c.id===cardId;})[0];
-      if(f){ f.count--; }
+      if(f) f.count--;
       return list.filter(function(c){return c.count>0;});
     }
-    function addOneG(list, cardId){
-      var f = list.filter(function(c){return c.id===cardId;})[0];
-      if(f) f.count = (f.count||1)+1; else list.push({id:cardId, count:1});
+    function addOne(list){
+      var f = list.filter(function(c){return c.id===newCard.id;})[0];
+      if(f) f.count = (f.count||1)+1; else list.push({id:newCard.id, count:1});
       return list;
     }
-    var fromData = live.medecins[slug(trade.from)], toData = live.medecins[slug(byName)];
-    var fromPatch = Object.assign({}, fromData, { cards: addOneG(removeOneG((fromData.cards||[]).slice(), trade.offerCardId), trade.wantCardId) });
-    var toPatch = Object.assign({}, toData, { cards: addOneG(removeOneG((toData.cards||[]).slice(), trade.wantCardId), trade.offerCardId) });
-    return Promise.all([
-      gameStore.update(fromData._id, GAME_TYPE.medecin, fromPatch),
-      gameStore.update(toData._id, GAME_TYPE.medecin, toPatch),
-      gameStore.update(trade._id, GAME_TYPE.trade, Object.assign({}, trade, { status:"accepte" }))
-    ]);
+    if(db){
+      var ref = db.doc("medecins/"+slug(name));
+      return ref.get().then(function(snap){
+        var data = snap.data();
+        data.cards = addOne(removeOne(data.cards||[]));
+        return ref.set(data);
+      }).then(function(){ return newCard; });
+    }
+    var existing = live.medecins[slug(name)];
+    var patch = Object.assign({}, existing, { cards: addOne(removeOne((existing.cards||[]).slice())) });
+    return gameStore.update(existing._id, GAME_TYPE.medecin, patch).then(function(){ return newCard; });
   }
 
   /* ---------------- state ---------------- */
@@ -1306,7 +1327,7 @@
           '<span class="pill">📦 Boosters ouverts : <b class="tabular">'+(mine.diagCount||0)+'</b></span>'+
           '<button class="btn btn-sm" id="goCollection">🗂️ Ma collection</button>'+
           '<button class="btn btn-sm" id="goColleagues">🏆 Collègues</button>'+
-          '<button class="btn btn-sm" id="goTrades">🔁 Échanges</button>'+
+          '<button class="btn btn-sm" id="goTrades">🔁 Recyclage</button>'+
         '</div>'+
       '</div>'+
       '<div class="section-head"><h2>En attente de diagnostic</h2><span class="hint muted">'+attente.length+' dossier(s), le plus ancien en premier</span></div>'+
@@ -1437,34 +1458,24 @@
       CARD_POOL.map(function(c){ return cardTile(c.id, ownedMap[c.id]||0); }).join("")+'</div>';
   }
 
-  /* ---------------- TRADES ---------------- */
+  /* ---------------- RECYCLAGE ----------------
+     Avec un seul Médecin dans le jeu, l'échange pair-à-pair n'a plus de sens
+     (personne d'autre pour accepter une offre). On garde l'idée d'une économie
+     de cartes en solo : un doublon (carte possédée en plus d'un exemplaire)
+     peut être recyclé contre une carte mystère fraîchement tirée du pool. */
   function viewTrades(){
     var mine = live.medecins[slug(state.name)] || {cards:[]};
-    var myCards = (mine.cards||[]).filter(function(c){return c.count>0;});
-    var openTrades = Object.keys(live.trades).map(function(k){ var t=live.trades[k]; t._id=k; return t; })
-      .filter(function(t){ return t.status==="ouvert"; });
-    var cardOpts = function(list){ return list.map(function(c){ var meta=CARD_POOL.filter(function(x){return x.id===c.id;})[0]; return '<option value="'+c.id+'">'+esc(meta?meta.name:c.id)+'</option>'; }).join(""); };
+    var duplicates = (mine.cards||[]).filter(function(c){return (c.count||0)>1;});
+    var rows = duplicates.map(function(c){
+      var meta = CARD_POOL.filter(function(x){return x.id===c.id;})[0];
+      if(!meta) return "";
+      return '<div class="trade-item"><span>'+meta.emoji+' <b>'+esc(meta.name)+'</b> <span class="faint">x'+c.count+'</span></span>'+
+        '<button class="btn btn-sm" data-recycle="'+meta.id+'">🔁 Recycler un doublon</button></div>';
+    }).join("") || '<div class="empty">Pas encore de doublon — ouvre plus de boosters pour en obtenir.</div>';
     return (
-      '<div class="section-head"><h1>Échanges entre collègues</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
-      '<div class="card">'+
-        '<h3>Proposer un échange</h3>'+
-        (myCards.length ? '<div class="btn-row" style="margin-top:10px;">'+
-          '<select id="selOffer">'+cardOpts(myCards)+'</select>'+
-          '<span class="muted">contre</span>'+
-          '<select id="selWant">'+cardOpts(CARD_POOL)+'</select>'+
-          '<button class="btn btn-gold btn-sm" id="btnPropose">Proposer</button>'+
-        '</div>' : '<p class="muted">Ouvre des boosters pour avoir des cartes à échanger.</p>')+
-      '</div>'+
-      '<div class="section-head"><h2>Offres ouvertes</h2></div>'+
-      '<div class="card">'+
-        (openTrades.length ? openTrades.map(function(t){
-          var offerMeta = CARD_POOL.filter(function(c){return c.id===t.offerCardId;})[0];
-          var wantMeta = CARD_POOL.filter(function(c){return c.id===t.wantCardId;})[0];
-          return '<div class="trade-item"><span><b>'+esc(t.from)+'</b> échange '+offerMeta.emoji+' '+esc(offerMeta.name)+' contre '+wantMeta.emoji+' '+esc(wantMeta.name)+'</span>'+
-            (t.from!==state.name ? '<button class="btn btn-sm" data-accept="'+t._id+'">Accepter</button>' : '<span class="faint">en attente</span>')+
-          '</div>';
-        }).join("") : '<div class="empty">Aucune offre pour le moment.</div>')+
-      '</div>'
+      '<div class="section-head"><h1>Atelier de recyclage</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
+      '<p class="note">Un doublon (carte possédée en plusieurs exemplaires) peut être recyclé contre une carte mystère fraîchement tirée du pool — de quoi compléter sa collection sans dépendre d\'un autre médecin.</p>'+
+      '<div class="card">'+rows+'</div>'
     );
   }
 
@@ -1656,8 +1667,8 @@
         var cards = [drawCard(), drawCard(), drawCard()];
         return awardBooster(state.name, []).then(function(){ return cards; });
       }).then(function(cards){
-        state.pendingBooster = cards;
         setState({screen:"medecinHome", activeDossier:null});
+        showBoosterReveal(cards);
       }).catch(function(){
         alert("Impossible de joindre l'API FHIR (voir la console FHIR).");
       });
@@ -1669,47 +1680,79 @@
       openBoosterFlow();
       return;
     }
-    if(t.id==="btnPropose"){
-      var off = document.getElementById("selOffer").value, want = document.getElementById("selWant").value;
-      proposeTrade(state.name, off, want).then(function(){ render(); });
-      return;
-    }
-    if(t.hasAttribute && t.hasAttribute("data-accept")){
-      var tid = t.getAttribute("data-accept");
-      var trade = live.trades[tid]; trade._id = tid;
-      acceptTrade(trade, state.name).then(function(){ sfx.win(); render(); });
+    if(t.hasAttribute && t.hasAttribute("data-recycle")){
+      var recycleId = t.getAttribute("data-recycle");
+      sfx.boing();
+      recycleCard(state.name, recycleId).then(function(newCard){
+        sfx.win();
+        render();
+        showBoosterReveal([newCard]);
+      });
       return;
     }
   });
 
-  function openBoosterFlow(){
-    var mine = live.medecins[slug(state.name)] || {cards:[]};
-    var pending = (mine.diagCount||0) - (mine.boostersOpened||0);
-    if(pending<=0) return;
-    var cards = state.pendingBooster || [drawCard(), drawCard(), drawCard()];
-    state.pendingBooster = null;
+  /* Ouvre immediatement le paquet passe en argument (appele juste apres un
+     diagnostic pose). openBoosterFlow() reste dispo comme filet de secours
+     (bouton "Ma collection") si l'overlay a ete ferme/rate avant ouverture. */
+  function showBoosterReveal(cards){
     sfx.pack();
-    var overlay = el('<div class="reveal-overlay"><h2>Booster maladie</h2><div class="reveal-cards"></div><button class="btn btn-gold" id="btnCloseReveal">Encaisser</button></div>');
+    var overlay = el(
+      '<div class="reveal-overlay">'+
+        '<div class="reveal-pack-burst" id="packBurst">🎁</div>'+
+        '<h2 class="reveal-title" style="opacity:0;">Booster maladie</h2>'+
+        '<div class="reveal-cards"></div>'+
+        '<button class="btn btn-gold" id="btnCloseReveal" style="opacity:0;pointer-events:none;">Encaisser</button>'+
+      '</div>'
+    );
     document.getElementById("overlayRoot").appendChild(overlay);
     var wrap = overlay.querySelector(".reveal-cards");
+    var title = overlay.querySelector(".reveal-title");
+    var closeBtn = overlay.querySelector("#btnCloseReveal");
+    var burst = overlay.querySelector("#packBurst");
+
+    setTimeout(function(){
+      burst.classList.add("burst-out");
+      title.style.transition = "opacity .3s ease";
+      title.style.opacity = "1";
+    }, 550);
+
     cards.forEach(function(c, i){
+      var baseDelay = 750 + i*900;
       setTimeout(function(){
-        var tile = el('<div class="reveal-card rarity-'+c.rarity+'"><span class="emoji">'+c.emoji+'</span><div class="name">'+esc(c.name)+'</div><div class="rarity">'+RARITY_META[c.rarity].label+'</div></div>');
-        wrap.appendChild(tile);
-        if(c.rarity==="COLLECTOR"){
-          sfx.collectorFanfare();
-          confettiBurst(document.body, ["#34e2a1","#ffb400","#ff4d5e","#b98bff","#ffffff"]);
-          setTimeout(function(){ confettiBurst(document.body, ["#34e2a1","#ffb400","#ff4d5e","#b98bff"]); }, 500);
-        } else if(c.rarity==="MYTHIQUE"){
-          sfx.legendary();
-          confettiBurst(document.body, ["#ffb400","#ff4d5e","#b98bff","#34e2a1"]);
-        } else if(c.rarity==="LEGENDAIRE"){
-          sfx.epic();
-          confettiBurst(document.body, ["#ffb400","#ffe08a"]);
-        }
-      }, i*380);
+        var slot = el(
+          '<div class="reveal-card-slot"><div class="reveal-card rarity-'+c.rarity+'">'+
+            '<div class="rc-face rc-back">❔</div>'+
+            '<div class="rc-face rc-front"><span class="emoji">'+c.emoji+'</span><div class="name">'+esc(c.name)+'</div><div class="rarity">'+RARITY_META[c.rarity].label+'</div></div>'+
+          '</div></div>'
+        );
+        wrap.appendChild(slot);
+        var cardEl = slot.querySelector(".reveal-card");
+        setTimeout(function(){
+          cardEl.classList.add("flipped");
+          sfx.click();
+          if(c.rarity==="COLLECTOR"){
+            sfx.collectorFanfare();
+            confettiBurst(document.body, ["#34e2a1","#ffb400","#ff4d5e","#b98bff","#ffffff"]);
+            setTimeout(function(){ confettiBurst(document.body, ["#34e2a1","#ffb400","#ff4d5e","#b98bff"]); }, 500);
+          } else if(c.rarity==="MYTHIQUE"){
+            sfx.legendary();
+            confettiBurst(document.body, ["#ffb400","#ff4d5e","#b98bff","#34e2a1"]);
+          } else if(c.rarity==="LEGENDAIRE"){
+            sfx.epic();
+            confettiBurst(document.body, ["#ffb400","#ffe08a"]);
+          }
+        }, 300);
+      }, baseDelay);
     });
-    overlay.querySelector("#btnCloseReveal").onclick = function(){
+
+    setTimeout(function(){
+      closeBtn.style.transition = "opacity .3s ease";
+      closeBtn.style.opacity = "1";
+      closeBtn.style.pointerEvents = "auto";
+    }, 750 + cards.length*900 + 400);
+
+    closeBtn.onclick = function(){
       overlay.remove();
       var s = slug(state.name);
       function applyPack(data){
@@ -1731,6 +1774,15 @@
         if(existing) gameStore.update(existing._id, GAME_TYPE.medecin, applyPack(Object.assign({}, existing)));
       }
     };
+  }
+
+  function openBoosterFlow(){
+    var mine = live.medecins[slug(state.name)] || {cards:[]};
+    var pending = (mine.diagCount||0) - (mine.boostersOpened||0);
+    if(pending<=0) return;
+    var cards = state.pendingBooster || [drawCard(), drawCard(), drawCard()];
+    state.pendingBooster = null;
+    showBoosterReveal(cards);
   }
 
   document.addEventListener("keydown", function(){});
