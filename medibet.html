@@ -1325,7 +1325,7 @@
       '<div class="section-head">'+
         '<h1>File d\'attente diagnostic</h1>'+
         '<div class="btn-row">'+
-          '<span class="pill">📦 Boosters ouverts : <b class="tabular">'+(mine.diagCount||0)+'</b></span>'+
+          '<span class="pill">📦 Boosters ouverts : <b class="tabular">'+(mine.boostersOpened||0)+'</b></span>'+
           '<button class="btn btn-sm" id="goCollection">🗂️ Ma collection</button>'+
           '<button class="btn btn-sm" id="goColleagues">🏆 Collègues</button>'+
           '<button class="btn btn-sm" id="goTrades">🔁 Recyclage</button>'+
@@ -1666,10 +1666,9 @@
         return resolveDossier(d4.id, diagCode, state.name);
       }).then(function(){
         var cards = [drawCard(), drawCard(), drawCard()];
-        return awardBooster(state.name, []).then(function(){ return cards; });
-      }).then(function(cards){
         setState({screen:"medecinHome", activeDossier:null});
         showBoosterReveal(cards);
+        awardBooster(state.name, []).catch(function(){ /* comptage secondaire, ne bloque pas le booster deja affiche */ });
       }).catch(function(){
         alert("Impossible de joindre l'API FHIR (voir la console FHIR).");
       });
@@ -1716,10 +1715,10 @@
       burst.classList.add("burst-out");
       title.style.transition = "opacity .3s ease";
       title.style.opacity = "1";
-    }, 550);
+    }, 400);
 
     cards.forEach(function(c, i){
-      var baseDelay = 750 + i*900;
+      var baseDelay = 500 + i*550;
       setTimeout(function(){
         var slot = el(
           '<div class="reveal-card-slot"><div class="reveal-card rarity-'+c.rarity+'">'+
@@ -1743,7 +1742,7 @@
             sfx.epic();
             confettiBurst(document.body, ["#ffb400","#ffe08a"]);
           }
-        }, 300);
+        }, 250);
       }, baseDelay);
     });
 
@@ -1751,12 +1750,15 @@
       closeBtn.style.transition = "opacity .3s ease";
       closeBtn.style.opacity = "1";
       closeBtn.style.pointerEvents = "auto";
-    }, 750 + cards.length*900 + 400);
+    }, 500 + cards.length*550 + 250);
 
     closeBtn.onclick = function(){
-      overlay.remove();
+      if(closeBtn.disabled) return;
+      closeBtn.disabled = true;
+      closeBtn.textContent = "Encaissement…";
       var s = slug(state.name);
       function applyPack(data){
+        data = data || {name:state.name, cards:[], diagCount:0, boostersOpened:0};
         data.boostersOpened = (data.boostersOpened||0)+1;
         var owned = data.cards||[];
         cards.forEach(function(c){
@@ -1766,13 +1768,22 @@
         data.cards = owned;
         return data;
       }
+      var done = function(){ overlay.remove(); };
+      var fail = function(){
+        closeBtn.disabled = false;
+        closeBtn.textContent = "Encaisser";
+        alert("Le serveur FHIR n'a pas répondu (réseau). Tes cartes n'ont pas été enregistrées, réessaie.");
+      };
       if(db){
         db.doc("medecins/"+s).get().then(function(snap){
-          db.doc("medecins/"+s).set(applyPack(snap.data()));
-        });
+          return db.doc("medecins/"+s).set(applyPack(snap.data()));
+        }).then(done).catch(fail);
       } else {
-        var existing = live.medecins[s];
-        if(existing) gameStore.update(existing._id, GAME_TYPE.medecin, applyPack(Object.assign({}, existing)));
+        try {
+          var existing = live.medecins[s];
+          if(existing) gameStore.update(existing._id, GAME_TYPE.medecin, applyPack(Object.assign({}, existing)));
+          done();
+        } catch(e){ fail(); }
       }
     };
   }
