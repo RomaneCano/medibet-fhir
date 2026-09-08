@@ -331,6 +331,13 @@
   var PRACTITIONER_IDS = {
     "Alexandre Desoutter": "6a9eb9f82788f33b659d11ef"
   };
+  /* Meme logique que PRACTITIONER_IDS : un identifiant FHIR Patient fixe et unique, pour
+     que Romane Cano reste LE MEME Patient FHIR quel que soit l'ordinateur/navigateur qui
+     ouvre l'app (avant ce fix, l'id etait mis en cache en localStorage par appareil, donc
+     un second poste sans ce cache re-creait un nouveau Patient a chaque fois). */
+  var PATIENT_IDS = {
+    "Romane Cano": "6a9ec7b52788f33b659d11f9"
+  };
 
   /* ---------------- symptômes & base de connaissance maladies ----------------
      Le patient coche ses symptômes ; notre algorithme d'aide au pré-diagnostic
@@ -771,9 +778,12 @@
     };
   }
 
-  /* Un vrai Patient FHIR est créé une seule fois par joueur (POST /api/patient),
-     puis son id est réutilisé (cache localStorage) pour toutes ses fiches suivantes. */
+  /* Identifiant FHIR Patient fixe (cf. PATIENT_IDS) pour les joueurs connus — garantit que
+     "Romane Cano" reste le même Patient FHIR peu importe l'ordinateur utilisé. Pour un nom
+     inconnu (hors demo), on retombe sur l'ancien comportement : créer un Patient une seule
+     fois puis mettre son id en cache localStorage pour cet appareil. */
   function ensurePatientFhirId(name){
+    if(PATIENT_IDS[name]) return Promise.resolve(PATIENT_IDS[name]);
     var key = "medibet_patient_fhir_id_"+slug(name);
     var cached = null;
     try{ cached = localStorage.getItem(key); }catch(e){}
