@@ -1568,7 +1568,7 @@
           var pariHere = live.paris[dCheck.id];
           var myBetHere = pariHere && (pariHere.mises||[]).filter(function(m){return m.name===state.name;})[0];
           var wonHere = myBetHere && pariHere.pronostic===found.diagnostic;
-          if(myBetHere && !state.fhirCredited[dCheck.id] && state.role!=="proche"){
+          if(myBetHere && !state.fhirCredited[dCheck.id]){
             state.fhirCredited[dCheck.id] = true;
             if(wonHere){
               var gainHere = Math.round(myBetHere.montant*pariHere.cote);
@@ -1621,7 +1621,7 @@
       var sel = document.getElementById("selPronostic"), inp = document.getElementById("inpMise");
       var d2 = dossierView(state.activeDossier);
       var code = sel.value, montant = parseInt(inp.value,10)||10;
-      if(state.role!=="proche" && montant>patientBalance(state.name)){
+      if(montant>patientBalance(state.name)){
         alert("Solde CoinPot insuffisant (il te reste "+patientBalance(state.name)+" 🪙).");
         return;
       }
@@ -1629,7 +1629,7 @@
       fhirClient.getPatient(d2.patient.id, d2.patient.name).then(function(){
         return placeBet(d2.id, code, optCote(d2,code), state.name, montant, "patient");
       }).then(function(){
-        if(state.role!=="proche") return adjustPatientBalance(state.name, -montant);
+        return adjustPatientBalance(state.name, -montant);
       });
       return;
     }
@@ -1638,13 +1638,13 @@
       var inp2 = document.getElementById("inpMiseJoin");
       var pari = live.paris[d3.id];
       var montantJoin = parseInt(inp2.value,10)||10;
-      if(state.role!=="proche" && montantJoin>patientBalance(state.name)){
+      if(montantJoin>patientBalance(state.name)){
         alert("Solde CoinPot insuffisant (il te reste "+patientBalance(state.name)+" 🪙).");
         return;
       }
       sfx.place();
       placeBet(d3.id, pari.pronostic, pari.cote, state.name, montantJoin, state.role==="proche"?"proche":"patient").then(function(){
-        if(state.role!=="proche") return adjustPatientBalance(state.name, -montantJoin);
+        return adjustPatientBalance(state.name, -montantJoin);
       });
       return;
     }
