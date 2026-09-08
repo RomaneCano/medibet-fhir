@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>MediBet — Accueil — choix du rôle</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root{
+      --bg:#0a0d12; --panel:#121722; --panel2:#182031;
+      --ink:#eef3f7; --muted:#8ea0b5; --faint:#5b6c82;
+      --gold:#ffb400; --gold-ink:#3a2600; --crimson:#ff4d5e; --mint:#34e2a1; --violet:#b98bff;
+      --line:#243149; --line-soft:#1a2334;
+      --shadow: 0 20px 50px -20px rgba(0,0,0,.7);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;}
+    body{
+      background:
+        radial-gradient(1200px 700px at 50% -10%, #1a2540 0%, transparent 60%),
+        var(--bg);
+      color:var(--ink);
+      font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+    a{color:var(--gold);}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+    .frame{width:1440px;min-height:1000px;}
+    .marquee{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+      padding:22px 40px 14px;border-bottom:1px solid var(--line-soft);
+    }
+    .brand{display:flex;align-items:baseline;gap:10px;}
+    .brand .logo{
+      font-family:"Monoton",cursive;font-size:30px;letter-spacing:2px;color:var(--gold);
+      text-shadow:0 0 6px rgba(255,180,0,.55), 0 0 22px rgba(255,180,0,.25);
+    }
+    .brand .tag{font-size:11px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+    .pill{
+      display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);
+      border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);margin-left:8px;
+    }
+    main{padding:64px 40px 60px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+    .logo-big{
+      font-family:"Monoton",cursive;font-size:78px;color:var(--gold);
+      text-shadow:0 0 10px rgba(255,180,0,.55), 0 0 40px rgba(255,180,0,.3);
+      margin-bottom:10px;
+    }
+    p.sub{color:var(--muted);font-size:16px;max-width:560px;margin:0 auto 44px;line-height:1.55;}
+    .role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:860px;width:100%;}
+    .role-card{
+      background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:28px 22px;text-align:left;
+    }
+    .role-card.hi{border-color:var(--gold);box-shadow:0 14px 30px -14px rgba(255,180,0,.35);}
+    .role-card .emoji{font-size:36px;}
+    .role-card h3{margin:12px 0 0;font-size:17px;}
+    .role-card p{color:var(--muted);font-size:13px;margin:8px 0 0;line-height:1.45;}
+    .note{
+      font-size:12.5px;color:var(--faint);border:1px dashed var(--line);border-radius:10px;padding:12px 16px;
+      background:var(--panel2);margin-top:36px;max-width:660px;
+    }
+    .fhir-toggle{
+      position:absolute;bottom:22px;right:26px;
+      background:var(--panel2);border:1px solid var(--line);color:var(--mint);
+      border-radius:999px;padding:10px 16px;font-size:12.5px;font-family:"IBM Plex Mono",monospace;
+      display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);
+    }
+    .fhir-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);}
+  </style>
+</head>
+<body>
+<div class="frame" style="position:relative;">
+  <div class="marquee">
+    <div class="brand">
+      <span class="logo">MediBet</span>
+      <span class="tag">le jackpot du diagnostic</span>
+      <span class="pill">🧪 FHIR simulé</span>
+    </div>
+  </div>
+  <main>
+    <div class="logo-big">MediBet</div>
+    <p class="sub">Le patient mise sur son diagnostic, ses proches suivent la cote, et le médecin abat sa carte en ouvrant un booster à chaque verdict. Propulsé par la plateforme d'intermédiation FHIR.</p>
+    <div class="role-grid">
+      <div class="role-card hi">
+        <div class="emoji">🎰</div>
+        <h3>Je suis Patient</h3>
+        <p>Choisis ton dossier, place ta mise sur ton diagnostic.</p>
+      </div>
+      <div class="role-card">
+        <div class="emoji">🩺</div>
+        <h3>Je suis Médecin</h3>
+        <p>Pose le vrai diagnostic, encaisse un booster maladie.</p>
+      </div>
+      <div class="role-card">
+        <div class="emoji">💸</div>
+        <h3>Je suis Proche</h3>
+        <p>Rejoins le pari d'un proche avec un code dossier.</p>
+      </div>
+    </div>
+    <p class="note">Monnaie 100% virtuelle (CoinPot), aucune transaction réelle. Base FHIR : <span class="mono">fhir.alliance4u.io</span> (appels simulés dans cet artifact, voir la console FHIR en bas à droite).</p>
+  </main>
+  <div class="fhir-toggle"><span class="fhir-dot"></span> FHIR trace</div>
+</div>
+</body>
+</html>

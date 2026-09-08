@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>MediBet — Collection de cartes maladies</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root{
+      --bg:#0a0d12; --panel:#121722; --panel2:#182031;
+      --ink:#eef3f7; --muted:#8ea0b5; --faint:#5b6c82; --gold:#ffb400;
+      --line:#243149; --line-soft:#1a2334; --shadow:0 20px 50px -20px rgba(0,0,0,.7);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;}
+    body{background:radial-gradient(1200px 700px at 50% -10%, #1a2540 0%, transparent 60%), var(--bg);color:var(--ink);font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;}
+    .tabular{font-variant-numeric:tabular-nums;}
+    .frame{width:1440px;min-height:1500px;}
+    .marquee{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 40px 14px;border-bottom:1px solid var(--line-soft);}
+    .brand{display:flex;align-items:baseline;gap:10px;}
+    .brand .logo{font-family:"Monoton",cursive;font-size:26px;letter-spacing:2px;color:var(--gold);text-shadow:0 0 6px rgba(255,180,0,.55);}
+    .brand .tag{font-size:10.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:6px 11px;border-radius:8px;font-size:12.5px;font-weight:600;}
+    main{max-width:1180px;margin:0 auto;padding:28px 40px 60px;}
+    h1{font-size:24px;margin:0;}
+    h2{font-size:18px;margin:0;}
+    .muted{color:var(--muted);}
+    .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:26px 0 14px;}
+    .section-head:first-of-type{margin-top:0;}
+    .pack-cta{display:flex;flex-direction:column;align-items:center;gap:10px;padding:32px 20px;text-align:center;}
+    .pack-art{width:100px;height:134px;border-radius:14px;background:linear-gradient(145deg,#2a1a4d,#5b2fa8 40%,#ffb400 140%);box-shadow:0 20px 45px -18px rgba(255,180,0,.5), inset 0 0 0 2px rgba(255,255,255,.15);display:grid;place-items:center;font-size:32px;}
+    .grid-3{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+    .card-tile{border-radius:14px;border:1px solid var(--line);background:var(--panel2);padding:14px;text-align:center;position:relative;overflow:hidden;}
+    .card-tile .glow{position:absolute;inset:-40%;background:radial-gradient(circle,var(--rc) 0%,transparent 65%);opacity:.18;pointer-events:none;}
+    .card-tile .emoji{font-size:32px;display:block;margin-bottom:6px;filter:drop-shadow(0 0 8px var(--rc));}
+    .card-tile .name{font-weight:700;font-size:12px;}
+    .card-tile .rarity{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--rc);font-weight:700;margin-top:4px;}
+    .card-tile .count{position:absolute;top:8px;right:10px;font-size:11px;color:var(--muted);font-family:"IBM Plex Mono",monospace;}
+    .card-tile.owned-0{opacity:.28;filter:grayscale(1);}
+  </style>
+</head>
+<body>
+<div class="frame">
+  <div class="marquee">
+    <div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span></div>
+    <button class="btn">← Retour</button>
+  </div>
+  <main>
+    <div class="section-head"><h1>Ma collection</h1></div>
+    <div class="pack-cta">
+      <div class="pack-art">🎁</div>
+      <p class="muted">2 booster(s) à ouvrir, clique sur le paquet !</p>
+    </div>
+    <div class="section-head"><h2>Collection complète</h2><span class="muted tabular">23 / 51 cartes découvertes</span></div>
+
+    <div class="section-head" style="margin-top:26px;"><h2 style="color:#ffb400;">Légendaire</h2><span class="muted tabular">1 / 6</span></div>
+    <div class="grid-3">
+      <div class="card-tile" style="--rc:#ffb400;"><div class="glow"></div><span class="count">×1</span><span class="emoji">🔥</span><div class="name">Fièvre Skibidi Ohio Rizz</div><div class="rarity">Légendaire</div></div>
+      <div class="card-tile owned-0" style="--rc:#ffb400;"><div class="glow"></div><span class="emoji">🕵️</span><div class="name">Syndrome Sussy Total</div><div class="rarity">Légendaire</div></div>
+      <div class="card-tile owned-0" style="--rc:#ffb400;"><div class="glow"></div><span class="emoji">😴</span><div class="name">Apnée du Sommeil GOATED</div><div class="rarity">Légendaire</div></div>
+      <div class="card-tile owned-0" style="--rc:#ffb400;"><div class="glow"></div><span class="emoji">🧠</span><div class="name">AVC Silencieux Final Boss</div><div class="rarity">Légendaire</div></div>
+      <div class="card-tile owned-0" style="--rc:#ffb400;"><div class="glow"></div><span class="emoji">🌫️</span><div class="name">Glaucome Skibidi Rizzler</div><div class="rarity">Légendaire</div></div>
+      <div class="card-tile owned-0" style="--rc:#ffb400;"><div class="glow"></div><span class="emoji">🫁</span><div class="name">Embolie Pulmonaire Rizzlord</div><div class="rarity">Légendaire</div></div>
+    </div>
+
+    <div class="section-head" style="margin-top:26px;"><h2 style="color:#b98bff;">Épique</h2><span class="muted tabular">3 / 8</span></div>
+    <div class="grid-3">
+      <div class="card-tile" style="--rc:#b98bff;"><div class="glow"></div><span class="count">×2</span><span class="emoji">🌀</span><div class="name">Labyrinthite Sigma Grindset</div><div class="rarity">Épique</div></div>
+      <div class="card-tile" style="--rc:#b98bff;"><div class="glow"></div><span class="count">×1</span><span class="emoji">💓</span><div class="name">Tachycardie Rizzlée</div><div class="rarity">Épique</div></div>
+      <div class="card-tile" style="--rc:#b98bff;"><div class="glow"></div><span class="count">×1</span><span class="emoji">🌸</span><div class="name">Eczéma Delulu</div><div class="rarity">Épique</div></div>
+      <div class="card-tile owned-0" style="--rc:#b98bff;"><div class="glow"></div><span class="emoji">🪨</span><div class="name">Colique Néphrétique Gyatt</div><div class="rarity">Épique</div></div>
+      <div class="card-tile owned-0" style="--rc:#b98bff;"><div class="glow"></div><span class="emoji">🦴</span><div class="name">Sciatique Grindset</div><div class="rarity">Épique</div></div>
+      <div class="card-tile owned-0" style="--rc:#b98bff;"><div class="glow"></div><span class="emoji">🌙</span><div class="name">Insomnie Gyatt Rush</div><div class="rarity">Épique</div></div>
+    </div>
+
+    <div class="section-head" style="margin-top:26px;"><h2 style="color:#4da3ff;">Rare</h2><span class="muted tabular">6 / 13</span></div>
+    <div class="grid-3">
+      <div class="card-tile" style="--rc:#4da3ff;"><div class="glow"></div><span class="count">×3</span><span class="emoji">🌪️</span><div class="name">Migraine Gyatt Rush</div><div class="rarity">Rare</div></div>
+      <div class="card-tile" style="--rc:#4da3ff;"><div class="glow"></div><span class="count">×1</span><span class="emoji">💪</span><div class="name">Tendinite du Sigma</div><div class="rarity">Rare</div></div>
+      <div class="card-tile" style="--rc:#4da3ff;"><div class="glow"></div><span class="count">×2</span><span class="emoji">😮‍💨</span><div class="name">Bronchite Rizzlée</div><div class="rarity">Rare</div></div>
+      <div class="card-tile" style="--rc:#4da3ff;"><div class="glow"></div><span class="count">×1</span><span class="emoji">⚡</span><div class="name">Zona Baka</div><div class="rarity">Rare</div></div>
+      <div class="card-tile owned-0" style="--rc:#4da3ff;"><div class="glow"></div><span class="emoji">😶‍🌫️</span><div class="name">Anémie Delulu</div><div class="rarity">Rare</div></div>
+      <div class="card-tile owned-0" style="--rc:#4da3ff;"><div class="glow"></div><span class="emoji">🌀</span><div class="name">Vertige Ohio Final</div><div class="rarity">Rare</div></div>
+    </div>
+
+    <div class="section-head" style="margin-top:26px;"><h2 style="color:#8ea0b5;">Commun</h2><span class="muted tabular">13 / 16</span></div>
+    <div class="grid-3">
+      <div class="card-tile" style="--rc:#8ea0b5;"><div class="glow"></div><span class="count">×4</span><span class="emoji">🤧</span><div class="name">Rhino Skibidi</div><div class="rarity">Commun</div></div>
+      <div class="card-tile" style="--rc:#8ea0b5;"><div class="glow"></div><span class="count">×2</span><span class="emoji">🚽</span><div class="name">Gastro Ohio</div><div class="rarity">Commun</div></div>
+      <div class="card-tile" style="--rc:#8ea0b5;"><div class="glow"></div><span class="count">×1</span><span class="emoji">🗣️</span><div class="name">Angine Fanum Tax</div><div class="rarity">Commun</div></div>
+      <div class="card-tile" style="--rc:#8ea0b5;"><div class="glow"></div><span class="count">×3</span><span class="emoji">🤒</span><div class="name">Grippette No Cap</div><div class="rarity">Commun</div></div>
+      <div class="card-tile" style="--rc:#8ea0b5;"><div class="glow"></div><span class="count">×1</span><span class="emoji">👂</span><div class="name">Otite Mid</div><div class="rarity">Commun</div></div>
+      <div class="card-tile owned-0" style="--rc:#8ea0b5;"><div class="glow"></div><span class="emoji">🤧</span><div class="name">Sinusite Skibidi</div><div class="rarity">Commun</div></div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

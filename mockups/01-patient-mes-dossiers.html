@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>MediBet — Patient — mes dossiers</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root{
+      --bg:#0a0d12; --panel:#121722; --panel2:#182031;
+      --ink:#eef3f7; --muted:#8ea0b5; --faint:#5b6c82;
+      --gold:#ffb400; --mint:#34e2a1; --violet:#b98bff;
+      --line:#243149; --line-soft:#1a2334;
+      --shadow: 0 20px 50px -20px rgba(0,0,0,.7);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;}
+    body{background:radial-gradient(1200px 700px at 50% -10%, #1a2540 0%, transparent 60%), var(--bg);color:var(--ink);font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+    .frame{width:1440px;min-height:1120px;}
+    .marquee{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:22px 40px 14px;border-bottom:1px solid var(--line-soft);}
+    .brand{display:flex;align-items:baseline;gap:10px;}
+    .brand .logo{font-family:"Monoton",cursive;font-size:26px;letter-spacing:2px;color:var(--gold);text-shadow:0 0 6px rgba(255,180,0,.55);}
+    .brand .tag{font-size:10.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+    .marquee-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);}
+    .pill b{color:var(--ink);font-weight:600;}
+    .pill-wallet{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;font-weight:700;border:none;}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:600;}
+    .btn-gold{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;border:none;box-shadow:0 8px 20px -8px rgba(255,180,0,.6);}
+    .btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px;}
+    .btn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    main{max-width:1180px;margin:0 auto;padding:28px 40px 60px;}
+    h1{font-size:24px;margin:0;}
+    h3{font-size:15px;margin:0;}
+    .muted{color:var(--muted);}
+    .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 16px;flex-wrap:wrap;}
+    .pack-cta{display:flex;flex-direction:column;align-items:center;gap:8px;padding:32px 20px;text-align:center;background:var(--panel);border:1px solid var(--line-soft);border-radius:16px;margin-bottom:26px;}
+    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+    .dossier{background:var(--panel);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+    .dossier-top{padding:16px 20px;display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line-soft);}
+    .dossier-id{font-size:11px;color:var(--faint);}
+    .status-tag{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+    .status-ouvert{background:rgba(52,226,161,.12);color:var(--mint);border:1px solid rgba(52,226,161,.3);}
+    .status-resolu{background:rgba(139,148,255,.12);color:var(--violet);border:1px solid rgba(185,139,255,.3);}
+    .vitals{padding:14px 20px;font-size:13px;color:var(--muted);background:var(--panel2);}
+    .dossier-foot{padding:14px 20px;}
+    .result-banner{padding:0;font-weight:700;font-size:14px;}
+    .result-win{color:var(--mint);}
+    .result-lose{color:var(--crimson,#ff4d5e);}
+  </style>
+</head>
+<body>
+<div class="frame">
+  <div class="marquee">
+    <div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span></div>
+    <div class="marquee-right">
+      <span class="pill">👤 <b>Romane Cano</b></span>
+      <span class="pill">🎯 Rôle : <b>Patient</b></span>
+      <span class="pill pill-wallet">💰 <b>450</b> CoinPot</span>
+      <button class="btn btn-sm">↩ Accueil</button>
+    </div>
+  </div>
+  <main>
+    <div class="section-head">
+      <h1>Mes dossiers</h1>
+      <div class="btn-row"><span class="muted">Romane Cano · Équipe Patient</span><button class="btn btn-sm">🏆 Classement</button></div>
+    </div>
+    <div class="pack-cta">
+      <button class="btn btn-gold">➕ Décrire mes symptômes</button>
+      <p class="muted" style="margin:8px 0 0;">Renseigne tes symptômes, notre algorithme te propose les diagnostics les plus probables avec leur cote. Freebet de bienvenue : 500 🪙.</p>
+    </div>
+    <div class="grid-2">
+      <div class="dossier">
+        <div class="dossier-top">
+          <div><h3>Dossier du 8 sept. 2026</h3><div class="dossier-id mono">pat-7f2a91</div></div>
+          <span class="status-tag status-ouvert">En attente du médecin</span>
+        </div>
+        <div class="vitals">Fièvre, Toux, Fatigue, Céphalées, Frissons</div>
+        <div class="dossier-foot"><button class="btn btn-gold btn-sm">Voir mon pari</button></div>
+      </div>
+      <div class="dossier">
+        <div class="dossier-top">
+          <div><h3>Dossier du 2 sept. 2026</h3><div class="dossier-id mono">pat-7f2a91</div></div>
+          <span class="status-tag status-resolu">Résolu</span>
+        </div>
+        <div class="vitals">Douleur articulaire, Fatigue, Gonflement des jambes</div>
+        <div class="dossier-foot">
+          <div class="result-banner result-win">🎉 Gagné +75 🪙 (pronostic Entorse de la cheville)</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

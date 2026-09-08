@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>MediBet — Patient — choix des symptômes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root{
+      --bg:#0a0d12; --panel:#121722; --panel2:#182031;
+      --ink:#eef3f7; --muted:#8ea0b5; --faint:#5b6c82; --gold:#ffb400;
+      --line:#243149; --line-soft:#1a2334;
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;}
+    body{background:radial-gradient(1200px 700px at 50% -10%, #1a2540 0%, transparent 60%), var(--bg);color:var(--ink);font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;}
+    .frame{width:1440px;min-height:900px;}
+    .marquee{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:22px 40px 14px;border-bottom:1px solid var(--line-soft);}
+    .brand{display:flex;align-items:baseline;gap:10px;}
+    .brand .logo{font-family:"Monoton",cursive;font-size:26px;letter-spacing:2px;color:var(--gold);text-shadow:0 0 6px rgba(255,180,0,.55);}
+    .brand .tag{font-size:10.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+    .marquee-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);}
+    .pill b{color:var(--ink);font-weight:600;}
+    .pill-wallet{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;font-weight:700;border:none;}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:600;}
+    .btn-gold{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;border:none;box-shadow:0 8px 20px -8px rgba(255,180,0,.6);}
+    .btn-gold:disabled{opacity:.4;}
+    .btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px;}
+    main{max-width:1180px;margin:0 auto;padding:28px 40px 60px;}
+    h1{font-size:24px;margin:0;}
+    .muted{color:var(--muted);}
+    .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 8px;}
+    .symptom-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+    .symptom-chip{border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:500;}
+    .symptom-chip.on{background:rgba(255,180,0,.14);border-color:var(--gold);color:var(--gold);font-weight:700;}
+  </style>
+</head>
+<body>
+<div class="frame">
+  <div class="marquee">
+    <div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span></div>
+    <div class="marquee-right">
+      <span class="pill">👤 <b>Romane Cano</b></span>
+      <span class="pill">🎯 Rôle : <b>Patient</b></span>
+      <span class="pill pill-wallet">💰 <b>450</b> CoinPot</span>
+      <button class="btn btn-sm">↩ Accueil</button>
+    </div>
+  </div>
+  <main>
+    <div class="section-head"><h1>Quels sont tes symptômes ?</h1><button class="btn btn-sm">← Retour</button></div>
+    <p class="muted">Coche tout ce qui s'applique — notre algorithme d'aide au pré-diagnostic croisera ça avec sa base de maladies.</p>
+    <div class="symptom-grid">
+      <button class="symptom-chip on">🌡️ Fièvre</button>
+      <button class="symptom-chip on">😷 Toux</button>
+      <button class="symptom-chip">🗣️ Mal de gorge</button>
+      <button class="symptom-chip on">😴 Fatigue</button>
+      <button class="symptom-chip on">🤕 Céphalées</button>
+      <button class="symptom-chip">🫀 Douleur thoracique</button>
+      <button class="symptom-chip">🤢 Douleur abdominale</button>
+      <button class="symptom-chip">🤮 Nausées</button>
+      <button class="symptom-chip">🤢 Vomissements</button>
+      <button class="symptom-chip">💩 Diarrhée</button>
+      <button class="symptom-chip">🔴 Éruption cutanée</button>
+      <button class="symptom-chip">✋ Démangeaisons</button>
+      <button class="symptom-chip">🦴 Douleur articulaire</button>
+      <button class="symptom-chip">💪 Douleur musculaire</button>
+      <button class="symptom-chip">🫁 Essoufflement</button>
+      <button class="symptom-chip">😵 Vertiges</button>
+      <button class="symptom-chip">🍽️ Perte d'appétit</button>
+      <button class="symptom-chip on">🥶 Frissons</button>
+      <button class="symptom-chip">🔵 Ganglions gonflés</button>
+      <button class="symptom-chip">👁️ Yeux rouges</button>
+      <button class="symptom-chip">🤧 Nez qui coule</button>
+      <button class="symptom-chip">🔻 Douleur lombaire</button>
+      <button class="symptom-chip">💓 Palpitations</button>
+      <button class="symptom-chip">😶‍🌫️ Confusion</button>
+    </div>
+    <div style="margin-top:22px;">
+      <button class="btn btn-gold">Envoyer au médecin (5 symptômes)</button>
+    </div>
+  </main>
+</div>
+</body>
+</html>

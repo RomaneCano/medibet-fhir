@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>MediBet — Atelier de recyclage des cartes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root{
+      --bg:#0a0d12; --panel:#121722; --panel2:#182031;
+      --ink:#eef3f7; --muted:#8ea0b5; --faint:#5b6c82; --gold:#ffb400;
+      --line:#243149; --line-soft:#1a2334; --shadow:0 20px 50px -20px rgba(0,0,0,.7);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;}
+    body{background:radial-gradient(1200px 700px at 50% -10%, #1a2540 0%, transparent 60%), var(--bg);color:var(--ink);font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;}
+    .frame{width:900px;min-height:800px;}
+    .marquee{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 40px 14px;border-bottom:1px solid var(--line-soft);}
+    .brand{display:flex;align-items:baseline;gap:10px;}
+    .brand .logo{font-family:"Monoton",cursive;font-size:26px;letter-spacing:2px;color:var(--gold);text-shadow:0 0 6px rgba(255,180,0,.55);}
+    .brand .tag{font-size:10.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:6px 11px;border-radius:8px;font-size:12.5px;font-weight:600;}
+    main{max-width:760px;margin:0 auto;padding:28px 40px 60px;}
+    h1{font-size:24px;margin:0;}
+    .section-head{margin:0 0 16px;}
+    .note{font-size:13px;color:var(--faint);border:1px dashed var(--line);border-radius:10px;padding:12px 16px;background:var(--panel2);margin-bottom:18px;}
+    .card{background:var(--panel);border:1px solid var(--line-soft);border-radius:16px;padding:6px 20px;box-shadow:var(--shadow);}
+    .trade-item{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line-soft);font-size:14px;}
+    .trade-item:last-child{border-bottom:none;}
+    .faint{color:var(--faint);}
+    .btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px;}
+  </style>
+</head>
+<body>
+<div class="frame">
+  <div class="marquee">
+    <div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span></div>
+    <button class="btn">← Retour</button>
+  </div>
+  <main>
+    <div class="section-head"><h1>Atelier de recyclage</h1></div>
+    <div class="note">Un doublon (carte possédée en plusieurs exemplaires) peut être recyclé contre une carte mystère fraîchement tirée du pool — de quoi compléter sa collection sans dépendre d'un autre médecin.</div>
+    <div class="card">
+      <div class="trade-item"><span>🤧 <b>Rhino Skibidi</b> <span class="faint">x4</span></span><button class="btn btn-sm">🔁 Recycler un doublon</button></div>
+      <div class="trade-item"><span>🚽 <b>Gastro Ohio</b> <span class="faint">x2</span></span><button class="btn btn-sm">🔁 Recycler un doublon</button></div>
+      <div class="trade-item"><span>🌪️ <b>Migraine Gyatt Rush</b> <span class="faint">x3</span></span><button class="btn btn-sm">🔁 Recycler un doublon</button></div>
+      <div class="trade-item"><span>😮‍💨 <b>Bronchite Rizzlée</b> <span class="faint">x2</span></span><button class="btn btn-sm">🔁 Recycler un doublon</button></div>
+      <div class="trade-item"><span>🌀 <b>Labyrinthite Sigma Grindset</b> <span class="faint">x2</span></span><button class="btn btn-sm">🔁 Recycler un doublon</button></div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

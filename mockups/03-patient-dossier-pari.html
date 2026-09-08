@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>MediBet — Patient — dossier et pari</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root{
+      --bg:#0a0d12; --panel:#121722; --panel2:#182031;
+      --ink:#eef3f7; --muted:#8ea0b5; --faint:#5b6c82;
+      --gold:#ffb400; --gold-ink:#3a2600; --mint:#34e2a1;
+      --line:#243149; --line-soft:#1a2334;
+      --shadow: 0 20px 50px -20px rgba(0,0,0,.7);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;}
+    body{
+      background:radial-gradient(1200px 700px at 50% -10%, #1a2540 0%, transparent 60%), var(--bg);
+      color:var(--ink);font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;
+    }
+    a{color:var(--gold);}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+    .tabular{font-variant-numeric:tabular-nums;}
+    .frame{width:1440px;min-height:1180px;}
+    .marquee{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+      padding:22px 40px 14px;border-bottom:1px solid var(--line-soft);
+    }
+    .brand{display:flex;align-items:baseline;gap:10px;}
+    .brand .logo{font-family:"Monoton",cursive;font-size:26px;letter-spacing:2px;color:var(--gold);text-shadow:0 0 6px rgba(255,180,0,.55);}
+    .brand .tag{font-size:10.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+    .marquee-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);}
+    .pill b{color:var(--ink);font-weight:600;}
+    .pill-wallet{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;font-weight:700;border:none;}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:600;}
+    .btn-gold{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;border:none;box-shadow:0 8px 20px -8px rgba(255,180,0,.6);}
+    .btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px;}
+    main{max-width:1180px;margin:0 auto;padding:28px 40px 60px;}
+    .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 16px;}
+    h1{font-size:24px;margin:0;}
+    .muted{color:var(--muted);}
+    .faint{color:var(--faint);}
+    .share-box{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+      background:linear-gradient(180deg,rgba(255,180,0,.14),rgba(255,180,0,.05));
+      border:2px solid var(--gold);border-radius:14px;padding:16px 20px;margin:0 0 20px;
+    }
+    .share-label{font-size:13px;color:var(--muted);margin-bottom:6px;}
+    .share-code{font-family:"IBM Plex Mono",monospace;font-size:22px;font-weight:700;color:var(--gold);letter-spacing:.02em;}
+    .dossier{background:var(--panel);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+    .vitals{padding:16px 22px;font-size:13.5px;color:var(--muted);background:var(--panel2);}
+    .vitals b{color:var(--ink);}
+    .odds-board{padding:10px 14px;}
+    .odds-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 8px;border-bottom:1px dashed var(--line-soft);}
+    .odds-row:last-child{border-bottom:none;}
+    .odds-name{font-weight:600;font-size:15px;}
+    .odds-cote{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:17px;color:var(--gold);background:rgba(255,180,0,.08);border:1px solid rgba(255,180,0,.25);border-radius:8px;padding:5px 12px;min-width:64px;text-align:center;}
+    .odds-row.picked{background:rgba(255,180,0,.06);border-radius:10px;}
+    .stake-row{display:flex;gap:10px;align-items:center;padding:18px 22px;background:var(--panel2);flex-wrap:wrap;}
+    select{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 11px;font-size:13.5px;}
+    input[type=number]{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 11px;font-size:14px;font-family:"IBM Plex Mono",monospace;width:90px;}
+    .mise-list{padding:14px 22px;display:flex;flex-direction:column;gap:8px;}
+    .mise-item{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--line-soft);}
+    .mise-item b{color:var(--ink);}
+    .pot-total{padding:16px 22px;display:flex;justify-content:space-between;align-items:center;font-size:13.5px;color:var(--muted);border-top:1px solid var(--line-soft);}
+    .fhir-check{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 22px;border-top:1px solid var(--line-soft);flex-wrap:wrap;}
+    .note{font-size:13px;color:var(--faint);border:1px dashed var(--line);border-radius:10px;padding:12px 16px;background:var(--panel2);margin-top:18px;}
+  </style>
+</head>
+<body>
+<div class="frame">
+  <div class="marquee">
+    <div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span></div>
+    <div class="marquee-right">
+      <span class="pill">👤 <b>Romane Cano</b></span>
+      <span class="pill">🎯 Rôle : <b>Patient</b></span>
+      <span class="pill pill-wallet">💰 <b class="tabular">450</b> CoinPot</span>
+      <button class="btn btn-sm">↩ Accueil</button>
+    </div>
+  </div>
+  <main>
+    <div class="section-head">
+      <h1>Dossier du 8 sept. 2026</h1>
+      <button class="btn btn-sm">← Retour</button>
+    </div>
+    <div class="share-box">
+      <div>
+        <div class="share-label">📣 Code à partager à tes proches pour qu'ils misent avec toi</div>
+        <div class="share-code">d-7q3k9m2p</div>
+      </div>
+      <button class="btn btn-gold btn-sm">📋 Copier le code</button>
+    </div>
+    <div class="dossier">
+      <div class="vitals"><b>Symptômes déclarés</b> · Fièvre, Toux, Fatigue, Céphalées, Frissons</div>
+      <div class="odds-board">
+        <div class="odds-row picked"><span class="odds-name">Grippe saisonnière</span><span class="odds-cote tabular">2.40</span></div>
+        <div class="odds-row"><span class="odds-name">Rhino-pharyngite virale</span><span class="odds-cote tabular">3.10</span></div>
+        <div class="odds-row"><span class="odds-name">Angine virale</span><span class="odds-cote tabular">4.50</span></div>
+        <div class="odds-row"><span class="odds-name">COVID-19</span><span class="odds-cote tabular">5.80</span></div>
+      </div>
+      <div class="stake-row">
+        <span class="muted">Ta mise : <b>50 🪙</b> sur <b>Grippe saisonnière</b> (cote 2.40)</span>
+      </div>
+      <div class="mise-list">
+        <div class="mise-item"><span>Romane Cano <span class="faint">(patient)</span></span><b>50 🪙</b></div>
+        <div class="mise-item"><span>Neirouz Attia <span class="faint">(proche)</span></span><b>20 🪙</b></div>
+        <div class="mise-item"><span>Rémi Delarue <span class="faint">(proche)</span></span><b>15 🪙</b></div>
+      </div>
+      <div class="pot-total"><span>Pot total</span><b class="tabular">85 🪙</b></div>
+      <div class="fhir-check">
+        <button class="btn btn-sm">🔄 Vérifier le diagnostic auprès du serveur FHIR</button>
+        <span class="faint mono" style="font-size:12px;">GET /api/observation?subject.reference=Patient/pat-7f2a91</span>
+      </div>
+    </div>
+    <div class="note">📡 Diagnostic en attente du médecin — dès qu'il/elle publie une Observation FHIR sur ce dossier, ton pari se résout automatiquement.</div>
+  </main>
+</div>
+</body>
+</html>
