@@ -21,6 +21,10 @@ avec de vrais appels réseau vérifiés en direct contre le serveur du TP.
 - **Projet Patient** : Neirouz Attia (PO), Rémi Delarue (Scrum Master), Romane Cano (Dev)
 - **Projet Médecin** : Alexandre Desoutter (PO), Aimé Goetschel (Scrum Master), Eya Rejeb (Dev)
 
+Sur demande du professeur, le jeu lui-même n'a qu'un seul Patient (Romane Cano) et un
+seul Médecin (Alexandre Desoutter) : choisir un rôle sur l'écran d'accueil mène directement
+à cette identité unique, sans liste où en choisir une autre dans la base.
+
 ## Lancer le projet en local
 
 ```bash
