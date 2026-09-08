@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>MediBet — Résultat du pari et booster</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root{
+      --bg:#0a0d12; --panel:#121722; --panel2:#182031;
+      --ink:#eef3f7; --muted:#8ea0b5; --faint:#5b6c82;
+      --gold:#ffb400; --crimson:#ff4d5e; --mint:#34e2a1; --violet:#b98bff;
+      --line:#243149; --line-soft:#1a2334;
+      --shadow: 0 20px 50px -20px rgba(0,0,0,.7);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;}
+    body{
+      background:radial-gradient(1200px 700px at 50% -10%, #1a2540 0%, transparent 60%), var(--bg);
+      color:var(--ink);font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;
+    }
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+    .tabular{font-variant-numeric:tabular-nums;}
+    .frame{width:1440px;height:1180px;position:relative;overflow:hidden;}
+    .marquee{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:22px 40px 14px;border-bottom:1px solid var(--line-soft);}
+    .brand{display:flex;align-items:baseline;gap:10px;}
+    .brand .logo{font-family:"Monoton",cursive;font-size:26px;letter-spacing:2px;color:var(--gold);text-shadow:0 0 6px rgba(255,180,0,.55);}
+    .brand .tag{font-size:10.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+    .marquee-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);}
+    .pill b{color:var(--ink);font-weight:600;}
+    .pill-wallet{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;font-weight:700;border:none;}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:600;}
+    .btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px;}
+    main{max-width:1180px;margin:0 auto;padding:28px 40px 60px;}
+    h1{font-size:24px;margin:0;}
+    .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 16px;}
+    .dossier{background:var(--panel);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);filter:blur(1.5px) brightness(.55);}
+    .vitals{padding:16px 22px;font-size:13.5px;color:var(--muted);background:var(--panel2);}
+    .vitals b{color:var(--ink);}
+    .odds-board{padding:10px 14px;}
+    .odds-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 8px;border-bottom:1px dashed var(--line-soft);}
+    .odds-row:last-child{border-bottom:none;}
+    .odds-name{font-weight:600;font-size:15px;}
+    .odds-cote{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:17px;color:var(--gold);background:rgba(255,180,0,.08);border:1px solid rgba(255,180,0,.25);border-radius:8px;padding:5px 12px;min-width:64px;text-align:center;}
+    .odds-row.winner{background:rgba(52,226,161,.08);}
+    .odds-row.loser{opacity:.55;}
+    .result-banner{padding:18px 22px;font-weight:700;font-size:15px;color:var(--mint);border-top:1px solid var(--line-soft);}
+
+    .reveal-overlay{
+      position:absolute;inset:0;
+      background:radial-gradient(circle at 50% 38%,rgba(30,14,54,.97),rgba(4,6,10,.99));
+      display:flex;align-items:center;justify-content:center;flex-direction:column;gap:32px;padding:24px;
+    }
+    .reveal-title{font-size:26px;letter-spacing:.02em;color:var(--ink);text-shadow:0 0 24px var(--gold);margin:0;}
+    .reveal-cards{display:flex;gap:26px;justify-content:center;}
+    .reveal-card-slot{width:180px;height:250px;}
+    .rc-front{
+      width:100%;height:100%;border-radius:18px;border:2px solid var(--rc);box-shadow:0 0 40px -8px var(--rc);
+      background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px;
+    }
+    .rc-front .emoji{font-size:56px;}
+    .rc-front .name{font-weight:700;font-size:15px;margin-top:12px;}
+    .rc-front .rarity{font-size:11px;color:var(--rc);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-top:6px;}
+    .btn-gold{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;border:none;box-shadow:0 8px 20px -8px rgba(255,180,0,.6);padding:11px 22px;border-radius:10px;font-size:14px;font-weight:700;}
+  </style>
+</head>
+<body>
+<div class="frame">
+  <div class="marquee">
+    <div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span></div>
+    <div class="marquee-right">
+      <span class="pill">👤 <b>Romane Cano</b></span>
+      <span class="pill pill-wallet">💰 <b class="tabular">570</b> CoinPot</span>
+      <button class="btn btn-sm">↩ Accueil</button>
+    </div>
+  </div>
+  <main>
+    <div class="section-head"><h1>Dossier du 8 sept. 2026</h1></div>
+    <div class="dossier">
+      <div class="vitals"><b>Symptômes déclarés</b> · Fièvre, Toux, Fatigue, Céphalées, Frissons</div>
+      <div class="odds-board">
+        <div class="odds-row winner"><span class="odds-name">Grippe saisonnière ✅</span><span class="odds-cote tabular">2.40</span></div>
+        <div class="odds-row loser"><span class="odds-name">Rhino-pharyngite virale</span><span class="odds-cote tabular">3.10</span></div>
+        <div class="odds-row loser"><span class="odds-name">Angine virale</span><span class="odds-cote tabular">4.50</span></div>
+      </div>
+      <div class="result-banner">🎉 Diagnostic officiel posé par le Dr Alexandre Desoutter : Grippe saisonnière — Gagné +120 🪙</div>
+    </div>
+  </main>
+
+  <div class="reveal-overlay">
+    <h2 class="reveal-title">Booster maladie</h2>
+    <div class="reveal-cards">
+      <div class="reveal-card-slot">
+        <div class="rc-front" style="--rc:#8ea0b5;">
+          <span class="emoji">🤧</span>
+          <div class="name">Rhino Skibidi</div>
+          <div class="rarity">Commun</div>
+        </div>
+      </div>
+      <div class="reveal-card-slot">
+        <div class="rc-front" style="--rc:#4da3ff;">
+          <span class="emoji">🌪️</span>
+          <div class="name">Migraine Gyatt Rush</div>
+          <div class="rarity">Rare</div>
+        </div>
+      </div>
+      <div class="reveal-card-slot">
+        <div class="rc-front" style="--rc:#ffb400;">
+          <span class="emoji">🔥</span>
+          <div class="name">Fièvre Skibidi Ohio Rizz</div>
+          <div class="rarity">Légendaire</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-gold">Encaisser</button>
+  </div>
+</div>
+</body>
+</html>
