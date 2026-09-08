@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>MediBet — Médecin — dossiers et diagnostic officiel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root{
+      --bg:#0a0d12; --panel:#121722; --panel2:#182031;
+      --ink:#eef3f7; --muted:#8ea0b5; --faint:#5b6c82;
+      --gold:#ffb400; --mint:#34e2a1;
+      --line:#243149; --line-soft:#1a2334;
+      --shadow: 0 20px 50px -20px rgba(0,0,0,.7);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;}
+    body{
+      background:radial-gradient(1200px 700px at 50% -10%, #1a2540 0%, transparent 60%), var(--bg);
+      color:var(--ink);font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;
+    }
+    a{color:var(--gold);}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+    .frame{width:1440px;min-height:1560px;}
+    .marquee{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:22px 40px 14px;border-bottom:1px solid var(--line-soft);}
+    .brand{display:flex;align-items:baseline;gap:10px;}
+    .brand .logo{font-family:"Monoton",cursive;font-size:26px;letter-spacing:2px;color:var(--gold);text-shadow:0 0 6px rgba(255,180,0,.55);}
+    .brand .tag{font-size:10.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+    .marquee-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);}
+    .pill b{color:var(--ink);font-weight:600;}
+    .btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:600;}
+    .btn-gold{background:linear-gradient(180deg,#ffcc4d,#ffa500);color:#3a2600;border:none;box-shadow:0 8px 20px -8px rgba(255,180,0,.6);}
+    .btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px;}
+    .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+    main{max-width:1180px;margin:0 auto;padding:28px 40px 60px;}
+    h1{font-size:24px;margin:0;}
+    h2{font-size:18px;margin:0;}
+    h3{font-size:15px;margin:0;}
+    .muted{color:var(--muted);}
+    .faint{color:var(--faint);}
+    .hint{font-size:12.5px;}
+    .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:32px 0 14px;flex-wrap:wrap;}
+    .section-head:first-child{margin-top:0;}
+    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+    .dossier{background:var(--panel);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+    .dossier-top{padding:16px 20px;display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line-soft);}
+    .dossier-id{font-size:11px;color:var(--faint);}
+    .status-tag{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:rgba(52,226,161,.12);color:var(--mint);border:1px solid rgba(52,226,161,.3);}
+    .vitals{padding:14px 20px;font-size:13px;color:var(--muted);background:var(--panel2);}
+    .vitals b{color:var(--ink);}
+    .dossier-foot{padding:14px 20px;}
+    .focus-panel{background:var(--panel);border:1px solid var(--gold);border-radius:16px;overflow:hidden;box-shadow:0 20px 50px -20px rgba(255,180,0,.35);}
+    .focus-vitals{padding:18px 22px;border-bottom:1px solid var(--line-soft);}
+    .note{font-size:13px;color:var(--faint);border:1px dashed var(--line);border-radius:10px;padding:12px 16px;background:var(--panel2);margin:0 22px 16px;}
+    .diag-panel{padding:0 22px 22px;}
+    select{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 11px;font-size:13.5px;width:420px;max-width:100%;}
+    optgroup{color:var(--gold);font-weight:700;}
+  </style>
+</head>
+<body>
+<div class="frame">
+  <div class="marquee">
+    <div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span></div>
+    <div class="marquee-right">
+      <span class="pill">👤 <b>Alexandre Desoutter</b></span>
+      <span class="pill">🎯 Rôle : <b>Médecin</b></span>
+      <span class="pill">📦 Boosters ouverts : <b class="tabular">7</b></span>
+      <button class="btn btn-sm">↩ Accueil</button>
+    </div>
+  </div>
+  <main>
+    <div class="section-head">
+      <h1>Tableau de bord</h1>
+      <div class="btn-row">
+        <button class="btn btn-sm">🎴 Ma collection</button>
+        <button class="btn btn-sm">🏆 Collègues</button>
+        <button class="btn btn-sm">🔁 Recyclage</button>
+      </div>
+    </div>
+
+    <div class="section-head"><h2>En attente de diagnostic</h2><span class="hint muted">2 dossier(s), le plus ancien en premier</span></div>
+    <div class="grid-2">
+      <div class="dossier">
+        <div class="dossier-top">
+          <div><h3>Romane Cano</h3><div class="dossier-id mono">8 sept. 2026</div></div>
+          <span class="status-tag">3 mise(s)</span>
+        </div>
+        <div class="vitals">Fièvre, Toux, Fatigue, Céphalées, Frissons</div>
+        <div class="dossier-foot"><button class="btn btn-gold btn-sm">Examiner le dossier</button></div>
+      </div>
+      <div class="dossier">
+        <div class="dossier-top">
+          <div><h3>Eya Rejeb</h3><div class="dossier-id mono">7 sept. 2026</div></div>
+          <span class="status-tag">1 mise(s)</span>
+        </div>
+        <div class="vitals">Douleur abdominale, Nausées, Perte d'appétit</div>
+        <div class="dossier-foot"><button class="btn btn-gold btn-sm">Examiner le dossier</button></div>
+      </div>
+    </div>
+
+    <div class="section-head"><h2>Dossier ouvert — Romane Cano</h2><span class="hint muted">8 sept. 2026</span></div>
+    <div class="focus-panel">
+      <div class="focus-vitals"><b>Symptômes déclarés par le patient</b><br><span class="muted">Fièvre, Toux, Fatigue, Céphalées, Frissons</span></div>
+      <div class="note">Pistes suggérées par l'algorithme au patient (pour info, votre choix n'est pas limité à celles-ci) : Grippe saisonnière, Rhino-pharyngite virale, Angine virale, COVID-19</div>
+      <div class="note">Un pari est ouvert sur ce dossier, pot de 85 🪙. Ton diagnostic officiel décide qui gagne.</div>
+      <div class="diag-panel">
+        <h3 style="margin-bottom:10px;">Poser le diagnostic officiel (POST Observation FHIR)</h3>
+        <select>
+          <optgroup label="Probable (≥ 50%)">
+            <option>Grippe saisonnière — 82% probable</option>
+            <option>Rhino-pharyngite virale — 61% probable</option>
+          </optgroup>
+          <optgroup label="Possible (20-49%)">
+            <option>Angine virale — 34% probable</option>
+            <option>COVID-19 — 28% probable</option>
+          </optgroup>
+          <optgroup label="Peu probable (< 20%)">
+            <option>Bronchite aiguë — 12% probable</option>
+          </optgroup>
+        </select>
+        <button class="btn btn-gold" style="margin-left:10px;">Valider le diagnostic</button>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

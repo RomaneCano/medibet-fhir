@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>MediBet — Console FHIR (journal des appels réseau)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root{
+      --bg:#0a0d12; --panel:#121722; --panel2:#182031;
+      --ink:#eef3f7; --muted:#8ea0b5; --faint:#5b6c82; --gold:#ffb400; --mint:#34e2a1;
+      --line:#243149; --line-soft:#1a2334; --shadow:0 20px 50px -20px rgba(0,0,0,.7);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;}
+    body{background:radial-gradient(1200px 700px at 50% -10%, #1a2540 0%, transparent 60%), var(--bg);color:var(--ink);font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;}
+    .frame{width:1440px;height:900px;position:relative;overflow:hidden;}
+    .marquee{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 40px 14px;border-bottom:1px solid var(--line-soft);}
+    .brand{display:flex;align-items:baseline;gap:10px;}
+    .brand .logo{font-family:"Monoton",cursive;font-size:26px;letter-spacing:2px;color:var(--gold);text-shadow:0 0 6px rgba(255,180,0,.55);}
+    .brand .tag{font-size:10.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);}
+    main{max-width:1180px;margin:0 auto;padding:28px 40px 60px;opacity:.35;filter:blur(1px);}
+    h1{font-size:24px;}
+    .muted{color:var(--muted);}
+    .fhir-toggle{
+      position:absolute;bottom:296px;right:26px;
+      background:var(--panel2);border:1px solid var(--line);color:var(--mint);
+      border-radius:999px;padding:10px 16px;font-size:12.5px;font-family:"IBM Plex Mono",monospace;
+      display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);
+    }
+    .fhir-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);}
+    .fhir-console{position:absolute;bottom:0;left:0;right:0;height:280px;background:#070a0f;border-top:1px solid var(--line);display:flex;flex-direction:column;}
+    .fhir-console-head{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line-soft);}
+    .fhir-console-head .title{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--mint);}
+    .btn{appearance:none;border:1px solid var(--line);background:transparent;color:var(--ink);padding:6px 11px;border-radius:8px;font-size:12.5px;font-weight:600;}
+    .fhir-log{flex:1;overflow-y:auto;padding:10px 16px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.65;}
+    .fhir-log .l{margin-bottom:9px;}
+    .fhir-log .m{color:var(--gold);}
+    .fhir-log .p{color:var(--muted);}
+    .fhir-log .r{color:var(--faint);padding-left:14px;display:block;}
+  </style>
+</head>
+<body>
+<div class="frame">
+  <div class="marquee">
+    <div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span></div>
+    <span class="pill">🧪 FHIR simulé</span>
+  </div>
+  <main>
+    <h1>Dossier du 8 sept. 2026</h1>
+    <p class="muted">(écran d'arrière-plan assourdi pour mettre en avant la console FHIR)</p>
+  </main>
+
+  <div class="fhir-toggle"><span class="fhir-dot"></span> FHIR trace</div>
+  <div class="fhir-console">
+    <div class="fhir-console-head">
+      <span class="title">// api.alliance4u.io · flux FHIR (réel)</span>
+      <button class="btn">Fermer ✕</button>
+    </div>
+    <div class="fhir-log">
+      <div class="l"><span class="m">POST</span> <span class="p">/api/observation</span><br><span class="r">→ {"resourceType":"Observation","id":"obs-8k2p1x","status":"final","code":{"text":"Grippe saisonnière"}...</span></div>
+      <div class="l"><span class="m">GET</span> <span class="p">/api/observation?subject.reference=Patient/pat-7f2a91</span><br><span class="r">→ [{"resourceType":"Observation","id":"obs-8k2p1x","subject":{"reference":"Patient/pat-7f2a91"}...</span></div>
+      <div class="l"><span class="m">GET</span> <span class="p">/api/practitioner/prac-3d9e</span><br><span class="r">→ {"resourceType":"Practitioner","id":"prac-3d9e","name":[{"text":"Dr Alexandre Desoutter"}]}</span></div>
+      <div class="l"><span class="m">POST</span> <span class="p">/api/basic</span><br><span class="r">→ {"resourceType":"Basic","id":"basic-91qz","code":{"text":"medibet-pari"},"extension":[...]}</span></div>
+      <div class="l"><span class="m">GET</span> <span class="p">/api/patient/pat-7f2a91</span><br><span class="r">→ {"resourceType":"Patient","id":"pat-7f2a91","name":[{"text":"Romane Cano"}]}</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
