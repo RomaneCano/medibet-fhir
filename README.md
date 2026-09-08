@@ -60,3 +60,31 @@ tous les joueurs connectés au lien (mises, boosters, collections, échanges). E
 instance est indépendante pour cette partie « jeu ». Seuls les échanges FHIR
 (Patient/Practitioner/Observation/Appointment) sont réellement partagés entre postes,
 via le serveur du TP.
+
+## Probabilités des boosters de cartes
+
+Chaque diagnostic posé par le médecin ouvre un booster de **3 cartes tirées indépendamment**
+(`drawCard()` dans `medibet.html`). Pour chaque carte : on tire un nombre aléatoire pondéré
+par les poids de rareté (`RARITY_META`) pour déterminer la rareté, puis une carte est choisie
+au hasard parmi toutes celles de cette rareté dans `CARD_POOL`.
+
+| Rareté | Poids | Probabilité par carte tirée |
+|---|---|---|
+| Commun | 52 | ~52,9 % |
+| Rare | 26 | ~26,5 % |
+| Épique | 14 | ~14,3 % |
+| Légendaire | 5.5 | ~5,6 % |
+| Mythique | 1.5 | ~1,53 % |
+| Collector | 0.05 | ~0,051 % (≈ 1 chance sur 1960) |
+
+Points à retenir :
+- La probabilité par carte **individuelle** dépend aussi du nombre de cartes dans son
+  tiers de rareté (le poids ci-dessus est réparti également entre toutes les cartes de
+  la rareté tirée) : plus un tiers contient de cartes différentes, plus chacune d'elles
+  est individuellement rare à obtenir précisément.
+- Pas de garantie de type « pity system » : les 3 cartes d'un même booster sont des tirages
+  indépendants, donc un booster 100% Commun reste statistiquement possible.
+- Collector est un drop volontairement quasi symbolique (2 cartes seulement dans tout le
+  jeu) : c'est le jackpot ultime.
+
+Ces chiffres servent de base à la relecture d'équilibrage rareté prévue avant la soutenance.
