@@ -215,6 +215,7 @@
   .reveal-pack-burst{
     position:absolute;font-size:110px;filter:drop-shadow(0 0 40px var(--gold));
     animation:packShake .55s ease-in-out;
+    pointer-events:none;
   }
   .reveal-pack-burst.burst-out{animation:packBurst .5s cubic-bezier(.3,1,.4,1) forwards;}
   @keyframes packShake{0%,100%{transform:rotate(0);}20%{transform:rotate(-8deg) scale(1.03);}40%{transform:rotate(7deg) scale(1.05);}60%{transform:rotate(-6deg) scale(1.05);}80%{transform:rotate(4deg) scale(1.02);}}
