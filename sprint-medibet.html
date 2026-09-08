@@ -116,7 +116,7 @@
     { n:"UC3", title:"Le médecin consulte le dossier FHIR", desc:"Le médecin ouvre un dossier et lit les données cliniques (Patient, vitaux) exposées par la plateforme FHIR avant de statuer.", flow:"App Médecin → GET /api/patient/{id}" },
     { n:"UC4", title:"Le médecin pose le diagnostic officiel", desc:"Le médecin choisit le diagnostic réel et le publie comme ressource clinique. C'est cet acte qui fait autorité, pas le pari.", flow:"App Médecin → POST /api/observation" },
     { n:"UC5", title:"Le pari se résout via une vraie lecture FHIR", desc:"Depuis un poste différent de celui du médecin, l'app Patient interroge le serveur FHIR pour détecter le diagnostic publié et résoudre le pari.", flow:"App Patient (poste 1) → GET /api/observation?subject.reference=..." },
-    { n:"UC6", title:"Le médecin ouvre un booster et compare sa collection", desc:"Chaque diagnostic posé rapporte un booster de cartes ; le médecin peut comparer sa collection avec ses collègues et échanger des doublons.", flow:"App Médecin → collection partagée" },
+    { n:"UC6", title:"Le médecin ouvre un booster et enrichit sa collection", desc:"Chaque diagnostic posé rapporte un booster de cartes ; les doublons peuvent être recyclés en solo contre une carte mystère (un seul Médecin dans le jeu, plus d'échange entre collègues).", flow:"App Médecin → atelier de recyclage" },
     { n:"UC7", title:"Le patient récupère son rendez-vous de suivi", desc:"Après un pari gagné, le patient déclenche la prise d'un rendez-vous de suivi auprès de la plateforme FHIR.", flow:"App Patient → POST /api/appointment" }
   ];
 
