@@ -119,14 +119,6 @@
   .role-card h3{margin-top:10px;font-size:17px;}
   .role-card p{color:var(--muted);font-size:13px;margin:6px 0 0;}
 
-  .roster{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;}
-  .name-chip{
-    border:1px solid var(--line);background:var(--panel2);color:var(--ink);
-    padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:500;
-  }
-  .name-chip:hover{border-color:var(--gold);}
-  .name-chip.active{border-color:var(--gold);background:rgba(255,180,0,.12);}
-
   /* ---------- dossier / betting board ---------- */
   .dossier{
     background:var(--panel);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden;
@@ -309,14 +301,12 @@
   var FHIR_BASE = "https://fhir.alliance4u.io";
   var MOCK_MODE = !!(window.claude && window.claude.use);
 
-  var TEAMS = {
-    patient: { label: "Équipe Patient", members: ["Romane Cano","Rémi Delarue","Neirouz Attia"] },
-    medecin: { label: "Équipe Médecin", members: ["Alexandre Desoutter","Aimé Goetschel","Eya Rejeb"] }
-  };
+  /* Sur demande du professeur : un seul Patient et un seul Médecin dans le jeu,
+     pas de sélection parmi plusieurs identités de la base. */
+  var SINGLE_PATIENT_NAME = "Romane Cano";
+  var SINGLE_MEDECIN_NAME = "Alexandre Desoutter";
   var PRACTITIONER_IDS = {
-    "Alexandre Desoutter": "6a9eb9f82788f33b659d11ef",
-    "Aimé Goetschel": "6a9eb9f92788f33b659d11f0",
-    "Eya Rejeb": "6a9eb9f92788f33b659d11f1"
+    "Alexandre Desoutter": "6a9eb9f82788f33b659d11ef"
   };
 
   /* ---------------- symptômes & base de connaissance maladies ----------------
@@ -1496,7 +1486,14 @@
       var role = roleCardEl.getAttribute("data-role");
       sfx.click();
       if(role==="proche"){ setState({screen:"procheJoin", role:"proche"}); return; }
-      state.role = role; render();
+      state.role = role;
+      if(role==="medecin"){
+        state.name = SINGLE_MEDECIN_NAME;
+        ensureMedecinDoc(state.name).then(function(){ setState({screen:"medecinHome"}); });
+      } else {
+        state.name = SINGLE_PATIENT_NAME;
+        ensurePatientWallet(state.name).then(function(){ setState({screen:"patientHome"}); });
+      }
       return;
     }
 
@@ -1745,36 +1742,6 @@
   };
   document.getElementById("fhirClose").onclick = function(){
     document.getElementById("fhirConsole").classList.remove("open");
-  };
-
-  /* ---------------- name selection wiring (delegated, role already chosen) ---------------- */
-  document.addEventListener("click", function(ev){
-    var t = ev.target;
-    if(t.classList && t.classList.contains("name-chip")){
-      var nm = t.getAttribute("data-name");
-      state.name = nm;
-      sfx.click();
-      if(state.role==="medecin"){
-        ensureMedecinDoc(nm).then(function(){ setState({screen:"medecinHome"}); });
-      } else {
-        ensurePatientWallet(nm).then(function(){ setState({screen:"patientHome"}); });
-      }
-    }
-  });
-
-  /* re-render role picker to include roster once a role is chosen but no name yet */
-  var _origRender = render;
-  render = function(){
-    _origRender();
-    if(state.role && !state.name && (state.screen==="landing")){
-      var app = document.getElementById("app");
-      var roster = TEAMS[state.role].members.map(function(m){ return '<button class="name-chip" data-name="'+esc(m)+'">'+esc(m)+'</button>'; }).join("");
-      app.querySelector("main").innerHTML =
-        '<div class="landing"><h2>'+TEAMS[state.role].label+'</h2><p class="sub">Qui es-tu ?</p><div class="roster">'+roster+'</div>'+
-        '<button class="btn btn-ghost btn-sm" style="margin-top:20px;" id="btnCancelRole">← Changer de rôle</button></div>';
-      var cancel = document.getElementById("btnCancelRole");
-      if(cancel) cancel.onclick = function(){ setState({role:null}); };
-    }
   };
 
   /* ---------------- db bootstrap ---------------- */
