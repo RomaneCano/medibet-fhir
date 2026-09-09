@@ -23,8 +23,10 @@ pour les équipes Patient et Médecin.
 
 ## Liens
 
-- Site public : https://medibet-fhir.netlify.app
-- Suivi agile (cas d'usage, équipes, burndown) : https://medibet-fhir.netlify.app/sprint-medibet.html
+- Site public : https://romanecano.github.io/medibet-fhir/ (GitHub Pages, publié automatiquement à chaque push sur `master`)
+- Suivi agile (cas d'usage, équipes, burndown) : https://romanecano.github.io/medibet-fhir/sprint-medibet.html
+- Ancien hébergement Netlify (https://medibet-fhir.netlify.app), déployé à la main au CLI et
+  suspendu faute de crédits — les liens ci-dessus le remplacent
 - Product backlog détaillé : Trello (un board par équipe)
 
 ## Équipes
@@ -35,6 +37,14 @@ pour les équipes Patient et Médecin.
 Sur demande du professeur, le jeu lui-même n'a qu'un seul Patient (Romane Cano) et un
 seul Médecin (Alexandre Desoutter) : choisir un rôle sur l'écran d'accueil mène directement
 à cette identité unique, sans liste où en choisir une autre dans la base.
+
+## Déploiement
+
+Le site est servi par **GitHub Pages** depuis la branche `master`, dossier racine : chaque push
+sur `master` republie le site, sans build ni CLI. Comme Pages sert le dépôt sous le sous-chemin
+`/medibet-fhir/` et non à la racine du domaine, tous les liens internes doivent rester
+**relatifs** (voir `index.html`) ; un chemin en `/medibet.html` renverrait un 404. Le fichier
+`.nojekyll` désactive le traitement Jekyll, inutile ici.
 
 ## Lancer le projet en local
 
