@@ -25,6 +25,8 @@ pour les équipes Patient et Médecin.
 
 - Site public : https://romanecano.github.io/medibet-fhir/ (GitHub Pages, publié automatiquement à chaque push sur `master`)
 - Suivi agile (cas d'usage, équipes, burndown) : https://romanecano.github.io/medibet-fhir/sprint-medibet.html
+- Dossier technique FHIR (ressources, attributs, chronologie des appels) :
+  https://romanecano.github.io/medibet-fhir/fhir-medibet.html
 - Ancien hébergement Netlify (https://medibet-fhir.netlify.app), déployé à la main au CLI et
   suspendu faute de crédits — les liens ci-dessus le remplacent
 - Product backlog détaillé : Trello (un board par équipe)
