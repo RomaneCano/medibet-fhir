@@ -93,7 +93,7 @@
 
   var PROJECTS = {
     patient: {
-      label:"Projet Patient", color:"patient", engaged:37,
+      label:"Projet Patient", color:"patient", engaged:57,
       team:[
         {name:"Neirouz Attia", role:"Product Owner"},
         {name:"Rémi Delarue", role:"Scrum Master"},
@@ -111,13 +111,10 @@
   };
 
   var USE_CASES = [
-    { n:"UC1", title:"Le patient consulte son dossier et mise", desc:"Le patient ouvre un dossier, voit le tableau de cotes par diagnostic possible et place un pronostic avec une mise en CoinPot.", flow:"App Patient → lecture locale des cotes" },
-    { n:"UC2", title:"Un proche rejoint le pari à distance", desc:"Le patient partage un code dossier ; un proche (autre appareil) l'utilise pour ajouter sa propre mise au même pari.", flow:"App Patient (poste 2) → pot commun" },
-    { n:"UC3", title:"Le médecin consulte le dossier FHIR", desc:"Le médecin ouvre un dossier et lit les données cliniques (Patient, vitaux) exposées par la plateforme FHIR avant de statuer.", flow:"App Médecin → GET /api/patient/{id}" },
-    { n:"UC4", title:"Le médecin pose le diagnostic officiel", desc:"Le médecin choisit le diagnostic réel et le publie comme ressource clinique. C'est cet acte qui fait autorité, pas le pari.", flow:"App Médecin → POST /api/observation" },
-    { n:"UC5", title:"Le pari se résout via une vraie lecture FHIR", desc:"Depuis un poste différent de celui du médecin, l'app Patient interroge le serveur FHIR pour détecter le diagnostic publié et résoudre le pari.", flow:"App Patient (poste 1) → GET /api/observation?subject.reference=..." },
-    { n:"UC6", title:"Le médecin ouvre un booster et enrichit sa collection", desc:"Chaque diagnostic posé rapporte un booster de cartes ; les doublons peuvent être recyclés en solo contre une carte mystère (un seul Médecin dans le jeu, plus d'échange entre collègues).", flow:"App Médecin → atelier de recyclage" },
-    { n:"UC7", title:"Le patient récupère son rendez-vous de suivi", desc:"Après un pari gagné, le patient déclenche la prise d'un rendez-vous de suivi auprès de la plateforme FHIR.", flow:"App Patient → POST /api/appointment" }
+    { n:"UC1", title:"Consulter son dossier et miser sur son pronostic", desc:"Le patient coche ses symptômes, l'application crée sa ressource Patient FHIR et affiche les diagnostics les plus probables avec leur cote. Il place sa mise en CoinPot.", flow:"App Patient → POST /api/patient" },
+    { n:"UC2", title:"Un proche rejoint le pari à distance", desc:"Le patient partage un code dossier ; un proche, depuis son propre appareil, mise sur le même pronostic avec son propre portefeuille. Pari social greffé sur le dossier : aucune ressource FHIR.", flow:"App Patient (poste 2) → pot commun" },
+    { n:"UC3", title:"Le pari se résout par une vraie lecture FHIR", desc:"Depuis un poste différent de celui du médecin, l'app Patient interroge le serveur pour détecter l'Observation publiée, compare le diagnostic au pronostic et résout le pari. Cas d'usage vitrine.", flow:"App Patient → GET /api/observation?subject.reference=…" },
+    { n:"UC4", title:"Le patient demande son rendez-vous de suivi", desc:"Après le verdict, le patient déclenche la création d'une ressource Appointment sur la plateforme FHIR — dernier maillon de la chaîne côté Patient.", flow:"App Patient → POST /api/appointment" }
   ];
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
@@ -138,7 +135,7 @@
       '<div class="sub">Deux projets Scrum distincts (Patient / Médecin), sprint du '+SPRINT_DAYS[0]+' au '+SPRINT_DAYS[SPRINT_DAYS.length-1]+'.</div></div>'+
       '<button class="theme-toggle" id="btnTheme">🌓 Thème</button>'+
     '</div>'+
-    '<div class="trello-note">📋 <span>Product backlog détaillé (user stories, priorités, statuts) tenu à jour sur <b>Trello</b>, un board par équipe. Cette page couvre l\'analyse métier et le suivi d\'avancement (burndown).</span></div>';
+    '<div class="trello-note">📋 <span>Product backlog détaillé (user stories, priorités, statuts) tenu à jour sur <b>Trello</b>, un board par équipe. Cette page couvre l\'analyse métier et le suivi d\'avancement (burndown). Les cas d\'usage sont numérotés par projet : UC1 à UC4 côté Patient, l\'équipe Médecin a les siens.</span></div>';
   }
 
   function useCasesSection(){
