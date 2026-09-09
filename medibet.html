@@ -206,6 +206,19 @@
   .card-tile .count{position:absolute;top:8px;right:10px;font-size:11px;color:var(--muted);font-family:"IBM Plex Mono",monospace;}
   .card-tile.owned-0{opacity:.28;filter:grayscale(1);}
 
+  .card-tile.selectable{cursor:pointer;user-select:none;transition:transform .1s ease,box-shadow .15s ease;}
+  .card-tile.selectable:hover{transform:translateY(-2px);}
+  .card-tile.selectable.sel{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset,0 0 22px -6px var(--gold);}
+  .card-tile .sel-badge{position:absolute;top:8px;left:10px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--gold);color:var(--gold-ink);font-size:11px;font-weight:800;line-height:20px;font-family:"IBM Plex Mono",monospace;}
+
+  .recycle-bar{
+    position:sticky;bottom:0;margin-top:18px;padding:14px 16px;border-radius:14px;
+    background:var(--panel2);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  }
+  .recycle-bar .progress{font-family:"IBM Plex Mono",monospace;font-weight:700;}
+  .recycle-bar .progress.ready{color:var(--gold);}
+
   .reveal-overlay{
     position:fixed;inset:0;width:100vw;height:100vh;
     background:radial-gradient(circle at 50% 38%,rgba(30,14,54,.97),rgba(4,6,10,.99));
@@ -715,8 +728,10 @@
      c'est donc le chemin qui tourne réellement pendant la démonstration en conditions réelles. */
   var GAME_TYPE = { dossier:"medibet-dossier", pari:"medibet-pari", medecin:"medibet-medecin", trade:"medibet-trade", patient:"medibet-patient" };
   var FREEBET_WELCOME = 500;
-  /* Nombre d'exemplaires d'une même carte requis pour un recyclage (voir recycleCard()/viewTrades()). */
-  var RECYCLE_COST = 10;
+  /* Tailles de lot proposées pour le recyclage (voir recycleSelection()/viewTrades()) :
+     le médecin choisit un lot de 5 ou de 10 cartes — n'importe lesquelles de sa
+     collection, pas forcément des doublons d'une même carte. */
+  var RECYCLE_TARGETS = [5, 10];
   function gsEncode(type, obj){
     var extension = Object.keys(obj).filter(function(k){ return k!=="_id"; }).map(function(k){
       var v = obj[k];
@@ -1034,15 +1049,19 @@
     return existing._id ? gameStore.update(existing._id, GAME_TYPE.medecin, patch) : gameStore.create(GAME_TYPE.medecin, patch);
   }
 
-  /* Recycle RECYCLE_COST exemplaires d'une même carte contre une carte
-     mystere fraichement tiree du pool (meme regle de probabilite qu'un
-     booster, via drawCard()). Retourne la carte obtenue. */
-  function recycleCard(name, cardId){
+  /* Recycle un lot de cartes choisies librement par le médecin (n'importe
+     quel mélange de cartes différentes, tant que le total sacrifié vaut
+     exactement une des tailles de RECYCLE_TARGETS) contre UNE carte mystère
+     fraîchement tirée du pool (même règle de probabilité qu'un booster, via
+     drawCard()). `selection` est une map {cardId: quantité sacrifiée}.
+     Retourne la carte obtenue. */
+  function recycleSelection(name, selection){
     var newCard = drawCard();
-    function removeOne(list){
-      var f = list.filter(function(c){return c.id===cardId;})[0];
-      if(f) f.count -= RECYCLE_COST;
-      return list.filter(function(c){return c.count>0;});
+    function removeSelected(list){
+      return list.map(function(c){
+        var take = selection[c.id]||0;
+        return take ? Object.assign({}, c, {count:c.count-take}) : c;
+      }).filter(function(c){return c.count>0;});
     }
     function addOne(list){
       var f = list.filter(function(c){return c.id===newCard.id;})[0];
@@ -1053,17 +1072,17 @@
       var ref = db.doc("medecins/"+slug(name));
       return ref.get().then(function(snap){
         var data = snap.data();
-        data.cards = addOne(removeOne(data.cards||[]));
+        data.cards = addOne(removeSelected(data.cards||[]));
         return ref.set(data);
       }).then(function(){ return newCard; });
     }
     var existing = live.medecins[slug(name)];
-    var patch = Object.assign({}, existing, { cards: addOne(removeOne((existing.cards||[]).slice())) });
+    var patch = Object.assign({}, existing, { cards: addOne(removeSelected((existing.cards||[]).slice())) });
     return gameStore.update(existing._id, GAME_TYPE.medecin, patch).then(function(){ return newCard; });
   }
 
   /* ---------------- state ---------------- */
-  var state = { screen:"landing", role:null, name:null, activeDossier:null, revealCards:null };
+  var state = { screen:"landing", role:null, name:null, activeDossier:null, revealCards:null, recycleTarget:5, recycleSel:{} };
 
   function setState(patch){ Object.assign(state, patch); render(); }
 
@@ -1480,23 +1499,45 @@
   /* ---------------- RECYCLAGE ----------------
      Avec un seul Médecin dans le jeu, l'échange pair-à-pair n'a plus de sens
      (personne d'autre pour accepter une offre). On garde l'idée d'une économie
-     de cartes en solo : 10 exemplaires d'une même carte peuvent être recyclés
-     contre une carte mystère fraîchement tirée du pool (même règle de
-     probabilité que l'ouverture d'un booster, voir drawCard()/RARITY_META). */
+     de cartes en solo : le médecin choisit un lot de 5 ou 10 cartes — un
+     mélange libre, pas forcément des doublons d'une même carte — et les
+     sacrifie contre UNE carte mystère fraîchement tirée du pool (même règle
+     de probabilité que l'ouverture d'un booster, voir drawCard()/RARITY_META). */
   function viewTrades(){
     var mine = live.medecins[slug(state.name)] || {cards:[]};
-    var duplicates = (mine.cards||[]).filter(function(c){return (c.count||0)>=RECYCLE_COST;});
-    var rows = duplicates.map(function(c){
+    var owned = (mine.cards||[]).filter(function(c){ return (c.count||0)>0; });
+    var target = state.recycleTarget || RECYCLE_TARGETS[0];
+    var sel = state.recycleSel || {};
+    var totalSel = Object.keys(sel).reduce(function(s,k){ return s+(sel[k]||0); }, 0);
+    var targetBtns = RECYCLE_TARGETS.map(function(n){
+      return '<button class="btn btn-sm'+(target===n?" btn-gold":"")+'" data-target="'+n+'">Lot de '+n+'</button>';
+    }).join("");
+    var tiles = owned.map(function(c){
       var meta = CARD_POOL.filter(function(x){return x.id===c.id;})[0];
       if(!meta) return "";
-      var batches = Math.floor(c.count/RECYCLE_COST);
-      return '<div class="trade-item"><span>'+meta.emoji+' <b>'+esc(meta.name)+'</b> <span class="faint">x'+c.count+' ('+batches+' recyclage'+(batches>1?"s":"")+' possible'+(batches>1?"s":"")+')</span></span>'+
-        '<button class="btn btn-sm" data-recycle="'+meta.id+'">🔁 Recycler '+RECYCLE_COST+' exemplaires</button></div>';
-    }).join("") || '<div class="empty">Pas encore de quoi recycler — il faut '+RECYCLE_COST+' exemplaires d\'une même carte (ouvre plus de boosters pour en obtenir).</div>';
+      var pick = sel[c.id]||0;
+      return '<div class="card-tile selectable rarity-'+meta.rarity+(pick>0?" sel":"")+'" data-cardsel="'+meta.id+'">'+
+        '<div class="glow"></div>'+
+        (pick>0? '<span class="sel-badge">'+pick+'</span>':'')+
+        '<span class="count">×'+c.count+'</span>'+
+        '<span class="emoji">'+meta.emoji+'</span>'+
+        '<div class="name">'+esc(meta.name)+'</div>'+
+        '<div class="rarity">'+RARITY_META[meta.rarity].label+'</div>'+
+      '</div>';
+    }).join("") || '<div class="empty">Aucune carte à recycler pour l\'instant — ouvre des boosters pour garnir ta collection.</div>';
+    var ready = totalSel===target;
+    var bar = owned.length ? (
+      '<div class="recycle-bar">'+
+        '<span class="progress'+(ready?" ready":"")+'">'+totalSel+' / '+target+' carte'+(target>1?"s":"")+' sélectionnée'+(totalSel>1?"s":"")+'</span>'+
+        '<button class="btn btn-gold" id="btnRecycleConfirm"'+(ready?"":" disabled")+'>🔁 Recycler contre une carte mystère</button>'+
+      '</div>'
+    ) : "";
     return (
       '<div class="section-head"><h1>Atelier de recyclage</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
-      '<p class="note">'+RECYCLE_COST+' exemplaires d\'une même carte peuvent être recyclés contre une carte mystère fraîchement tirée du pool (mêmes probabilités qu\'un booster) — de quoi compléter sa collection sans dépendre d\'un autre médecin.</p>'+
-      '<div class="card">'+rows+'</div>'
+      '<p class="note">Choisis une taille de lot puis clique sur '+target+' cartes de ta collection — n\'importe lesquelles, même différentes — pour les sacrifier contre UNE carte mystère fraîchement tirée du pool (mêmes probabilités qu\'un booster) : de quoi compléter sa collection sans dépendre d\'un autre médecin.</p>'+
+      '<div class="btn-row" style="margin:10px 0 16px;">'+targetBtns+'</div>'+
+      '<div class="grid grid-3">'+tiles+'</div>'+
+      bar
     );
   }
 
@@ -1537,7 +1578,7 @@
     if(t.id==="goCollection"){ sfx.click(); setState({screen:"collection"}); return; }
     if(t.id==="goColleagues"){ sfx.click(); setState({screen:"colleagues", viewingColleague:null}); return; }
     if(t.id==="goPatientsBoard"){ sfx.click(); setState({screen:"patientsBoard"}); return; }
-    if(t.id==="goTrades"){ sfx.click(); setState({screen:"trades"}); return; }
+    if(t.id==="goTrades"){ sfx.click(); setState({screen:"trades", recycleSel:{}}); return; }
 
     if(t.id==="btnNewDossier"){
       sfx.click(); setState({screen:"patientCreate", pickedSymptoms:[]}); return;
@@ -1701,13 +1742,37 @@
       openBoosterFlow();
       return;
     }
-    if(t.hasAttribute && t.hasAttribute("data-recycle")){
-      var recycleId = t.getAttribute("data-recycle");
+    var targetBtnEl = t.closest && t.closest("[data-target]");
+    if(targetBtnEl){
+      sfx.click();
+      setState({recycleTarget:Number(targetBtnEl.getAttribute("data-target")), recycleSel:{}});
+      return;
+    }
+    var cardSelEl = t.closest && t.closest("[data-cardsel]");
+    if(cardSelEl){
+      var selId = cardSelEl.getAttribute("data-cardsel");
+      var mineForSel = live.medecins[slug(state.name)] || {cards:[]};
+      var ownedCard = (mineForSel.cards||[]).filter(function(c){return c.id===selId;})[0];
+      var ownedCount = ownedCard ? ownedCard.count : 0;
+      var target = state.recycleTarget || RECYCLE_TARGETS[0];
+      var sel = Object.assign({}, state.recycleSel||{});
+      var cur = sel[selId]||0;
+      var others = Object.keys(sel).reduce(function(s,k){ return k===selId ? s : s+(sel[k]||0); }, 0);
+      var cap = Math.min(ownedCount, target-others);
+      var next = cur+1>cap ? 0 : cur+1;
+      if(next<=0) delete sel[selId]; else sel[selId] = next;
+      sfx.click();
+      setState({recycleSel:sel});
+      return;
+    }
+    if(t.id==="btnRecycleConfirm"){
+      var totalSel = Object.keys(state.recycleSel||{}).reduce(function(s,k){ return s+(state.recycleSel[k]||0); }, 0);
+      if(totalSel !== (state.recycleTarget||RECYCLE_TARGETS[0])) return;
       sfx.boing();
-      recycleCard(state.name, recycleId).then(function(newCard){
+      recycleSelection(state.name, state.recycleSel).then(function(newCard){
         sfx.win();
-        render();
-        showBoosterReveal([newCard]);
+        setState({recycleSel:{}});
+        showBoosterReveal([newCard], {alreadyApplied:true});
       });
       return;
     }
@@ -1716,7 +1781,11 @@
   /* Ouvre immediatement le paquet passe en argument (appele juste apres un
      diagnostic pose). openBoosterFlow() reste dispo comme filet de secours
      (bouton "Ma collection") si l'overlay a ete ferme/rate avant ouverture. */
-  function showBoosterReveal(cards){
+  /* alreadyApplied:true signale que `cards` a déjà été crédité côté données
+     (cas du recyclage, où recycleSelection() a déjà retiré/ajouté les cartes) —
+     l'overlay ne fait alors que l'animation, sans réappliquer applyPack(). */
+  function showBoosterReveal(cards, opts){
+    var alreadyApplied = opts && opts.alreadyApplied;
     sfx.pack();
     var overlay = el(
       '<div class="reveal-overlay">'+
@@ -1775,6 +1844,7 @@
 
     closeBtn.onclick = function(){
       overlay.remove();
+      if(alreadyApplied){ render(); return; }
       var s = slug(state.name);
       function applyPack(data){
         data.boostersOpened = (data.boostersOpened||0)+1;
