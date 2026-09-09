@@ -227,6 +227,36 @@
   .tuto-step .tuto-emoji{font-size:28px;line-height:1;flex-shrink:0;width:40px;text-align:center;}
   .tuto-step h3{margin-bottom:2px;}
   .tuto-step p{margin:0;font-size:13.5px;}
+  /* ---------- renflouement : fausses pubs + roulette ---------- */
+  .pub-screen{
+    width:min(520px,92vw);border-radius:20px;border:1px solid var(--line);
+    background:var(--panel);box-shadow:var(--shadow);overflow:hidden;
+  }
+  .pub-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:9px 14px;background:var(--panel2);border-bottom:1px solid var(--line-soft);
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint);
+  }
+  .pub-body{padding:30px 24px;text-align:center;}
+  .pub-body .pub-emoji{font-size:64px;line-height:1;animation:float 2.4s ease-in-out infinite;}
+  .pub-body .pub-brand{margin-top:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12px;color:var(--gold);}
+  .pub-body .pub-slogan{font-size:21px;font-weight:700;margin-top:6px;text-wrap:balance;}
+  .pub-body .pub-text{font-size:13.5px;color:var(--muted);margin-top:10px;line-height:1.55;}
+  .pub-body .pub-legal{font-size:10px;color:var(--faint);margin-top:16px;line-height:1.4;}
+  .pub-progress{height:4px;background:var(--line-soft);}
+  .pub-progress > i{display:block;height:100%;width:0;background:var(--gold);transition:width .1s linear;}
+  .pub-foot{display:flex;justify-content:flex-end;padding:12px 14px;background:var(--panel2);border-top:1px solid var(--line-soft);}
+
+  .wheel-wrap{position:relative;width:min(320px,80vw);aspect-ratio:1;margin:0 auto;}
+  .wheel-wrap .wheel-pointer{
+    position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+    font-size:30px;z-index:2;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6));
+  }
+  .wheel-wrap svg{width:100%;height:100%;border-radius:50%;box-shadow:0 0 45px -10px var(--gold),inset 0 0 0 6px var(--panel2);}
+  .wheel-spin{transition:transform 4.4s cubic-bezier(.15,.72,.1,1);transform-origin:50% 50%;}
+  .pub-count{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--faint);}
+  .rescue-gain{font-family:"IBM Plex Mono",monospace;font-size:44px;font-weight:700;color:var(--gold);text-shadow:0 0 24px rgba(255,180,0,.5);}
+
   .reveal-cards{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;max-width:min(920px,92vw);perspective:1400px;}
   .reveal-card-slot{width:180px;height:250px;}
   .reveal-card{
@@ -828,7 +858,10 @@
     }
     var existing = live.patients[s];
     var patch = Object.assign({ slug:s, name:name, balance:FREEBET_WELCOME }, existing||{});
-    patch.balance = Math.max(0, (patch.balance||FREEBET_WELCOME)+delta);
+    /* Attention : un solde de 0 est une valeur légitime (joueur à sec), pas une absence de
+       solde — un test de véracité ici recréditerait le freebet de bienvenue par erreur. */
+    var current = typeof patch.balance==="number" ? patch.balance : FREEBET_WELCOME;
+    patch.balance = Math.max(0, current+delta);
     return (existing && existing._id) ? gameStore.update(existing._id, GAME_TYPE.patient, patch) : gameStore.create(GAME_TYPE.patient, patch);
   }
   function patientBalance(name){
@@ -939,6 +972,8 @@
     var rolePill = '<span class="pill">🎯 Rôle : <b>'+(state.role==="proche"?"Proche":"Patient")+'</b></span>';
     var walletPill = !state.name ? "" :
       '<span class="pill pill-wallet">💰 <b class="tabular">'+patientBalance(state.name)+'</b> CoinPot</span>';
+    /* Entrée manuelle vers le renflouement : visible uniquement à 0 CoinPot. */
+    var rescueBtn = isBroke() ? '<button class="btn btn-sm btn-gold" data-rescue="1" title="Regarder des fausses pubs pour renflouer ton portefeuille">📺 Renflouer</button>' : "";
     return (
       '<div class="marquee">'+
         '<div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span>'+
@@ -950,6 +985,7 @@
           '<span class="pill">👤 <b>'+esc(state.name||"—")+'</b></span>'+
           rolePill+
           walletPill+
+          rescueBtn+
           '<button class="btn btn-sm" id="btnHome">↩ Accueil</button>'+
         '</div>')+
       '</div>'
@@ -968,6 +1004,7 @@
     app.innerHTML = header() + '<main>'+body+'</main>';
     wireCommon();
     renderFhirLog();
+    maybeOfferRescue();
   }
 
   function wireCommon(){
@@ -1012,6 +1049,201 @@
     };
   }
 
+  /* ---------------- renflouement : fausses pubs + roulette CoinPot ----------------
+     Filet anti-fin-de-partie : quand le portefeuille du joueur tombe à 0 CoinPot, il n'a
+     plus aucun moyen de miser. Il peut alors « regarder des fausses pubs » (parodie assumée
+     des jeux mobiles free-to-play) pour faire tourner une roulette et récupérer de quoi
+     reparier. L'offre n'existe QUE tant que le solde vaut exactement 0 : dès le premier
+     CoinPot regagné elle disparaît, impossible de farmer des pubs avec un solde positif. */
+  var RESCUE_WHEEL = [
+    { gain:60,   weight:22, color:"#243149" },
+    { gain:100,  weight:20, color:"#2f3f5e" },
+    { gain:150,  weight:16, color:"#243149" },
+    { gain:200,  weight:14, color:"#2f3f5e" },
+    { gain:260,  weight:11, color:"#243149" },
+    { gain:350,  weight:9,  color:"#2f3f5e" },
+    { gain:500,  weight:6,  color:"#6b4a00" },
+    { gain:1000, weight:2,  color:"#8a5a00" }
+  ];
+  var FAKE_ADS = [
+    { emoji:"🩹", brand:"Panséo+", slogan:"Le pansement qui croit en toi.",
+      text:"Trois épaisseurs, zéro diagnostic. Panséo+ recouvre le problème pour que tu n'aies plus à y penser.",
+      legal:"Fausse publicité. Marque inventée, produit inexistant, efficacité non testée (ni testable)." },
+    { emoji:"🧴", brand:"Sirop Kof-Kof",
+      slogan:"12 plantes. 0 étude clinique.",
+      text:"Un goût de réglisse tiède et la certitude d'avoir fait quelque chose. Kof-Kof, la médecine du placebo assumé.",
+      legal:"Fausse publicité. Ne remplace ni un médecin, ni un sirop, ni rien du tout." },
+    { emoji:"🩻", brand:"ScanDrive 24/7",
+      slogan:"Ton IRM au drive, en 4 minutes chrono.",
+      text:"Tu commandes au micro, tu récupères tes images au guichet 2. Menu radio + boisson à 39 CoinPot.",
+      legal:"Fausse publicité. Aucun établissement de santé ne fonctionne comme ça. Heureusement." }
+  ];
+  var AD_DURATION_MS = 4200;   // durée d'une fausse pub
+  var AD_SKIP_AFTER_MS = 2000; // délai avant que « Passer » devienne cliquable
+
+  var rescueOpen = false;      // un flux de renflouement est déjà affiché
+  var rescueAutoShown = false; // l'ouverture automatique a déjà eu lieu pour ce passage à 0
+
+  function hasWallet(name){ return !!(name && live.patients[slug(name)]); }
+  /* Vrai uniquement quand le joueur est à sec : c'est la seule condition d'accès aux pubs. */
+  function isBroke(){
+    return !!state.name && state.screen!=="landing" && hasWallet(state.name) && patientBalance(state.name)===0;
+  }
+  /* Appelé à chaque rendu : propose spontanément le renflouement au moment où le solde
+     tombe à 0, et réarme l'offre dès que le joueur est retombé à sec plus tard. */
+  function maybeOfferRescue(){
+    if(!isBroke()){ rescueAutoShown = false; return; }
+    if(rescueOpen || rescueAutoShown) return;
+    rescueAutoShown = true;
+    showRescueFlow();
+  }
+
+  function pickWheelIndex(){
+    var total = RESCUE_WHEEL.reduce(function(a,s){ return a+s.weight; }, 0);
+    var r = Math.random()*total;
+    for(var i=0;i<RESCUE_WHEEL.length;i++){
+      r -= RESCUE_WHEEL[i].weight;
+      if(r<=0) return i;
+    }
+    return RESCUE_WHEEL.length-1;
+  }
+  function wheelSvg(){
+    var n = RESCUE_WHEEL.length, step = 360/n, cx = 100, cy = 100, r = 96, parts = "";
+    function pt(angle){
+      var rad = (angle-90)*Math.PI/180;
+      return [(cx+r*Math.cos(rad)).toFixed(2), (cy+r*Math.sin(rad)).toFixed(2)];
+    }
+    for(var i=0;i<n;i++){
+      var a0 = pt(i*step), a1 = pt((i+1)*step);
+      parts += '<path d="M'+cx+','+cy+' L'+a0[0]+','+a0[1]+' A'+r+','+r+' 0 0 1 '+a1[0]+','+a1[1]+' Z" '+
+               'fill="'+RESCUE_WHEEL[i].color+'" stroke="#0a0d12" stroke-width="1.5"/>';
+      parts += '<g transform="rotate('+(i*step+step/2)+' '+cx+' '+cy+')">'+
+               '<text x="'+cx+'" y="34" text-anchor="middle" font-family="IBM Plex Mono, monospace" '+
+               'font-size="15" font-weight="700" fill="#ffe9b0">'+RESCUE_WHEEL[i].gain+'</text></g>';
+    }
+    return '<svg viewBox="0 0 200 200" aria-label="Roulette CoinPot">'+
+      '<g class="wheel-spin" id="wheelSpin">'+parts+'</g>'+
+      '<circle cx="'+cx+'" cy="'+cy+'" r="17" fill="#121722" stroke="#ffb400" stroke-width="2"/>'+
+      '<text x="'+cx+'" y="'+(cy+6)+'" text-anchor="middle" font-size="16">🪙</text>'+
+    '</svg>';
+  }
+
+  function showRescueFlow(){
+    if(rescueOpen) return;
+    rescueOpen = true;
+    var timers = [], intervals = [];
+    function later(fn, ms){ timers.push(setTimeout(fn, ms)); }
+    function every(fn, ms){ var id = setInterval(fn, ms); intervals.push(id); return id; }
+    function clearTimers(){ timers.forEach(clearTimeout); intervals.forEach(clearInterval); timers = []; intervals = []; }
+
+    var overlay = el('<div class="reveal-overlay" style="overflow-y:auto;padding:30px 20px;"><div id="rescueStage" style="margin:auto;text-align:center;"></div></div>');
+    document.getElementById("overlayRoot").appendChild(overlay);
+    var stage = overlay.querySelector("#rescueStage");
+    function close(){ clearTimers(); rescueOpen = false; overlay.remove(); }
+
+    /* Étape 1 — constat : plus un seul CoinPot en poche. */
+    function stageIntro(){
+      stage.innerHTML =
+        '<div class="card" style="max-width:520px;width:min(520px,92vw);">'+
+          '<div style="font-size:56px;">🪙💨</div>'+
+          '<h2 style="margin:10px 0 6px;">Plus un seul CoinPot</h2>'+
+          '<p class="muted" style="margin:0 auto;max-width:400px;">Ton portefeuille est à sec, impossible de miser sur un nouveau dossier. '+
+            'Regarde quelques fausses publicités et fais tourner la roulette pour repartir avec de quoi reparier.</p>'+
+          '<div class="btn-row" style="justify-content:center;margin-top:20px;flex-wrap:wrap;">'+
+            '<button class="btn btn-gold" id="rescueStart">📺 Regarder '+FAKE_ADS.length+' fausses pubs</button>'+
+            '<button class="btn btn-ghost btn-sm" id="rescueSkip">Plus tard</button>'+
+          '</div>'+
+          '<p class="note" style="margin-top:14px;">Publicités parodiques, monnaie virtuelle : rien de tout ça n\'est réel.</p>'+
+        '</div>';
+      stage.querySelector("#rescueStart").onclick = function(){ sfx.click(); stageAd(0); };
+      stage.querySelector("#rescueSkip").onclick = function(){ sfx.click(); close(); };
+    }
+
+    /* Étape 2 — la régie publicitaire maison, une fausse pub après l'autre. */
+    function stageAd(i){
+      var ad = FAKE_ADS[i];
+      stage.innerHTML =
+        '<div class="pub-screen">'+
+          '<div class="pub-bar"><span>PUBLICITÉ '+(i+1)+'/'+FAKE_ADS.length+'</span><span class="pub-count" id="pubCount">…</span></div>'+
+          '<div class="pub-body">'+
+            '<div class="pub-emoji">'+ad.emoji+'</div>'+
+            '<div class="pub-brand">'+esc(ad.brand)+'</div>'+
+            '<div class="pub-slogan">'+esc(ad.slogan)+'</div>'+
+            '<p class="pub-text">'+esc(ad.text)+'</p>'+
+            '<p class="pub-legal">'+esc(ad.legal)+'</p>'+
+          '</div>'+
+          '<div class="pub-progress"><i id="pubBar"></i></div>'+
+          '<div class="pub-foot"><button class="btn btn-sm" id="pubNext" disabled>Passer ▶</button></div>'+
+        '</div>';
+      var bar = stage.querySelector("#pubBar"), count = stage.querySelector("#pubCount"), next = stage.querySelector("#pubNext");
+      var started = Date.now();
+      function done(){
+        if(i+1 < FAKE_ADS.length) stageAd(i+1);
+        else stageWheel();
+      }
+      var iv = every(function(){
+        var elapsed = Date.now()-started;
+        var ratio = Math.min(1, elapsed/AD_DURATION_MS);
+        bar.style.width = (ratio*100).toFixed(1)+"%";
+        var left = Math.max(0, Math.ceil((AD_DURATION_MS-elapsed)/1000));
+        count.textContent = left ? left+" s" : "fin";
+        if(elapsed>=AD_SKIP_AFTER_MS && next.disabled){ next.disabled = false; }
+        if(ratio>=1){ clearInterval(iv); done(); }
+      }, 100);
+      next.onclick = function(){ sfx.click(); clearInterval(iv); done(); };
+    }
+
+    /* Étape 3 — la roulette : un tour, un gain aléatoire pondéré. */
+    function stageWheel(){
+      stage.innerHTML =
+        '<div class="card" style="max-width:520px;width:min(520px,92vw);">'+
+          '<h2 style="margin-bottom:4px;">Roulette CoinPot</h2>'+
+          '<p class="muted" style="margin-top:0;">Pubs regardées : la roulette est débloquée. Un seul tour.</p>'+
+          '<div class="wheel-wrap"><div class="wheel-pointer">🔻</div>'+wheelSvg()+'</div>'+
+          '<div class="btn-row" style="justify-content:center;margin-top:18px;">'+
+            '<button class="btn btn-gold" id="rescueSpin">🎡 Tourner la roulette</button>'+
+          '</div>'+
+        '</div>';
+      var spinBtn = stage.querySelector("#rescueSpin");
+      spinBtn.onclick = function(){
+        spinBtn.disabled = true;
+        var idx = pickWheelIndex();
+        var step = 360/RESCUE_WHEEL.length;
+        var jitter = (Math.random()-0.5)*(step-10);
+        var target = 360*6 + (360 - (idx*step + step/2)) + jitter;
+        var wheel = stage.querySelector("#wheelSpin");
+        sfx.place();
+        requestAnimationFrame(function(){ wheel.style.transform = "rotate("+target.toFixed(2)+"deg)"; });
+        later(function(){ stageResult(RESCUE_WHEEL[idx].gain); }, 4600);
+      };
+    }
+
+    /* Étape 4 — créditer le portefeuille et annoncer le gain. */
+    function stageResult(gain){
+      sfx.win();
+      confettiBurst(document.body, ["#ffb400","#ff4d5e","#b98bff","#34e2a1"]);
+      /* Le crédit part d'abord vers le serveur (il lit le solde courant), puis mise à jour
+         optimiste locale pour que le portefeuille affiché suive sans attendre le prochain poll. */
+      adjustPatientBalance(state.name, gain);
+      var s = slug(state.name);
+      if(live.patients[s]) live.patients[s].balance = (live.patients[s].balance||0) + gain;
+      stage.innerHTML =
+        '<div class="card" style="max-width:520px;width:min(520px,92vw);">'+
+          '<div style="font-size:52px;">🎉</div>'+
+          '<h2 style="margin:8px 0 2px;">La roulette te renfloue</h2>'+
+          '<div class="rescue-gain">+'+gain+' 🪙</div>'+
+          '<p class="muted">Ces CoinPot sont crédités sur ton portefeuille : tu peux repartir miser sur un dossier.</p>'+
+          '<div class="btn-row" style="justify-content:center;margin-top:18px;">'+
+            '<button class="btn btn-gold" id="rescueDone">Reparier</button>'+
+          '</div>'+
+        '</div>';
+      stage.querySelector("#rescueDone").onclick = function(){ sfx.coin(); close(); render(); };
+      render();
+    }
+
+    stageIntro();
+  }
+
   /* ---------------- LANDING ---------------- */
   function viewLanding(){
     return (
@@ -1054,6 +1286,12 @@
         '<div class="btn-row"><span class="muted">'+esc(state.name)+' · Équipe Patient</span>'+
         '<button class="btn btn-sm" id="goPatientsBoard">🏆 Classement</button></div>'+
       '</div>'+
+      (isBroke() ?
+        '<div class="pack-cta" style="padding:20px;margin-bottom:16px;border:1px solid var(--gold);">'+
+          '<h3 style="margin:0 0 6px;">🪙 Portefeuille vide</h3>'+
+          '<p class="muted" style="margin:0 0 12px;">Plus aucun CoinPot pour miser. Regarde quelques fausses pubs et tente la roulette pour te refaire.</p>'+
+          '<button class="btn btn-gold" data-rescue="1">📺 Regarder des fausses pubs</button>'+
+        '</div>' : "")+
       '<div class="pack-cta" style="padding:20px;"><button class="btn btn-gold" id="btnNewDossier">➕ Décrire mes symptômes</button>'+
       '<p class="muted" style="margin-top:8px;">Renseigne tes symptômes, notre algorithme te propose les diagnostics les plus probables avec leur cote. Freebet de bienvenue : '+FREEBET_WELCOME+' 🪙.</p></div>'+
       (mine.length===0 ? '<div class="empty">Aucun dossier pour l\'instant — clique ci-dessus pour commencer.</div>' : (
@@ -1285,6 +1523,7 @@
       return;
     }
     if(t.id==="goPatientsBoard"){ sfx.click(); setState({screen:"patientsBoard"}); return; }
+    if(t.hasAttribute && t.hasAttribute("data-rescue")){ sfx.click(); showRescueFlow(); return; }
     if(t.id==="toggleResolved"){ sfx.click(); setState({showAllResolved: !state.showAllResolved}); return; }
 
     if(t.id==="btnNewDossier"){
