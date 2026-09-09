@@ -812,6 +812,89 @@
     }
   };
 
+
+  /* ---------------- bruitages goofy ----------------
+     Les clics de l'interface tirent au sort un petit bruitage cartoon, tous synthétisés
+     à la volée (aucun fichier audio, aucune requête réseau). Deux briques en plus des
+     helpers tone()/sweep() : un oscillateur qui vibre (LFO) pour les couacs et le kazoo,
+     et une salve de bruit blanc filtrée pour les « pouic » et les squelchs. */
+  function vibrato(freq, start, dur, type, gain, rate, depth){
+    var c = ac(); if(!c) return;
+    var o = c.createOscillator(), g = c.createGain(), lfo = c.createOscillator(), lfoGain = c.createGain();
+    o.type = type||"sawtooth"; o.frequency.setValueAtTime(freq, c.currentTime+start);
+    lfo.type = "sine"; lfo.frequency.setValueAtTime(rate||18, c.currentTime+start);
+    lfoGain.gain.setValueAtTime(depth||60, c.currentTime+start);
+    lfo.connect(lfoGain); lfoGain.connect(o.frequency);
+    g.gain.setValueAtTime(0, c.currentTime+start);
+    g.gain.linearRampToValueAtTime(gain||.05, c.currentTime+start+.012);
+    g.gain.exponentialRampToValueAtTime(.0001, c.currentTime+start+dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(c.currentTime+start); o.stop(c.currentTime+start+dur+.02);
+    lfo.start(c.currentTime+start); lfo.stop(c.currentTime+start+dur+.02);
+  }
+  function noiseBurst(start, dur, gain, cutoff, sweepTo){
+    var c = ac(); if(!c) return;
+    var frames = Math.max(1, Math.floor(c.sampleRate*dur));
+    var buf = c.createBuffer(1, frames, c.sampleRate), data = buf.getChannelData(0);
+    for(var i=0;i<frames;i++) data[i] = (Math.random()*2-1);
+    var src = c.createBufferSource(); src.buffer = buf;
+    var filt = c.createBiquadFilter(); filt.type = "lowpass";
+    filt.frequency.setValueAtTime(cutoff||1200, c.currentTime+start);
+    if(sweepTo) filt.frequency.exponentialRampToValueAtTime(Math.max(sweepTo,1), c.currentTime+start+dur);
+    var g = c.createGain();
+    g.gain.setValueAtTime(gain||.05, c.currentTime+start);
+    g.gain.exponentialRampToValueAtTime(.0001, c.currentTime+start+dur);
+    src.connect(filt); filt.connect(g); g.connect(c.destination);
+    src.start(c.currentTime+start); src.stop(c.currentTime+start+dur+.02);
+  }
+
+  /* La ménagerie. Chaque bruitage reste sous ~300 ms pour que l'interface garde du répondant. */
+  var GOOFY = [
+    function boing(){ sweep(170,900,0,.08,"sine",.06); sweep(900,150,.07,.2,"sine",.05); },
+    function pouic(){ sweep(600,1500,0,.05,"square",.04); noiseBurst(.04,.05,.03,2600); },
+    function couac(){ vibrato(300,0,.16,"sawtooth",.045,22,80); },
+    function pouletCaoutchouc(){ vibrato(1100,0,.2,"sawtooth",.035,14,320); },
+    function kazoo(){ vibrato(380,0,.18,"square",.035,26,40); tone(760,0,.18,"triangle",.018); },
+    function sifflet(){ sweep(420,2100,0,.22,"sine",.04); },
+    function siffletDescendant(){ sweep(1900,320,0,.24,"sine",.04); },
+    function glouglou(){ [520,430,350].forEach(function(f,i){ tone(f, i*.055, .07, "sine", .05); }); },
+    function klaxon(){ tone(250,0,.08,"square",.05); tone(200,.08,.12,"square",.05); },
+    function ressort(){ for(var i=0;i<5;i++) sweep(300+i*120, 200+i*120, i*.045, .05, "triangle", .035); },
+    function bloc(){ tone(880,0,.05,"triangle",.05); tone(1320,.02,.04,"sine",.03); },
+    function splotch(){ noiseBurst(0,.16,.05,900,140); sweep(240,90,0,.18,"sawtooth",.035); },
+    function coucou(){ tone(784,0,.11,"sine",.05); tone(622,.12,.15,"sine",.05); },
+    function bloup(){ sweep(180,760,0,.07,"sine",.055); }
+  ];
+  var lastGoofyIndex = -1, lastGoofyAt = 0;
+  /* Tirage sans répétition immédiate : deux clics de suite ne donnent jamais deux fois
+     le même bruit, c'est ce qui rend l'ensemble drôle plutôt que lassant. */
+  function playGoofy(){
+    var i = Math.floor(Math.random()*GOOFY.length);
+    if(i===lastGoofyIndex) i = (i+1+Math.floor(Math.random()*(GOOFY.length-1)))%GOOFY.length;
+    lastGoofyIndex = i;
+    lastGoofyAt = Date.now();
+    try{ GOOFY[i](); }catch(e){}
+  }
+  sfx.goofy = playGoofy;
+  /* sfx.click devient un bruitage cartoon, avec un garde-fou : les boutons passent d'abord
+     par l'écouteur global ci-dessous, donc un handler qui appelle encore sfx.click() juste
+     après ne doit pas superposer un second bruit. */
+  sfx.click = function(){ if(Date.now()-lastGoofyAt < 150) return; playGoofy(); };
+
+  /* Boutons qui ont déjà leur propre bruitage thématique (pièces, mise) : pas de goofy
+     par-dessus, ça brouillerait le signal sonore de l'action. */
+  function hasOwnSound(el){
+    if(/^(btnMiser|btnRejoindre|btnSubmitSymptoms|btnCopyCode|rescueDone|rescueSpin)$/.test(el.id||"")) return true;
+    return el.hasAttribute("data-appt");
+  }
+  /* Un seul écouteur en phase de capture sonorise tout ce qui est cliquable, y compris les
+     boutons dont le handler ne jouait aucun son. */
+  document.addEventListener("click", function(ev){
+    var el = ev.target && ev.target.closest && ev.target.closest("button, .role-card, .symptom-chip, [data-open], [data-rescue]");
+    if(!el || el.disabled || hasOwnSound(el)) return;
+    playGoofy();
+  }, true);
+
   /* ---------------- confetti ---------------- */
   function confettiBurst(rootEl, colors){
     var n = 46;
