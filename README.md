@@ -83,6 +83,21 @@ instance est indépendante pour cette partie « jeu ». Seuls les échanges FHIR
 (Patient/Practitioner/Observation/Appointment) sont réellement partagés entre postes,
 via le serveur du TP.
 
+## Bruitages
+
+Tout le son est **synthétisé à la volée** en Web Audio (`tone`, `sweep`, `vibrato`,
+`noiseBurst`) : aucun fichier audio, aucune requête réseau, rien à héberger.
+
+Chaque clic de l'interface tire au sort un bruitage cartoon dans une ménagerie de 14
+(`GOOFY` dans `medibet.html`) : boing, pouic, couac, poulet en caoutchouc, kazoo, sifflet
+montant ou descendant, glouglou, klaxon, ressort, bloc de bois, splotch, coucou, bloup. Le
+tirage exclut le bruit précédent, pour que deux clics de suite ne sonnent jamais pareil.
+
+Un unique écouteur en phase de capture sonorise tout ce qui est cliquable, y compris les
+boutons dont le handler ne jouait rien. Les actions qui ont déjà leur bruitage thématique
+(mise placée, pièces encaissées) en sont exclues, et `sfx.click()` se tait s'il a déjà sonné
+il y a moins de 150 ms : jamais deux sons superposés sur un même clic.
+
 ## Renflouement : fausses pubs + roulette CoinPot
 
 Quand le portefeuille du patient tombe à **0 CoinPot**, il ne peut plus miser : la partie est
