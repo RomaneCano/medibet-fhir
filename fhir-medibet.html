@@ -232,6 +232,7 @@
     <ol>
       <li><a href="#principe">Le principe, en une minute</a></li>
       <li><a href="#contrat">Le contrat REST du serveur</a></li>
+      <li><a href="#console">Lire la console FHIR</a></li>
       <li><a href="#chrono">La chronologie d'une partie</a></li>
       <li><a href="#basic">Basic : le standard comme base de jeu</a></li>
       <li><a href="#conformite">Conformité : ce qui l'est, ce qui ne l'est pas</a></li>
@@ -363,13 +364,81 @@
     </div>
 <pre><code>var MOCK_MODE = !!(window.claude &amp;&amp; window.claude.use);</code></pre>
     <div class="prose">
-      <p>Elle ne vaut <code>true</code> que dans le bac à sable d'un artifact Claude, où le réseau externe est bloqué : les réponses sont alors simulées côté client pour que la démo reste jouable. Partout ailleurs — site public, exécution locale — elle vaut <code>false</code> et chaque appel part réellement sur le réseau. La pastille du bandeau indique lequel des deux modes tourne, et la <b>console FHIR</b> (bouton en bas à droite des apps) affiche les 60 derniers appels avec leur méthode, leur chemin et la réponse du serveur : c'est la preuve visible, pendant la démonstration, que les échanges sont réels.</p>
+      <p>Elle ne vaut <code>true</code> que dans le bac à sable d'un artifact Claude, où le réseau externe est bloqué : les réponses sont alors simulées côté client pour que la démo reste jouable. Partout ailleurs — site public, exécution locale — elle vaut <code>false</code> et chaque appel part réellement sur le réseau. La pastille du bandeau indique lequel des deux modes tourne, et le titre de la console FHIR le répète : <code>flux FHIR (réel)</code> ou <code>(simulé)</code>. Sur le site public, c'est toujours <b>(réel)</b> — c'est l'argument à montrer au jury.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="console">
+    <h2><span class="num">03</span> Lire la console FHIR</h2>
+
+    <div class="prose">
+      <p>Le bouton <b>FHIR trace</b>, en bas à droite des deux applications, ouvre le journal des appels réseau. C'est la pièce à conviction de la démonstration : elle n'affiche rien d'autre que ce que la page a réellement envoyé et reçu. <b>Une ligne = un aller-retour HTTP effectué.</b> Pas de ligne, pas d'appel.</p>
+    </div>
+
+    <h3>Anatomie d'une ligne</h3>
+<pre><code>POST /api/basic
+  → {"resourceType":"Basic","id":"6a9ed0c…","code":{"text":"medibet-dossier"},"exte</code></pre>
+    <div class="prose">
+      <p>La méthode, le chemin, puis <code>→</code> suivi de <b>la réponse brute du serveur</b> sérialisée en JSON et <b>coupée à 180 caractères</b>. Une ligne qui s'arrête au milieu d'un mot n'est donc pas une erreur : c'est la troncature d'affichage.</p>
+      <p>Trois informations sont enregistrées mais pas affichées, ce qui explique des lignes en apparence incomplètes :</p>
+    </div>
+    <ul class="tight">
+      <li><b>le corps envoyé</b> — un <code>POST</code> ne montre que la réponse, pas ce qui est parti ;</li>
+      <li><b>le message d'erreur</b> — un appel qui échoue s'affiche quand même, avec <code>→ null</code>. Une ligne <code>→ null</code> est un appel qui n'a pas abouti ;</li>
+      <li><b>l'horodatage</b>.</li>
+    </ul>
+    <div class="prose">
+      <p>Le journal conserve les <b>60 derniers appels</b> et les présente <b>du plus récent au plus ancien</b> : la nouveauté arrive en haut.</p>
+    </div>
+
+    <h3>Pourquoi ça défile tout seul</h3>
+    <div class="prose">
+      <p><code>GET /api/basic</code> revient <b>toutes les sept secondes</b> sans que personne ne touche à rien : c'est le sondage de l'état de jeu partagé, faute de <code>Subscription</code> FHIR. Ces lignes noient un peu les autres, mais ce sont elles qui font qu'un dossier créé sur l'autre poste finit par apparaître.</p>
+    </div>
+
+    <h3>Ce qui apparaît, action par action</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Action dans l'app</th><th>Ligne(s) attendue(s)</th></tr></thead>
+        <tbody>
+          <tr><td class="why">Ouverture de la page</td><td class="val">GET /api/basic, immédiatement puis toutes les 7 s</td></tr>
+          <tr><td class="why">Choix du rôle Patient</td><td class="val">POST /api/basic — seulement si le portefeuille n'existe pas encore</td></tr>
+          <tr><td class="why">Envoi des symptômes</td><td class="val">POST /api/basic — le dossier</td></tr>
+          <tr><td class="why">Placement d'une mise</td><td class="val">GET /api/patient/{id}, puis POST ou PUT /api/basic (le pari), puis PUT /api/basic (le portefeuille)</td></tr>
+          <tr><td class="why">Vérification du diagnostic</td><td class="val">GET /api/observation?subject.reference=Patient/{id}</td></tr>
+          <tr><td class="why">Roulette de renflouement</td><td class="val">PUT /api/basic — le portefeuille crédité</td></tr>
+          <tr><td class="why">Récupération du rendez-vous</td><td class="val">GET /api/patient/{id}, puis POST /api/appointment</td></tr>
+          <tr><td class="why">Ouverture d'un dossier (app Médecin)</td><td class="val">GET /api/patient/{id} et GET /api/practitioner/{id}</td></tr>
+          <tr><td class="why">Diagnostic posé (app Médecin)</td><td class="val">POST /api/observation, puis deux PUT /api/basic</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Deux absences volontaires</h3>
+    <ul class="tight">
+      <li><b>Aucun <code>POST /api/patient</code> au démarrage.</b> L'identifiant FHIR du joueur est câblé et pointe vers une ressource déjà créée sur le serveur : il n'y a rien à créer, donc aucun appel. Ce POST n'existe que pour un nom inconnu de la démo.</li>
+      <li><b>Aucun <code>PATCH</code>.</b> Chaque modification est un <code>PUT</code> qui renvoie la ressource entière — le serveur du TP ne fait pas de mise à jour partielle.</li>
+    </ul>
+
+    <h3>Pourquoi un autre nom que le joueur apparaît dans la console</h3>
+    <div class="prose">
+      <p>C'est l'observation qui déroute le plus, et elle est légitime : sur les lignes <code>GET /api/patient/{id}</code>, la réponse affichée peut porter <b>un nom différent de celui affiché dans l'interface</b> — par exemple <span class="mono">Neirouz Attia</span> alors que le joueur est Romane Cano.</p>
+      <p>Il n'y a aucune confusion d'identité entre joueurs. L'explication tient en deux faits :</p>
+    </div>
+    <ul class="tight">
+      <li>La console montre <b>la réponse brute du serveur</b>, donc le nom réellement stocké dans la ressource <code>Patient</code> visée par l'identifiant câblé. Si cette fiche a été créée pendant la mise en place par une autre membre de l'équipe et que son identifiant a ensuite été repris comme identifiant du joueur, c'est son nom qui revient du serveur.</li>
+      <li>L'application, elle, <b>ne relit jamais ce nom</b> : elle affiche celui de l'état de jeu (<code>patientName</code> dans le dossier <code>Basic</code>). Les deux ne peuvent donc jamais se contredire à l'écran — l'écart n'est visible que dans la console.</li>
+    </ul>
+    <div class="prose">
+      <p>Et ce nom revient <b>souvent</b> parce que <code>GET /api/patient/{id}</code> est déclenché à chaque mise, à chaque prise de rendez-vous, et à chaque ouverture de dossier côté Médecin.</p>
+      <p>La correction ne touche pas au code : il suffit de renommer la ressource sur le serveur (un <code>GET</code> puis un <code>PUT</code> du même objet avec le champ <code>name</code> corrigé), ou d'en créer une au bon nom et de câbler son identifiant. Le fond du problème — l'app n'affiche jamais l'identité que le serveur lui renvoie — est listé en <a href="#conformite">section 6</a>.</p>
     </div>
   </section>
 
   <!-- ============================================================ -->
   <section id="chrono">
-    <h2><span class="num">03</span> La chronologie d'une partie</h2>
+    <h2><span class="num">04</span> La chronologie d'une partie</h2>
     <div class="prose">
       <p>Chaque étape ci-dessous correspond à un moment de jeu et aux ressources qu'il met en mouvement, dans l'ordre. Les fiches détaillent attribut par attribut ce qui part sur le réseau et pourquoi.</p>
     </div>
@@ -553,7 +622,7 @@
 
   <!-- ============================================================ -->
   <section id="basic">
-    <h2><span class="num">04</span> Basic : le standard comme base de jeu</h2>
+    <h2><span class="num">05</span> Basic : le standard comme base de jeu</h2>
 
     <div class="prose">
       <p>Un dossier de pari, une cote, un portefeuille de CoinPot : rien de tout cela n'est une donnée clinique, et aucune ressource FHIR dédiée n'existe pour ça. Le standard prévoit exactement ce cas avec <code>Basic</code>, une ressource générique dont le <b>type réel est porté par son propre contenu</b>.</p>
@@ -621,7 +690,7 @@
 
   <!-- ============================================================ -->
   <section id="conformite">
-    <h2><span class="num">05</span> Conformité : ce qui l'est, ce qui ne l'est pas</h2>
+    <h2><span class="num">06</span> Conformité : ce qui l'est, ce qui ne l'est pas</h2>
 
     <div class="prose">
       <p>Assumer les écarts vaut mieux que les laisser découvrir. Voici l'état exact du projet.</p>
@@ -659,7 +728,7 @@
 
   <!-- ============================================================ -->
   <section id="code">
-    <h2><span class="num">06</span> Où c'est, dans le code</h2>
+    <h2><span class="num">07</span> Où c'est, dans le code</h2>
     <div class="prose">
       <p>Tout tient dans deux fichiers, un par application. Les numéros de ligne valent pour la version courante du dépôt.</p>
     </div>
