@@ -728,10 +728,11 @@
      c'est donc le chemin qui tourne réellement pendant la démonstration en conditions réelles. */
   var GAME_TYPE = { dossier:"medibet-dossier", pari:"medibet-pari", medecin:"medibet-medecin", trade:"medibet-trade", patient:"medibet-patient" };
   var FREEBET_WELCOME = 500;
-  /* Tailles de lot proposées pour le recyclage (voir recycleSelection()/viewTrades()) :
-     le médecin choisit un lot de 5 ou de 10 cartes — n'importe lesquelles de sa
-     collection, pas forcément des doublons d'une même carte. */
-  var RECYCLE_TARGETS = [5, 10];
+  /* Nombre de cartes en double (au-delà du 1er exemplaire, toujours conservé)
+     à sacrifier pour obtenir une carte mystère (voir recycleSelection()/viewTrades()).
+     Une carte n'est éligible au recyclage que si on en possède au moins 2 —
+     on ne peut jamais recycler son unique exemplaire d'une carte. */
+  var RECYCLE_BATCH = 5;
   function gsEncode(type, obj){
     var extension = Object.keys(obj).filter(function(k){ return k!=="_id"; }).map(function(k){
       var v = obj[k];
@@ -1049,11 +1050,11 @@
     return existing._id ? gameStore.update(existing._id, GAME_TYPE.medecin, patch) : gameStore.create(GAME_TYPE.medecin, patch);
   }
 
-  /* Recycle un lot de cartes choisies librement par le médecin (n'importe
-     quel mélange de cartes différentes, tant que le total sacrifié vaut
-     exactement une des tailles de RECYCLE_TARGETS) contre UNE carte mystère
-     fraîchement tirée du pool (même règle de probabilité qu'un booster, via
-     drawCard()). `selection` est une map {cardId: quantité sacrifiée}.
+  /* Recycle un lot de RECYCLE_BATCH cartes en double (jamais le dernier
+     exemplaire d'une carte) contre UNE carte mystère fraîchement tirée du
+     pool (même règle de probabilité qu'un booster, via drawCard()) — elle
+     peut retomber sur une carte déjà possédée ou une toute nouvelle.
+     `selection` est une map {cardId: quantité sacrifiée}.
      Retourne la carte obtenue. */
   function recycleSelection(name, selection){
     var newCard = drawCard();
@@ -1082,7 +1083,7 @@
   }
 
   /* ---------------- state ---------------- */
-  var state = { screen:"landing", role:null, name:null, activeDossier:null, revealCards:null, recycleTarget:5, recycleSel:{} };
+  var state = { screen:"landing", role:null, name:null, activeDossier:null, revealCards:null, recycleSel:{} };
 
   function setState(patch){ Object.assign(state, patch); render(); }
 
@@ -1499,23 +1500,23 @@
   /* ---------------- RECYCLAGE ----------------
      Avec un seul Médecin dans le jeu, l'échange pair-à-pair n'a plus de sens
      (personne d'autre pour accepter une offre). On garde l'idée d'une économie
-     de cartes en solo : le médecin choisit un lot de 5 ou 10 cartes — un
-     mélange libre, pas forcément des doublons d'une même carte — et les
-     sacrifie contre UNE carte mystère fraîchement tirée du pool (même règle
-     de probabilité que l'ouverture d'un booster, voir drawCard()/RARITY_META). */
+     de cartes en solo : une carte ne devient recyclable qu'à partir de son 2e
+     exemplaire (le tout premier reste toujours acquis à la collection), et
+     RECYCLE_BATCH doublons — d'une ou plusieurs cartes différentes — se
+     sacrifient contre UNE carte mystère fraîchement tirée du pool (même règle
+     de probabilité que l'ouverture d'un booster, voir drawCard()/RARITY_META) :
+     elle peut retomber sur une carte déjà possédée ou une toute nouvelle. */
   function viewTrades(){
     var mine = live.medecins[slug(state.name)] || {cards:[]};
-    var owned = (mine.cards||[]).filter(function(c){ return (c.count||0)>0; });
-    var target = state.recycleTarget || RECYCLE_TARGETS[0];
+    var eligible = (mine.cards||[]).filter(function(c){ return (c.count||0)>1; });
+    var totalAvailable = eligible.reduce(function(s,c){ return s+(c.count-1); }, 0);
     var sel = state.recycleSel || {};
     var totalSel = Object.keys(sel).reduce(function(s,k){ return s+(sel[k]||0); }, 0);
-    var targetBtns = RECYCLE_TARGETS.map(function(n){
-      return '<button class="btn btn-sm'+(target===n?" btn-gold":"")+'" data-target="'+n+'">Lot de '+n+'</button>';
-    }).join("");
-    var tiles = owned.map(function(c){
+    var tiles = eligible.map(function(c){
       var meta = CARD_POOL.filter(function(x){return x.id===c.id;})[0];
       if(!meta) return "";
       var pick = sel[c.id]||0;
+      var recyclable = c.count-1;
       return '<div class="card-tile selectable rarity-'+meta.rarity+(pick>0?" sel":"")+'" data-cardsel="'+meta.id+'">'+
         '<div class="glow"></div>'+
         (pick>0? '<span class="sel-badge">'+pick+'</span>':'')+
@@ -1523,19 +1524,22 @@
         '<span class="emoji">'+meta.emoji+'</span>'+
         '<div class="name">'+esc(meta.name)+'</div>'+
         '<div class="rarity">'+RARITY_META[meta.rarity].label+'</div>'+
+        '<div class="faint" style="margin-top:4px;font-size:10px;">'+recyclable+' recyclable'+(recyclable>1?"s":"")+'</div>'+
       '</div>';
-    }).join("") || '<div class="empty">Aucune carte à recycler pour l\'instant — ouvre des boosters pour garnir ta collection.</div>';
-    var ready = totalSel===target;
-    var bar = owned.length ? (
+    }).join("") || '<div class="empty">Aucune carte en double pour l\'instant — une carte ne devient recyclable qu\'à partir de son 2e exemplaire (ouvre plus de boosters pour en obtenir).</div>';
+    var ready = totalSel===RECYCLE_BATCH;
+    var bar = eligible.length ? (
       '<div class="recycle-bar">'+
-        '<span class="progress'+(ready?" ready":"")+'">'+totalSel+' / '+target+' carte'+(target>1?"s":"")+' sélectionnée'+(totalSel>1?"s":"")+'</span>'+
+        '<span class="progress'+(ready?" ready":"")+'">'+totalSel+' / '+RECYCLE_BATCH+' doublons sélectionnés</span>'+
         '<button class="btn btn-gold" id="btnRecycleConfirm"'+(ready?"":" disabled")+'>🔁 Recycler contre une carte mystère</button>'+
       '</div>'
     ) : "";
+    var insufficientNote = (eligible.length && totalAvailable<RECYCLE_BATCH) ?
+      '<p class="note">Il te manque encore '+(RECYCLE_BATCH-totalAvailable)+' doublon'+((RECYCLE_BATCH-totalAvailable)>1?"s":"")+' pour lancer un recyclage ('+totalAvailable+' / '+RECYCLE_BATCH+' disponibles pour l\'instant).</p>' : "";
     return (
       '<div class="section-head"><h1>Atelier de recyclage</h1><button class="btn btn-sm" id="btnBack">← Retour</button></div>'+
-      '<p class="note">Choisis une taille de lot puis clique sur '+target+' cartes de ta collection — n\'importe lesquelles, même différentes — pour les sacrifier contre UNE carte mystère fraîchement tirée du pool (mêmes probabilités qu\'un booster) : de quoi compléter sa collection sans dépendre d\'un autre médecin.</p>'+
-      '<div class="btn-row" style="margin:10px 0 16px;">'+targetBtns+'</div>'+
+      '<p class="note">Dès qu\'une carte est possédée en double, l\'exemplaire en trop devient recyclable — ton dernier exemplaire de chaque carte n\'est jamais sacrifié. Clique sur '+RECYCLE_BATCH+' doublons (d\'une ou plusieurs cartes différentes) pour les échanger contre UNE carte mystère fraîchement tirée du pool (mêmes probabilités qu\'un booster) : elle peut retomber sur une carte que tu as déjà ou une toute nouvelle.</p>'+
+      insufficientNote+
       '<div class="grid grid-3">'+tiles+'</div>'+
       bar
     );
@@ -1742,23 +1746,16 @@
       openBoosterFlow();
       return;
     }
-    var targetBtnEl = t.closest && t.closest("[data-target]");
-    if(targetBtnEl){
-      sfx.click();
-      setState({recycleTarget:Number(targetBtnEl.getAttribute("data-target")), recycleSel:{}});
-      return;
-    }
     var cardSelEl = t.closest && t.closest("[data-cardsel]");
     if(cardSelEl){
       var selId = cardSelEl.getAttribute("data-cardsel");
       var mineForSel = live.medecins[slug(state.name)] || {cards:[]};
       var ownedCard = (mineForSel.cards||[]).filter(function(c){return c.id===selId;})[0];
-      var ownedCount = ownedCard ? ownedCard.count : 0;
-      var target = state.recycleTarget || RECYCLE_TARGETS[0];
+      var recyclableCount = ownedCard ? Math.max(0, ownedCard.count-1) : 0; // le dernier exemplaire n'est jamais recyclable
       var sel = Object.assign({}, state.recycleSel||{});
       var cur = sel[selId]||0;
       var others = Object.keys(sel).reduce(function(s,k){ return k===selId ? s : s+(sel[k]||0); }, 0);
-      var cap = Math.min(ownedCount, target-others);
+      var cap = Math.min(recyclableCount, RECYCLE_BATCH-others);
       var next = cur+1>cap ? 0 : cur+1;
       if(next<=0) delete sel[selId]; else sel[selId] = next;
       sfx.click();
@@ -1767,7 +1764,7 @@
     }
     if(t.id==="btnRecycleConfirm"){
       var totalSel = Object.keys(state.recycleSel||{}).reduce(function(s,k){ return s+(state.recycleSel[k]||0); }, 0);
-      if(totalSel !== (state.recycleTarget||RECYCLE_TARGETS[0])) return;
+      if(totalSel !== RECYCLE_BATCH) return;
       sfx.boing();
       recycleSelection(state.name, state.recycleSel).then(function(newCard){
         sfx.win();
