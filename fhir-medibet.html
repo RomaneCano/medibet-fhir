@@ -1,0 +1,704 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'interopérabilité FHIR de MediBet</title>
+<meta name="description" content="Ce que MediBet échange avec le serveur FHIR du TP : chaque ressource, chaque attribut, dans l'ordre chronologique des appels.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --bg:#f3f5f8;
+    --panel:#ffffff;
+    --panel-2:#eef1f5;
+    --ink:#12171d;
+    --muted:#586471;
+    --faint:#8b97a3;
+    --line:#dde3e9;
+    --line-strong:#c6d0d9;
+    --accent:#b8452b;
+    --accent-soft:#fbeae5;
+    --get:#1a6ba8;
+    --post:#137a4c;
+    --put:#8a6410;
+    --del:#a93a30;
+    --shadow:0 1px 2px rgba(18,23,29,.05), 0 10px 30px -18px rgba(18,23,29,.28);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0d1116;
+      --panel:#151b21;
+      --panel-2:#1b232b;
+      --ink:#e7edf2;
+      --muted:#98a5b1;
+      --faint:#66727e;
+      --line:#232e37;
+      --line-strong:#33414c;
+      --accent:#ff8663;
+      --accent-soft:#2b1712;
+      --get:#69b0e6;
+      --post:#59c78e;
+      --put:#dcae4a;
+      --del:#f0806f;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -20px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0d1116;
+    --panel:#151b21;
+    --panel-2:#1b232b;
+    --ink:#e7edf2;
+    --muted:#98a5b1;
+    --faint:#66727e;
+    --line:#232e37;
+    --line-strong:#33414c;
+    --accent:#ff8663;
+    --accent-soft:#2b1712;
+    --get:#69b0e6;
+    --post:#59c78e;
+    --put:#dcae4a;
+    --del:#f0806f;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -20px rgba(0,0,0,.8);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",-apple-system,Segoe UI,sans-serif;
+    font-size:15px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:"IBM Plex Serif",Georgia,serif;text-wrap:balance;margin:0;line-height:1.25;}
+  code,.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace;}
+  a{color:var(--accent);}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:36px 22px 90px;}
+  .prose{max-width:68ch;}
+  .prose p{margin:0 0 14px;}
+  .muted{color:var(--muted);}
+
+  /* ---------- en-tête ---------- */
+  .masthead{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+    padding-bottom:22px;margin-bottom:26px;border-bottom:2px solid var(--ink);
+  }
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent);font-weight:600;
+  }
+  .masthead h1{font-size:clamp(28px,4.2vw,40px);margin:8px 0 6px;}
+  .masthead .standfirst{color:var(--muted);max-width:62ch;font-size:15.5px;}
+  .theme-toggle{
+    border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);
+    border-radius:7px;padding:7px 13px;font:inherit;font-size:12.5px;cursor:pointer;flex-shrink:0;
+  }
+  .theme-toggle:hover{border-color:var(--accent);}
+
+  .facts{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:34px;
+  }
+  .fact{background:var(--panel);padding:13px 16px;}
+  .fact dt{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600;}
+  .fact dd{margin:5px 0 0;font-family:"IBM Plex Mono",monospace;font-size:13px;word-break:break-word;}
+
+  /* ---------- sommaire ---------- */
+  nav.toc{margin-bottom:40px;}
+  nav.toc ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 22px;counter-reset:toc;}
+  nav.toc li{counter-increment:toc;font-size:13.5px;border-top:1px solid var(--line);padding-top:7px;}
+  nav.toc li::before{content:counter(toc,decimal-leading-zero);font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--accent);margin-right:8px;}
+  nav.toc a{text-decoration:none;color:var(--ink);}
+  nav.toc a:hover{color:var(--accent);}
+
+  /* ---------- sections ---------- */
+  section{margin-bottom:52px;scroll-margin-top:20px;}
+  section > h2{
+    font-size:23px;padding-bottom:9px;margin-bottom:16px;border-bottom:1px solid var(--line-strong);
+    display:flex;align-items:baseline;gap:12px;
+  }
+  section > h2 .num{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent);font-weight:600;flex-shrink:0;
+  }
+  h3{font-size:17px;margin:26px 0 8px;}
+  h4{font-size:14.5px;margin:18px 0 6px;}
+
+  /* ---------- fiches ressource ---------- */
+  .sheet{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    box-shadow:var(--shadow);margin:18px 0 26px;overflow:hidden;
+  }
+  .sheet-head{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:13px 18px;border-bottom:1px solid var(--line);background:var(--panel-2);
+  }
+  .sheet-head .rtype{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:15px;}
+  .sheet-head .role{color:var(--muted);font-size:13px;flex:1 1 220px;}
+  .sheet-body{padding:16px 18px;}
+  .sheet-body > p:first-child{margin-top:0;}
+  .sheet-body > p:last-child{margin-bottom:0;}
+
+  .verb{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.05em;
+    border:1px solid currentColor;border-radius:5px;padding:1px 6px;white-space:nowrap;
+  }
+  .verb.get{color:var(--get);}
+  .verb.post{color:var(--post);}
+  .verb.put{color:var(--put);}
+  .verb.del{color:var(--del);}
+
+  .route{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:"IBM Plex Mono",monospace;font-size:12.5px;margin:0 0 12px;}
+  .route .path{color:var(--muted);word-break:break-all;}
+
+  /* ---------- tableaux ---------- */
+  .table-scroll{overflow-x:auto;margin:12px 0;}
+  table{border-collapse:collapse;width:100%;font-size:13.2px;min-width:520px;}
+  th,td{text-align:left;vertical-align:top;padding:9px 12px 9px 0;border-bottom:1px solid var(--line);}
+  th{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;border-bottom:1px solid var(--line-strong);}
+  tbody tr:last-child td{border-bottom:none;}
+  td.attr{font-family:"IBM Plex Mono",monospace;font-size:12.5px;white-space:nowrap;font-weight:500;}
+  td.val{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);}
+  td.why{min-width:230px;}
+
+  /* ---------- code ---------- */
+  pre{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;
+    padding:14px 16px;overflow-x:auto;margin:12px 0;
+    font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.55;
+  }
+  code{font-size:.92em;background:var(--panel-2);border-radius:4px;padding:1px 5px;}
+  pre code{background:none;padding:0;font-size:inherit;}
+
+  /* ---------- schéma ---------- */
+  figure{margin:22px 0;}
+  .diagram{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    box-shadow:var(--shadow);padding:16px 12px 8px;overflow-x:auto;
+  }
+  .diagram svg{display:block;width:100%;min-width:700px;height:auto;color:var(--ink);}
+  .d-box{fill:var(--panel-2);stroke:currentColor;stroke-width:1.2;}
+  .d-life{stroke:currentColor;stroke-width:1;opacity:.28;}
+  .d-arrow{stroke:currentColor;stroke-width:1.4;fill:none;}
+  .d-return{stroke:currentColor;stroke-width:1.2;fill:none;opacity:.6;stroke-dasharray:5 4;}
+  .d-hot{stroke:var(--accent);stroke-width:1.8;fill:none;}
+  .d-head{fill:currentColor;}
+  .d-head-hot{fill:var(--accent);}
+  .d-actor{fill:currentColor;font-family:"IBM Plex Sans",sans-serif;font-size:13px;font-weight:600;}
+  .d-label{fill:currentColor;font-family:"IBM Plex Mono",monospace;font-size:11.5px;}
+  .d-label-hot{fill:var(--accent);font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:500;}
+  .d-step{fill:var(--faint);font-family:"IBM Plex Mono",monospace;font-size:11px;}
+  figcaption{color:var(--muted);font-size:13px;margin-top:10px;max-width:68ch;}
+
+  /* ---------- encadrés ---------- */
+  .callout{
+    border-left:3px solid var(--accent);background:var(--accent-soft);
+    padding:12px 16px;border-radius:0 9px 9px 0;margin:16px 0;font-size:14px;
+  }
+  .callout b{font-weight:600;}
+  .callout p{margin:0 0 8px;}
+  .callout p:last-child{margin-bottom:0;}
+
+  ul.tight{margin:10px 0;padding-left:20px;}
+  ul.tight li{margin-bottom:7px;}
+
+  footer{border-top:1px solid var(--line);padding-top:18px;color:var(--faint);font-size:12.5px;}
+  @media (prefers-reduced-motion: no-preference){ html{scroll-behavior:smooth;} }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">MediBet · TP interopérabilité · session 2026</div>
+      <h1>L'interopérabilité FHIR de MediBet</h1>
+      <p class="standfirst">Ce que les deux applications échangent réellement avec le serveur du TP : chaque ressource, chaque attribut, chaque appel, dans l'ordre où ils se produisent pendant une partie.</p>
+    </div>
+    <button class="theme-toggle" id="btnTheme" type="button">🌓 Thème</button>
+  </header>
+
+  <dl class="facts">
+    <div class="fact"><dt>Serveur FHIR</dt><dd>fhir.alliance4u.io</dd></div>
+    <div class="fact"><dt>Version du standard</dt><dd>FHIR R4</dd></div>
+    <div class="fact"><dt>Ressources standard</dt><dd>Patient · Practitioner · Observation · Appointment</dd></div>
+    <div class="fact"><dt>Ressource générique</dt><dd>Basic (état de jeu)</dd></div>
+    <div class="fact"><dt>Applications</dt><dd>medibet.html · medibet-medecin.html</dd></div>
+  </dl>
+
+  <nav class="toc" aria-label="Sommaire">
+    <ol>
+      <li><a href="#principe">Le principe, en une minute</a></li>
+      <li><a href="#contrat">Le contrat REST du serveur</a></li>
+      <li><a href="#chrono">La chronologie d'une partie</a></li>
+      <li><a href="#basic">Basic : le standard comme base de jeu</a></li>
+      <li><a href="#conformite">Conformité : ce qui l'est, ce qui ne l'est pas</a></li>
+      <li><a href="#code">Où c'est, dans le code</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============================================================ -->
+  <section id="principe">
+    <h2><span class="num">01</span> Le principe, en une minute</h2>
+
+    <div class="prose">
+      <p>MediBet, ce sont <b>deux applications séparées</b> : le Patient parie sur son diagnostic, le Médecin le pose pour de vrai. Elles ne se parlent jamais directement — pas de state partagé, pas de canal privé, pas même un serveur commun qui nous appartiendrait. <b>Tout ce qu'elles ont en commun est déposé sur le serveur FHIR du TP</b>, sous forme de ressources FHIR, et relu par l'autre app depuis un autre poste.</p>
+      <p>C'est ce qui rend la démonstration honnête : l'app Patient tourne sur un ordinateur, l'app Médecin sur un autre, et le pari se résout quand même. Si le serveur FHIR est débranché, plus rien ne circule entre les deux.</p>
+      <p>Le schéma ci-dessous est la partie complète, du dossier créé jusqu'au rendez-vous de suivi. Les deux flèches accentuées sont le cœur du sujet : le diagnostic écrit par le Médecin, puis relu par le Patient.</p>
+    </div>
+
+    <figure>
+      <div class="diagram">
+        <svg viewBox="0 0 940 566" role="img" aria-label="Diagramme de séquence : l'app Patient et l'app Médecin n'échangent qu'à travers le serveur FHIR, du dépôt du dossier jusqu'à la prise de rendez-vous">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" class="d-head"></path>
+            </marker>
+            <marker id="ahh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" class="d-head-hot"></path>
+            </marker>
+          </defs>
+
+          <!-- acteurs -->
+          <rect x="42" y="12" width="196" height="38" rx="8" class="d-box"></rect>
+          <text x="140" y="36" text-anchor="middle" class="d-actor">App Patient</text>
+          <rect x="372" y="12" width="196" height="38" rx="8" class="d-box"></rect>
+          <text x="470" y="36" text-anchor="middle" class="d-actor">Serveur FHIR du TP</text>
+          <rect x="702" y="12" width="196" height="38" rx="8" class="d-box"></rect>
+          <text x="800" y="36" text-anchor="middle" class="d-actor">App Médecin</text>
+
+          <line x1="140" y1="50" x2="140" y2="552" class="d-life"></line>
+          <line x1="470" y1="50" x2="470" y2="552" class="d-life"></line>
+          <line x1="800" y1="50" x2="800" y2="552" class="d-life"></line>
+
+          <!-- 1 -->
+          <text x="8" y="90" class="d-step">1</text>
+          <line x1="140" y1="94" x2="462" y2="94" class="d-arrow" marker-end="url(#ah)"></line>
+          <text x="301" y="86" text-anchor="middle" class="d-label">POST /api/basic — le dossier</text>
+
+          <!-- 2 -->
+          <text x="8" y="140" class="d-step">2</text>
+          <line x1="140" y1="144" x2="462" y2="144" class="d-arrow" marker-end="url(#ah)"></line>
+          <text x="301" y="136" text-anchor="middle" class="d-label">POST /api/basic — le pari et la mise</text>
+
+          <!-- 3 -->
+          <text x="8" y="190" class="d-step">3</text>
+          <line x1="800" y1="194" x2="478" y2="194" class="d-arrow" marker-end="url(#ah)"></line>
+          <text x="639" y="186" text-anchor="middle" class="d-label">GET /api/basic — toutes les 7 s</text>
+
+          <!-- 4 -->
+          <text x="8" y="240" class="d-step">4</text>
+          <line x1="800" y1="244" x2="478" y2="244" class="d-arrow" marker-end="url(#ah)"></line>
+          <text x="639" y="236" text-anchor="middle" class="d-label">GET /api/patient + /api/practitioner</text>
+
+          <!-- 5 -->
+          <text x="8" y="290" class="d-step">5</text>
+          <line x1="800" y1="294" x2="478" y2="294" class="d-hot" marker-end="url(#ahh)"></line>
+          <text x="639" y="286" text-anchor="middle" class="d-label-hot">POST /api/observation — le diagnostic officiel</text>
+
+          <!-- 6 -->
+          <text x="8" y="340" class="d-step">6</text>
+          <line x1="800" y1="344" x2="478" y2="344" class="d-arrow" marker-end="url(#ah)"></line>
+          <text x="639" y="336" text-anchor="middle" class="d-label">PUT /api/basic — dossier résolu, pari tranché</text>
+
+          <!-- 7 -->
+          <text x="8" y="390" class="d-step">7</text>
+          <line x1="140" y1="394" x2="462" y2="394" class="d-hot" marker-end="url(#ahh)"></line>
+          <text x="301" y="386" text-anchor="middle" class="d-label-hot">GET /api/observation?subject.reference=…</text>
+
+          <!-- 8 -->
+          <text x="8" y="440" class="d-step">8</text>
+          <line x1="470" y1="444" x2="148" y2="444" class="d-return" marker-end="url(#ahh)"></line>
+          <text x="301" y="436" text-anchor="middle" class="d-label-hot">l'Observation du médecin → le pari se résout</text>
+
+          <!-- 9 -->
+          <text x="8" y="490" class="d-step">9</text>
+          <line x1="140" y1="494" x2="462" y2="494" class="d-arrow" marker-end="url(#ah)"></line>
+          <text x="301" y="486" text-anchor="middle" class="d-label">POST /api/appointment — le suivi, si gagné</text>
+
+          <text x="470" y="540" text-anchor="middle" class="d-step">aucune flèche ne relie jamais directement les deux applications</text>
+        </svg>
+      </div>
+      <figcaption>Les neuf appels réseau d'une partie complète. Les deux apps ne partagent qu'un seul point : le serveur FHIR du TP — et rien d'autre.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="contrat">
+    <h2><span class="num">02</span> Le contrat REST du serveur</h2>
+
+    <div class="prose">
+      <p>Le serveur du TP expose une API REST FHIR classique, en minuscules et sans préfixe de version. Toutes les requêtes partent avec <code>Content-Type: application/json</code>, et le CORS est ouvert : le navigateur peut appeler le serveur directement depuis la page, sans proxy.</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Appel</th><th>Ce que ça fait</th><th>Utilisé pour</th></tr></thead>
+        <tbody>
+          <tr><td class="attr"><span class="verb get">GET</span> /api/{ressource}/{id}</td><td>lire une ressource</td><td class="why">Patient, Practitioner</td></tr>
+          <tr><td class="attr"><span class="verb get">GET</span> /api/{ressource}</td><td>lister toutes les ressources d'un type</td><td class="why">Basic (état de jeu)</td></tr>
+          <tr><td class="attr"><span class="verb get">GET</span> /api/{ressource}?filtre</td><td>lister avec un filtre de recherche</td><td class="why">Observation par patient</td></tr>
+          <tr><td class="attr"><span class="verb post">POST</span> /api/{ressource}</td><td>créer, le corps est la ressource</td><td class="why">Patient, Observation, Appointment, Basic</td></tr>
+          <tr><td class="attr"><span class="verb put">PUT</span> /api/{ressource}/{id}</td><td>remplacer une ressource existante</td><td class="why">Basic (dossier résolu, portefeuille)</td></tr>
+          <tr><td class="attr"><span class="verb del">DELETE</span> /api/{ressource}/{id}</td><td>supprimer</td><td class="why">prévu dans le client, jamais déclenché</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Une particularité à connaître : les listes ne sont pas des Bundle</h3>
+    <div class="prose">
+      <p>Un serveur FHIR canonique répond à une recherche par un <code>Bundle</code> de type <code>searchset</code>, dont les résultats vivent dans <code>entry[].resource</code>. Le serveur du TP, lui, renvoie <b>un tableau JSON brut de ressources</b> — vérifié en direct contre le serveur. Notre lecture d'Observation accepte donc les deux formes, ce qui rend l'app portable sur un vrai serveur FHIR sans rien changer :</p>
+    </div>
+<pre><code>var list = Array.isArray(response)
+  ? response                                                  // serveur du TP
+  : ((response &amp;&amp; response.entry) || []).map(function(e){      // Bundle FHIR standard
+      return e.resource || e;
+    });</code></pre>
+
+    <h3>Vrais appels ou appels simulés</h3>
+    <div class="prose">
+      <p>Une seule variable décide, calculée automatiquement au chargement :</p>
+    </div>
+<pre><code>var MOCK_MODE = !!(window.claude &amp;&amp; window.claude.use);</code></pre>
+    <div class="prose">
+      <p>Elle ne vaut <code>true</code> que dans le bac à sable d'un artifact Claude, où le réseau externe est bloqué : les réponses sont alors simulées côté client pour que la démo reste jouable. Partout ailleurs — site public, exécution locale — elle vaut <code>false</code> et chaque appel part réellement sur le réseau. La pastille du bandeau indique lequel des deux modes tourne, et la <b>console FHIR</b> (bouton en bas à droite des apps) affiche les 60 derniers appels avec leur méthode, leur chemin et la réponse du serveur : c'est la preuve visible, pendant la démonstration, que les échanges sont réels.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="chrono">
+    <h2><span class="num">03</span> La chronologie d'une partie</h2>
+    <div class="prose">
+      <p>Chaque étape ci-dessous correspond à un moment de jeu et aux ressources qu'il met en mouvement, dans l'ordre. Les fiches détaillent attribut par attribut ce qui part sur le réseau et pourquoi.</p>
+    </div>
+
+    <h3>Étape 1 — Le patient existe comme ressource FHIR</h3>
+    <div class="prose">
+      <p>Avant tout pari, le joueur doit être un <code>Patient</code> sur le serveur. Deux chemins : pour les identités connues de la démo, l'identifiant est <b>câblé dans le code</b> (<code>PATIENT_IDS</code>) et pointe vers une ressource créée en amont sur le serveur du TP ; pour un nom inconnu, l'app crée le <code>Patient</code> à la volée puis met son id en cache local.</p>
+      <p>Ce câblage n'est pas de la triche, c'est une correction de bug : l'id était auparavant mis en cache par appareil, donc un second poste sans ce cache recréait un patient différent — et le dossier ouvert d'un côté n'était plus le même de l'autre.</p>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-head">
+        <span class="rtype">Patient</span>
+        <span class="role">l'identité du joueur, côté clinique</span>
+        <span class="verb post">POST</span><span class="verb get">GET</span>
+      </div>
+      <div class="sheet-body">
+        <div class="route"><span class="verb post">POST</span><span class="path">/api/patient</span><span class="muted">·</span><span class="verb get">GET</span><span class="path">/api/patient/{id}</span></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Attribut</th><th>Valeur envoyée</th><th>Pourquoi</th></tr></thead>
+            <tbody>
+              <tr><td class="attr">resourceType</td><td class="val">"Patient"</td><td class="why">Le type FHIR de la ressource. Obligatoire, c'est lui qui dit au serveur ce qu'il reçoit.</td></tr>
+              <tr><td class="attr">id</td><td class="val">"6a9ec7b5…"</td><td class="why">Attribué par le serveur à la création. Côté app il est câblé pour Romane Cano, ce qui garantit le même Patient sur tous les postes.</td></tr>
+              <tr><td class="attr">name[0].use</td><td class="val">"official"</td><td class="why">Qualifie le nom au sens FHIR (officiel, surnom, pseudonyme…). « official » = le nom d'état civil.</td></tr>
+              <tr><td class="attr">name[0].text</td><td class="val">"Romane Cano"</td><td class="why">Le nom complet prêt à afficher, sans recomposition.</td></tr>
+              <tr><td class="attr">name[0].family</td><td class="val">"Cano"</td><td class="why">Le nom de famille, isolé — c'est sur lui que porte une recherche par patronyme.</td></tr>
+              <tr><td class="attr">name[0].given[0]</td><td class="val">"Romane"</td><td class="why">Le prénom. FHIR prévoit une liste, un patient pouvant en avoir plusieurs.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted" style="font-size:13px;margin:10px 0 0;">L'app ne relit jamais ce nom : elle affiche celui de l'état de jeu. Si la fiche serveur porte un autre nom, rien ne le signale — voir la section conformité.</p>
+      </div>
+    </div>
+
+    <h3>Étape 2 — Le dossier part sur le serveur</h3>
+    <div class="prose">
+      <p>Le patient coche ses symptômes ; l'algorithme de pré-diagnostic croise ces symptômes avec la base de maladies et propose les cinq diagnostics les plus probables, chacun avec sa cote. Le tout est déposé comme une ressource <code>Basic</code> de type <code>medibet-dossier</code> — c'est cet objet que l'app Médecin verra apparaître dans sa file d'attente, depuis un autre ordinateur. Le détail de l'encodage est en <a href="#basic">section 4</a>.</p>
+    </div>
+
+    <h3>Étape 3 — La mise</h3>
+    <div class="prose">
+      <p>Au moment de miser, l'app fait d'abord un <code>GET /api/patient/{id}</code> : c'est une vérification volontaire que le patient existe bien côté serveur avant d'engager des CoinPot, et elle est visible dans la console FHIR pendant la démo. Le pari lui-même (<code>medibet-pari</code>) et le portefeuille (<code>medibet-patient</code>) partent ensuite comme ressources <code>Basic</code>.</p>
+    </div>
+
+    <h3>Étape 4 — Le médecin ouvre le dossier</h3>
+    <div class="prose">
+      <p>L'app Médecin interroge <code>GET /api/basic</code> toutes les sept secondes : c'est ainsi qu'un dossier créé sur un autre poste arrive dans sa file. À l'ouverture d'un dossier, elle lit les deux identités impliquées.</p>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-head">
+        <span class="rtype">Practitioner</span>
+        <span class="role">l'identité du médecin qui va statuer</span>
+        <span class="verb get">GET</span>
+      </div>
+      <div class="sheet-body">
+        <div class="route"><span class="verb get">GET</span><span class="path">/api/practitioner/6a9eb9f82788f33b659d11ef</span></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Attribut</th><th>Valeur</th><th>Pourquoi</th></tr></thead>
+            <tbody>
+              <tr><td class="attr">resourceType</td><td class="val">"Practitioner"</td><td class="why">Le type FHIR des professionnels de santé, distinct de Patient.</td></tr>
+              <tr><td class="attr">id</td><td class="val">"6a9eb9f8…"</td><td class="why">Câblé dans <code>PRACTITIONER_IDS</code> : la ressource a été créée en amont sur le serveur du TP pour l'équipe Médecin.</td></tr>
+              <tr><td class="attr">name[0].text</td><td class="val">"Alexandre Desoutter"</td><td class="why">Le nom lisible du praticien, réutilisé dans le <code>performer</code> de l'Observation.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted" style="font-size:13px;margin:10px 0 0;">Ressource lue seulement : l'app ne crée jamais de Practitioner, elle s'appuie sur ceux enregistrés pour le TP.</p>
+      </div>
+    </div>
+
+    <h3>Étape 5 — Le diagnostic officiel : l'Observation</h3>
+    <div class="prose">
+      <p>C'est l'acte central du projet, et la seule vraie donnée clinique que MediBet produit. Le médecin choisit le diagnostic réel dans la base complète des maladies, et l'app publie une ressource <code>Observation</code>. Tout le reste du jeu — la résolution du pari, le gain, le rendez-vous — découle de cette écriture.</p>
+    </div>
+
+<pre><code>{
+  "resourceType": "Observation",
+  "status": "final",
+  "code": {
+    "coding": [{ "system": "http://medibet.local/diagnostics",
+                 "code": "angine", "display": "Angine" }],
+    "text": "Angine"
+  },
+  "subject": { "reference": "Patient/6a9ec7b52788f33b659d11f9" },
+  "effectiveDateTime": "2026-09-09T13:11:04.512Z",
+  "performer": [{ "reference": "Practitioner/6a9eb9f82788f33b659d11ef",
+                  "display": "Alexandre Desoutter" }],
+  "valueCodeableConcept": { "text": "Angine" }
+}</code></pre>
+
+    <div class="sheet">
+      <div class="sheet-head">
+        <span class="rtype">Observation</span>
+        <span class="role">le diagnostic posé, qui fait autorité</span>
+        <span class="verb post">POST</span>
+      </div>
+      <div class="sheet-body">
+        <div class="route"><span class="verb post">POST</span><span class="path">/api/observation</span></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Attribut</th><th>Valeur envoyée</th><th>Pourquoi</th></tr></thead>
+            <tbody>
+              <tr><td class="attr">resourceType</td><td class="val">"Observation"</td><td class="why">Le type FHIR d'un constat clinique : mesure, test, ou ici un diagnostic posé.</td></tr>
+              <tr><td class="attr">status</td><td class="val">"final"</td><td class="why">Statut FHIR obligatoire. « final » = résultat vérifié et définitif, par opposition à « preliminary » ou « entered-in-error ». C'est ce qui autorise le pari à se trancher dessus.</td></tr>
+              <tr><td class="attr">code.coding[0].system</td><td class="val">"http://medibet.local/diagnostics"</td><td class="why">L'URI du système de codage employé. Un vrai déploiement mettrait ici SNOMED CT ou la CIM-10 ; nous déclarons honnêtement notre nomenclature maison plutôt que d'usurper une URI officielle.</td></tr>
+              <tr><td class="attr">code.coding[0].code</td><td class="val">"angine"</td><td class="why">Le code machine du diagnostic, celui que l'app Patient compare à sa base pour résoudre le pari.</td></tr>
+              <tr><td class="attr">code.coding[0].display</td><td class="val">"Angine"</td><td class="why">Le libellé humain associé au code.</td></tr>
+              <tr><td class="attr">code.text</td><td class="val">"Angine"</td><td class="why">Libellé libre. Sert de repli côté Patient : si le code est inconnu, l'app tente une correspondance sur ce texte.</td></tr>
+              <tr><td class="attr">subject.reference</td><td class="val">"Patient/6a9ec7b5…"</td><td class="why">Le patient concerné, référencé par son type et son id. <b>C'est l'attribut pivot</b> : c'est sur lui que porte la recherche qui permettra au Patient de retrouver son diagnostic.</td></tr>
+              <tr><td class="attr">effectiveDateTime</td><td class="val">"2026-09-09T13:11:04.512Z"</td><td class="why">Le moment où le constat vaut, en ISO 8601. Sert au tri côté Patient : sur plusieurs Observations, la plus récente l'emporte.</td></tr>
+              <tr><td class="attr">performer[0].reference</td><td class="val">"Practitioner/6a9eb9f8…"</td><td class="why">Qui a posé le diagnostic, référencé comme ressource — la traçabilité de l'acte.</td></tr>
+              <tr><td class="attr">performer[0].display</td><td class="val">"Alexandre Desoutter"</td><td class="why">Le nom lisible, que l'app Patient réaffiche sans avoir à relire le Practitioner.</td></tr>
+              <tr><td class="attr">valueCodeableConcept.text</td><td class="val">"Angine"</td><td class="why">La valeur observée. FHIR sépare <i>ce qui est observé</i> (<code>code</code>) de <i>ce qu'on a trouvé</i> (<code>value[x]</code>) ; on renseigne les deux pour rester lisible par un lecteur générique.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h3>Étape 6 — Le patient relit le diagnostic et le pari se résout</h3>
+    <div class="prose">
+      <p>Depuis son poste, le patient interroge lui-même le serveur. C'est la démonstration d'interopérabilité la plus parlante du projet : <b>aucune information ne transite entre les deux apps</b>, le Patient va chercher sur le serveur ce que le Médecin y a déposé.</p>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-head">
+        <span class="rtype">Observation</span>
+        <span class="role">relecture filtrée par patient</span>
+        <span class="verb get">GET</span>
+      </div>
+      <div class="sheet-body">
+        <div class="route"><span class="verb get">GET</span><span class="path">/api/observation?subject.reference=Patient/{id}</span></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Ce qui est lu</th><th>Traitement</th><th>Pourquoi</th></tr></thead>
+            <tbody>
+              <tr><td class="attr">?subject.reference</td><td class="val">Patient/{id}</td><td class="why">Le paramètre de recherche FHIR standard : ne renvoyer que les observations de ce patient.</td></tr>
+              <tr><td class="attr">resourceType</td><td class="val">filtre === "Observation"</td><td class="why">Le serveur peut renvoyer autre chose dans le tableau ; on ne garde que les Observations.</td></tr>
+              <tr><td class="attr">effectiveDateTime</td><td class="val">tri décroissant</td><td class="why">Un patient peut avoir plusieurs diagnostics dans le temps. Le pari se tranche sur le plus récent, avec repli sur <code>effectivePeriod.start</code>.</td></tr>
+              <tr><td class="attr">code.coding[0].code</td><td class="val">→ base de maladies</td><td class="why">Correspondance directe par code. S'il est inconnu, l'app essaie <code>code.text</code> par libellé, insensible à la casse.</td></tr>
+              <tr><td class="attr">performer[0].display</td><td class="val">nom du médecin</td><td class="why">Affiché dans le verdict, sans second appel réseau.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted" style="font-size:13px;margin:10px 0 0;">Le pronostic du pari est ensuite comparé au code trouvé : identiques, le patient est crédité de sa mise multipliée par la cote ; différents, la mise est perdue.</p>
+      </div>
+    </div>
+
+    <h3>Étape 7 — Le rendez-vous de suivi</h3>
+    <div class="prose">
+      <p>Un pari gagné ouvre droit à une consultation de suivi, prise elle aussi sur la plateforme. C'est la troisième ressource écrite par le projet, et la seule qui engage l'avenir plutôt que de constater le passé.</p>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-head">
+        <span class="rtype">Appointment</span>
+        <span class="role">la consultation de suivi</span>
+        <span class="verb post">POST</span>
+      </div>
+      <div class="sheet-body">
+        <div class="route"><span class="verb post">POST</span><span class="path">/api/appointment</span></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Attribut</th><th>Valeur envoyée</th><th>Pourquoi</th></tr></thead>
+            <tbody>
+              <tr><td class="attr">resourceType</td><td class="val">"Appointment"</td><td class="why">Le type FHIR d'un rendez-vous planifié.</td></tr>
+              <tr><td class="attr">status</td><td class="val">"booked"</td><td class="why">Statut FHIR obligatoire : le créneau est réservé et confirmé, pas seulement proposé (« proposed ») ni en attente (« pending »).</td></tr>
+              <tr><td class="attr">description</td><td class="val">"Consultation de suivi"</td><td class="why">Le motif, en clair, pour un lecteur humain.</td></tr>
+              <tr><td class="attr">start</td><td class="val">maintenant + 7 jours</td><td class="why">Début du créneau, en ISO 8601 UTC. Une semaine, délai réaliste pour un suivi.</td></tr>
+              <tr><td class="attr">end</td><td class="val">start + 30 minutes</td><td class="why">Fin du créneau. FHIR attend une plage, pas un instant : une consultation dure.</td></tr>
+              <tr><td class="attr">participant[0].actor.reference</td><td class="val">"Patient/6a9ec7b5…"</td><td class="why">Qui participe. FHIR exige au moins un participant sur un Appointment.</td></tr>
+              <tr><td class="attr">participant[0].status</td><td class="val">"accepted"</td><td class="why">La position de ce participant sur le créneau : accepté, à distinguer du statut global du rendez-vous.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="basic">
+    <h2><span class="num">04</span> Basic : le standard comme base de jeu</h2>
+
+    <div class="prose">
+      <p>Un dossier de pari, une cote, un portefeuille de CoinPot : rien de tout cela n'est une donnée clinique, et aucune ressource FHIR dédiée n'existe pour ça. Le standard prévoit exactement ce cas avec <code>Basic</code>, une ressource générique dont le <b>type réel est porté par son propre contenu</b>.</p>
+      <p>Nous l'utilisons comme base de données partagée du jeu. L'intérêt est direct : <b>aucun serveur ne nous appartient</b>, et pourtant les deux apps partagent un état, sur deux ordinateurs différents, uniquement via la plateforme du TP.</p>
+    </div>
+
+    <h3>L'encodage : un attribut par extension</h3>
+    <div class="prose">
+      <p><code>Basic</code> n'a pas de champs métier. On encode donc chaque champ dans une <code>extension</code> — le mécanisme d'extensibilité prévu par FHIR — et le type de l'objet dans <code>code.text</code> :</p>
+    </div>
+<pre><code>{
+  "resourceType": "Basic",
+  "code": { "text": "medibet-pari" },
+  "extension": [
+    { "url": "dossierId", "valueString": "6a9ec8…" },
+    { "url": "pronostic", "valueString": "angine" },
+    { "url": "cote",      "valueString": "3.4" },
+    { "url": "mises",     "valueString": "[{\"name\":\"Romane Cano\",\"montant\":50,…}]" },
+    { "url": "status",    "valueString": "ouvert" }
+  ]
+}</code></pre>
+    <div class="prose">
+      <p>Les valeurs composées (listes, objets) sont sérialisées en JSON dans <code>valueString</code>, et reparsées à la lecture. Deux fonctions symétriques font tout le travail : <code>gsEncode()</code> à l'écriture, <code>gsDecode()</code> à la lecture, qui replace au passage l'<code>id</code> du serveur dans l'objet de jeu.</p>
+    </div>
+
+    <h3>Les cinq types d'objets</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>code.text</th><th>Champs (extensions)</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="attr">medibet-dossier</td>
+            <td class="val">patientName, patientFhirId, symptoms[], candidates[], status, createdAt<br>puis diagnostic, medecin, resolvedAt, gagnant</td>
+            <td class="why">Le dossier créé par le patient. <code>candidates</code> contient les cinq diagnostics proposés avec leur cote. Les quatre derniers champs sont ajoutés par l'app Médecin au moment du verdict.</td>
+          </tr>
+          <tr>
+            <td class="attr">medibet-pari</td>
+            <td class="val">dossierId, pronostic, cote, mises[], status</td>
+            <td class="why">Le pari attaché à un dossier. <code>mises</code> est la liste des participations (nom, montant, rôle patient ou proche, horodatage) : c'est ce qui permet à un proche de rejoindre depuis un autre appareil.</td>
+          </tr>
+          <tr>
+            <td class="attr">medibet-patient</td>
+            <td class="val">slug, name, balance, createdAt</td>
+            <td class="why">Le portefeuille CoinPot. Créé avec 500 🪙 de bienvenue, débité à la mise, crédité au gain et par la roulette de renflouement.</td>
+          </tr>
+          <tr>
+            <td class="attr">medibet-medecin</td>
+            <td class="val">slug, name, cards[], diagCount, boostersOpened, createdAt</td>
+            <td class="why">Le profil du médecin et sa collection de cartes maladie, alimentée à chaque diagnostic posé.</td>
+          </tr>
+          <tr>
+            <td class="attr">medibet-trade</td>
+            <td class="val">échange entre praticiens</td>
+            <td class="why">Type conservé en lecture, mais plus alimenté : le jeu n'a qu'un seul médecin, les échanges entre collègues ont été remplacés par le recyclage en solo.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>La synchronisation</h3>
+    <div class="prose">
+      <p>Il n'y a ni websocket ni <code>Subscription</code> FHIR : chaque app relit <code>GET /api/basic</code> toutes les sept secondes, compare le résultat au précédent et ne redessine l'écran que s'il a changé — et jamais pendant qu'un champ de formulaire est en cours de saisie. C'est rustique, mais c'est ce qui tourne pendant la démonstration, et ça suffit largement à l'échelle d'une partie.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="conformite">
+    <h2><span class="num">05</span> Conformité : ce qui l'est, ce qui ne l'est pas</h2>
+
+    <div class="prose">
+      <p>Assumer les écarts vaut mieux que les laisser découvrir. Voici l'état exact du projet.</p>
+    </div>
+
+    <h3>Ce qui est conforme</h3>
+    <ul class="tight">
+      <li>Les quatre ressources standard sont bien formées, avec leurs attributs obligatoires (<code>resourceType</code>, <code>status</code>, les références typées <code>Patient/{id}</code> et <code>Practitioner/{id}</code>).</li>
+      <li>Les références croisées sont réelles : l'Observation pointe vers un Patient et un Practitioner qui existent sur le serveur.</li>
+      <li>La recherche utilise un paramètre FHIR standard (<code>subject.reference</code>), pas une invention maison.</li>
+      <li><code>Basic</code> est employé pour ce à quoi le standard le destine : ce qui n'a pas de type dédié.</li>
+      <li>La lecture accepte aussi bien le tableau brut du serveur du TP qu'un <code>Bundle</code> FHIR canonique.</li>
+    </ul>
+
+    <h3>Ce qui ne l'est pas — et pourquoi</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Écart</th><th>Conséquence</th><th>Ce qu'il faudrait</th></tr></thead>
+        <tbody>
+          <tr><td class="why"><b>Codage maison des diagnostics</b> (<code>http://medibet.local/diagnostics</code>)</td><td class="why">Un autre système ne sait pas interpréter nos codes ; c'est le principal frein à une vraie interopérabilité sémantique.</td><td class="why">Des <code>CodeableConcept</code> en SNOMED CT ou CIM-10.</td></tr>
+          <tr><td class="why"><b>Pas d'authentification</b></td><td class="why">N'importe qui peut écrire sur le serveur du TP. Acceptable en bac à sable, impensable sur de la donnée réelle.</td><td class="why">SMART on FHIR / OAuth2 avec des scopes.</td></tr>
+          <tr><td class="why"><b>Basic détourné en base de jeu</b></td><td class="why">Légal, mais mélange donnée de jeu et donnée médicale sur le même serveur.</td><td class="why">Un backend applicatif dédié, FHIR réservé au clinique.</td></tr>
+          <tr><td class="why"><b>Pas de constantes vitales</b></td><td class="why">Ce que le médecin lit sont les symptômes auto-déclarés transportés dans le dossier, pas des Observations de catégorie <code>vital-signs</code>.</td><td class="why">Une Observation par mesure, avec <code>category</code> et unités UCUM.</td></tr>
+          <tr><td class="why"><b>Le nom du Patient n'est jamais relu</b></td><td class="why">L'app affiche le nom de l'état de jeu ; si la fiche serveur porte un autre nom, l'écart passe inaperçu.</td><td class="why">Afficher le nom renvoyé par le serveur, ou vérifier la concordance au démarrage.</td></tr>
+          <tr><td class="why"><b>Méthodes jamais appelées</b> : <code>PUT</code> et <code>DELETE /api/observation/{id}</code>, <code>GET /api/appointment/{id}</code></td><td class="why">Écrites pour couvrir le CRUD complet du TP, mais aucun écran ne les déclenche.</td><td class="why">Les brancher (corriger un diagnostic, annuler un rendez-vous) ou les retirer.</td></tr>
+          <tr><td class="why"><b>Synchronisation par sondage</b> (7 s)</td><td class="why">Latence visible et requêtes inutiles quand rien ne bouge.</td><td class="why">FHIR <code>Subscription</code>, ou un canal temps réel côté jeu.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <p><b>À retenir pour la soutenance.</b> L'interopérabilité <i>technique</i> est démontrée de bout en bout : deux applications, deux dépôts, deux déploiements, aucun état partagé, et un pari qui se résout quand même. L'interopérabilité <i>sémantique</i> — qu'un système tiers comprenne nos diagnostics — s'arrête au codage maison, et c'est le premier point de la liste des améliorations.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="code">
+    <h2><span class="num">06</span> Où c'est, dans le code</h2>
+    <div class="prose">
+      <p>Tout tient dans deux fichiers, un par application. Les numéros de ligne valent pour la version courante du dépôt.</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Quoi</th><th>Où</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr><td class="why">Base FHIR et mode simulé</td><td class="attr">medibet.html:374-375</td><td class="why"><code>FHIR_BASE</code>, <code>MOCK_MODE</code></td></tr>
+          <tr><td class="why">Identifiants câblés</td><td class="attr">medibet.html:388<br>medibet-medecin.html:357</td><td class="why"><code>PATIENT_IDS</code>, <code>PRACTITIONER_IDS</code></td></tr>
+          <tr><td class="why">Couche réseau</td><td class="attr">medibet.html:580-613</td><td class="why"><code>logFhir</code>, <code>realRequest</code>, <code>mockRequest</code>, <code>request</code></td></tr>
+          <tr><td class="why">Client FHIR</td><td class="attr">medibet.html:615<br>medibet-medecin.html:624</td><td class="why">une fonction par route, avec sa réponse simulée</td></tr>
+          <tr><td class="why">Construction de l'Observation</td><td class="attr">medibet-medecin.html:742</td><td class="why"><code>buildObservationResource()</code></td></tr>
+          <tr><td class="why">Publication du diagnostic</td><td class="attr">medibet-medecin.html:1246</td><td class="why">POST puis résolution du dossier et du pari</td></tr>
+          <tr><td class="why">Relecture du diagnostic</td><td class="attr">medibet.html:1540</td><td class="why"><code>checkFhirForDiagnosis()</code></td></tr>
+          <tr><td class="why">Construction du rendez-vous</td><td class="attr">medibet.html:730</td><td class="why"><code>buildAppointmentResource()</code></td></tr>
+          <tr><td class="why">Encodage Basic</td><td class="attr">medibet.html:683-728</td><td class="why"><code>GAME_TYPE</code>, <code>gsEncode</code>, <code>gsDecode</code>, <code>gameStore</code></td></tr>
+          <tr><td class="why">Sondage périodique</td><td class="attr">medibet.html:1789</td><td class="why"><code>startPolling()</code>, 7 s</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    MediBet · TP « Maîtrise des technologies de l'interopérabilité », session 2026 — équipes Patient et Médecin.
+    Suite envisagée : <a href="https://github.com/RomaneCano/medibet-fhir/blob/master/AMELIORATIONS.md">AMELIORATIONS.md</a>.
+    Suivi agile : <a href="sprint-medibet.html">cas d'usage et burndown</a>.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var btn = document.getElementById("btnTheme");
+  btn.addEventListener("click", function(){
+    var root = document.documentElement;
+    var cur = root.getAttribute("data-theme");
+    var next = cur === "dark" ? "light" : (cur === "light" ? null : "dark");
+    if(next) root.setAttribute("data-theme", next); else root.removeAttribute("data-theme");
+  });
+})();
+</script>
