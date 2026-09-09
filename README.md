@@ -10,6 +10,17 @@ et tranche le pari. Chaque diagnostic posé rapporte au médecin un booster de c
 Le tout s'articule autour de la plateforme d'intermédiation **FHIR** fournie pour le TP,
 avec de vrais appels réseau vérifiés en direct contre le serveur du TP.
 
+## Deux applications indépendantes
+
+- `medibet.html` : application **Patient / Proche** (dossiers, mise, suivi du pari).
+- `medibet-medecin.html` : application **Médecin** (file d'attente diagnostic, pose du
+  diagnostic officiel, collection de cartes, classement, recyclage).
+
+Les deux apps ne communiquent jamais directement entre elles : tout passe par le serveur
+FHIR du TP (dossiers et paris lus/écrits comme ressources `Basic`), exactement comme si
+elles tournaient sur deux ordinateurs différents — ce qui est d'ailleurs le cas en vrai
+pour les équipes Patient et Médecin.
+
 ## Liens
 
 - Site public : https://medibet-fhir.netlify.app
@@ -39,13 +50,14 @@ puis ouvrir http://localhost:8123
 - Endpoints utilisés : `GET/POST/PUT/DELETE /api/{resource}` (`patient`, `practitioner`,
   `observation`, `appointment`), `Content-Type: application/json`. Le serveur répond avec
   des tableaux JSON bruts sur les listes (pas de Bundle FHIR encapsulé).
-- `medibet.html` embarque un module `fhirClient` qui respecte exactement les
-  routes/méthodes documentées. `MOCK_MODE` (en tête de fichier) est calculé automatiquement :
-  `true` seulement quand la page tourne dans le bac à sable d'un artifact Claude (réseau
-  externe bloqué), `false` partout ailleurs (site public, local), pour de vrais appels réseau.
-- 6 `Patient` et 3 `Practitioner` réels ont été créés sur le serveur du TP pour les dossiers
-  et les membres de l'équipe Médecin ; leurs ids sont câblés dans `DOSSIERS` /
-  `PRACTITIONER_IDS`.
+- Chacune des deux apps embarque son propre module `fhirClient` qui respecte exactement
+  les routes/méthodes documentées. `MOCK_MODE` (en tête de fichier) est calculé
+  automatiquement : `true` seulement quand la page tourne dans le bac à sable d'un
+  artifact Claude (réseau externe bloqué), `false` partout ailleurs (site public, local),
+  pour de vrais appels réseau.
+- Des `Patient` et `Practitioner` réels ont été créés sur le serveur du TP pour les
+  dossiers et les membres de l'équipe Médecin ; leurs ids sont câblés dans
+  `PRACTITIONER_IDS` (et l'id Patient fixe de Romane Cano, côté `medibet.html`).
 - Le patient résout son pari en interrogeant lui-même le serveur FHIR (bouton « Vérifier le
   diagnostic auprès du serveur FHIR », `GET /api/observation?subject.reference=Patient/{id}`) :
   ça fonctionne même si l'app Patient et l'app Médecin tournent sur deux ordinateurs
@@ -88,3 +100,13 @@ Points à retenir :
   jeu) : c'est le jackpot ultime.
 
 Ces chiffres servent de base à la relecture d'équilibrage rareté prévue avant la soutenance.
+
+## Recyclage des cartes en double
+
+Une carte ne devient recyclable qu'à partir de son **2ᵉ exemplaire** (le tout premier
+reste toujours acquis à la collection). Dans l'atelier de recyclage (`medibet-medecin.html`),
+le médecin sélectionne **5 cartes en double** — d'une ou plusieurs cartes différentes,
+peu importe — pour les sacrifier contre **une carte mystère** fraîchement tirée du pool
+(`drawCard()`, mêmes probabilités qu'un booster ci-dessus). Elle peut retomber sur une
+carte déjà possédée ou une toute nouvelle : de quoi progresser vers les raretés
+supérieures sans dépendre d'un autre médecin dans la partie.
