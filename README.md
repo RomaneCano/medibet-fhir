@@ -73,6 +73,31 @@ instance est indépendante pour cette partie « jeu ». Seuls les échanges FHIR
 (Patient/Practitioner/Observation/Appointment) sont réellement partagés entre postes,
 via le serveur du TP.
 
+## Renflouement : fausses pubs + roulette CoinPot
+
+Quand le portefeuille du patient tombe à **0 CoinPot**, il ne peut plus miser : la partie est
+finie. Un filet de sécurité (parodie assumée des jeux mobiles free-to-play) se déclenche alors
+dans `medibet.html` :
+
+1. un écran « Plus un seul CoinPot » s'ouvre automatiquement au passage à zéro ;
+2. le joueur regarde **3 fausses publicités** (marques inventées, mention « fausse publicité »
+   affichée sur chacune), passables après 2 secondes ;
+3. une **roulette** à 8 secteurs (60 · 100 · 150 · 200 · 260 · 350 · 500 · 1000 🪙) est
+   débloquée : un tour, un gain aléatoire pondéré (les gros lots sont les plus rares) ;
+4. le gain est crédité sur le portefeuille — via la db partagée en artifact, via la ressource
+   FHIR `Basic` du joueur partout ailleurs — et le joueur peut reparier.
+
+L'offre n'est accessible **que tant que le solde vaut exactement 0**. Dès le premier CoinPot
+regagné, le bouton « 📺 Renflouer » du bandeau et la bannière de l'accueil disparaissent :
+impossible de regarder des pubs pour s'enrichir quand on a encore de quoi jouer. Si le joueur
+retombe à sec plus tard, l'offre se réarme.
+
+## Améliorations prévues après le sprint
+
+Les évolutions identifiées mais non tenables dans ce sprint sont regroupées dans
+[`AMELIORATIONS.md`](AMELIORATIONS.md) : elles alimentent la liste **« Améliorations »** des
+boards Trello et la partie « et après ? » de la soutenance.
+
 ## Probabilités des boosters de cartes
 
 Chaque diagnostic posé par le médecin ouvre un booster de **3 cartes tirées indépendamment**
