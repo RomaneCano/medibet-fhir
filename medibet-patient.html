@@ -222,11 +222,6 @@
   @keyframes packShake{0%,100%{transform:rotate(0);}20%{transform:rotate(-8deg) scale(1.03);}40%{transform:rotate(7deg) scale(1.05);}60%{transform:rotate(-6deg) scale(1.05);}80%{transform:rotate(4deg) scale(1.02);}}
   @keyframes packBurst{to{transform:scale(2.6);opacity:0;}}
   .reveal-title{font-size:26px;letter-spacing:.02em;text-shadow:0 0 24px var(--gold);}
-  .tuto-steps{display:flex;flex-direction:column;gap:16px;}
-  .tuto-step{display:flex;gap:14px;align-items:flex-start;text-align:left;}
-  .tuto-step .tuto-emoji{font-size:28px;line-height:1;flex-shrink:0;width:40px;text-align:center;}
-  .tuto-step h3{margin-bottom:2px;}
-  .tuto-step p{margin:0;font-size:13.5px;}
   .reveal-cards{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;max-width:min(920px,92vw);perspective:1400px;}
   .reveal-card-slot{width:180px;height:250px;}
   .reveal-card{
@@ -943,7 +938,6 @@
       '<div class="marquee">'+
         '<div class="brand"><span class="logo">MediBet</span><span class="tag">le jackpot du diagnostic</span>'+
           '<span class="pill" style="margin-left:8px;" title="'+FHIR_BASE+'">'+(MOCK_MODE?"🧪 FHIR simulé":"🟢 FHIR réel")+'</span>'+
-          '<button class="btn btn-sm btn-ghost" id="btnHelp" style="margin-left:8px;" title="Revoir le tutoriel">❓ Aide</button>'+
         '</div>'+
         (state.screen==="landing" ? "" :
         '<div class="marquee-right">'+
@@ -973,43 +967,6 @@
   function wireCommon(){
     var home = document.getElementById("btnHome");
     if(home) home.onclick = function(){ sfx.click(); setState({screen:"landing", role:null, name:null, activeDossier:null}); };
-    var help = document.getElementById("btnHelp");
-    if(help) help.onclick = function(){ sfx.click(); showTutoOverlay(); };
-  }
-
-  /* ---------------- tutoriel de premiere utilisation ---------------- */
-  var TUTO_KEY = "medibet_tuto_v1_vu";
-  var TUTO_STEPS = [
-    { emoji:"🩺", title:"Décris tes symptômes", text:"Coche ce qui te concerne. Notre algorithme croise ça avec 63 maladies connues et te propose les diagnostics les plus probables, chacun avec sa cote." },
-    { emoji:"🎰", title:"Mise sur ton pronostic", text:"Choisis le diagnostic auquel tu crois et mise des CoinPot dessus. Ta mise est débitée tout de suite ; le pari reste ouvert tant que le médecin n'a pas statué." },
-    { emoji:"💸", title:"Invite un proche", text:"Chaque dossier a un code à partager. Un proche peut rejoindre ton pari sans créer de compte — il mise dans son propre CoinPot, sur le même pronostic que toi." },
-    { emoji:"🔬", title:"Le médecin tranche", text:"Le vrai diagnostic est posé par le médecin sur son application, entièrement séparée de la tienne. Les deux ne communiquent que via le serveur FHIR partagé." },
-    { emoji:"🏆", title:"Le verdict tombe tout seul", text:"Dès que le diagnostic officiel est publié, ton pari se résout automatiquement — gain ou perte — sans rien avoir à faire. Un rendez-vous de suivi t'attend si tu as gagné." }
-  ];
-  function showTutoOverlay(){
-    var stepsHtml = TUTO_STEPS.map(function(s, i){
-      return '<div class="tuto-step">'+
-        '<div class="tuto-emoji">'+s.emoji+'</div>'+
-        '<div><h3>'+(i+1)+'. '+esc(s.title)+'</h3><p class="muted">'+esc(s.text)+'</p></div>'+
-      '</div>';
-    }).join("");
-    var overlay = el(
-      '<div class="reveal-overlay" style="justify-content:flex-start;overflow-y:auto;padding:40px 20px;">'+
-        '<div class="card" style="max-width:640px;width:100%;margin:auto;">'+
-          '<div class="logo-big" style="font-size:36px;margin-bottom:6px;">MediBet</div>'+
-          '<h2 style="margin-bottom:18px;">Comment ça marche ?</h2>'+
-          '<div class="tuto-steps">'+stepsHtml+'</div>'+
-          '<div style="text-align:center;margin-top:22px;">'+
-            '<button class="btn btn-gold" id="btnTutoClose">J\'ai compris, c\'est parti !</button>'+
-          '</div>'+
-        '</div>'+
-      '</div>'
-    );
-    document.getElementById("overlayRoot").appendChild(overlay);
-    overlay.querySelector("#btnTutoClose").onclick = function(){
-      try{ localStorage.setItem(TUTO_KEY, "1"); }catch(e){}
-      overlay.remove();
-    };
   }
 
   /* ---------------- LANDING ---------------- */
@@ -1034,21 +991,10 @@
   function viewPatientHome(){
     var mine = allDossiers().filter(function(d){ return d.patient.name===state.name; })
       .sort(function(a,b){ return b.createdAt-a.createdAt; });
-    var enAttente = mine.filter(function(d){ return d.status!=="resolu"; });
-    var resolus = mine.filter(function(d){ return d.status==="resolu"; });
-    var RESOLVED_PREVIEW = 4;
-    var showAllResolved = !!state.showAllResolved;
-    var resolusShown = showAllResolved ? resolus : resolus.slice(0, RESOLVED_PREVIEW);
-    var netTotal = resolus.reduce(function(acc, d){
+    var rows = mine.map(function(d){
       var pari = live.paris[d.id];
-      var mineBet = pari && (pari.mises||[]).filter(function(m){return m.name===state.name;})[0];
-      if(!mineBet) return acc;
-      var won = pari.pronostic === d.diagnostic;
-      return acc + (won ? Math.round(mineBet.montant*pari.cote) - mineBet.montant : -mineBet.montant);
-    }, 0);
-    var rowsAttente = enAttente.map(function(d){ return dossierCardSummary(d, live.paris[d.id]); }).join("");
-    var rowsResolus = resolusShown.map(function(d){ return dossierCardSummary(d, live.paris[d.id]); }).join("");
-    var remaining = resolus.length - RESOLVED_PREVIEW;
+      return dossierCardSummary(d, pari);
+    }).join("");
     return (
       '<div class="section-head"><h1>Mes dossiers</h1>'+
         '<div class="btn-row"><span class="muted">'+esc(state.name)+' · Équipe Patient</span>'+
@@ -1056,19 +1002,7 @@
       '</div>'+
       '<div class="pack-cta" style="padding:20px;"><button class="btn btn-gold" id="btnNewDossier">➕ Décrire mes symptômes</button>'+
       '<p class="muted" style="margin-top:8px;">Renseigne tes symptômes, notre algorithme te propose les diagnostics les plus probables avec leur cote. Freebet de bienvenue : '+FREEBET_WELCOME+' 🪙.</p></div>'+
-      (mine.length===0 ? '<div class="empty">Aucun dossier pour l\'instant — clique ci-dessus pour commencer.</div>' : (
-        '<div class="btn-row" style="margin:18px 0 26px;flex-wrap:wrap;">'+
-          '<span class="pill">📂 <b class="tabular">'+enAttente.length+'</b> en attente</span>'+
-          '<span class="pill">✅ <b class="tabular">'+resolus.length+'</b> résolu'+(resolus.length>1?'s':'')+'</span>'+
-          (resolus.length ? '<span class="pill" style="'+(netTotal>=0?'color:var(--mint);':'color:var(--crimson);')+'">'+(netTotal>=0?'📈 +':'📉 ')+netTotal+' 🪙 au total</span>' : '')+
-        '</div>'+
-        (enAttente.length ? '<h2>En attente du médecin</h2><div class="grid grid-2">'+rowsAttente+'</div>' : '')+
-        (resolus.length ? (
-          '<h2 style="margin-top:'+(enAttente.length?'30px':'0')+';">Dossiers résolus</h2>'+
-          '<div class="grid grid-2">'+rowsResolus+'</div>'+
-          (remaining>0 ? '<div style="text-align:center;margin-top:16px;"><button class="btn btn-sm" id="toggleResolved">'+(showAllResolved?'Réduire':'Afficher les '+remaining+' dossiers précédents')+'</button></div>' : '')
-        ) : '')
-      ))
+      (mine.length ? '<div class="grid grid-2">'+rows+'</div>' : '<div class="empty">Aucun dossier pour l\'instant — clique ci-dessus pour commencer.</div>')
     );
   }
   function dossierCardSummary(d, pari){
@@ -1285,7 +1219,6 @@
       return;
     }
     if(t.id==="goPatientsBoard"){ sfx.click(); setState({screen:"patientsBoard"}); return; }
-    if(t.id==="toggleResolved"){ sfx.click(); setState({showAllResolved: !state.showAllResolved}); return; }
 
     if(t.id==="btnNewDossier"){
       sfx.click(); setState({screen:"patientCreate", pickedSymptoms:[]}); return;
@@ -1480,10 +1413,6 @@
   }
 
   render();
-
-  try{
-    if(!localStorage.getItem(TUTO_KEY)) showTutoOverlay();
-  }catch(e){}
 
   if(window.claude && window.claude.use){
     window.claude.use("db").then(function(d){
